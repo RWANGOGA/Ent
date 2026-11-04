@@ -89,6 +89,19 @@ Students build one reusable pack: a 600-character statement, their verified docu
 
 `#dashboard-student-pack` — edit the statement, see attachment statuses, preview exactly what an employer receives, and see what was sent this term. The placement page button now reads **"Apply with my pack"** and the confirmation modal shows the statement and documents before sending.
 
+## Global system
+
+The product now assumes more than one country, currency and academic system.
+
+- **Coverage** — 14 placements across Uganda, Kenya, Tanzania, the Netherlands, Germany and the United Kingdom, plus three remote-worldwide roles. Region filter: East Africa, Europe, Remote.
+- **Currency** — every stipend carries a local amount and a USD value. The utility bar switches display between local, USD and EUR (static rates, `FX` in `app.js`), and each row shows the equivalent beneath it.
+- **Grade equivalence** — a requirement is stored in the local band and published with its UK / ECTS / US equivalents: `CGPA 3.0+` reads as *UK 2:1 · ECTS B · US 3.0*. Table on the About page.
+- **Work authorisation** — every placement states one of three: *visa sponsorship*, *right to work required*, or *remote, worldwide*. It is filterable and shown as a tag on every row.
+- **Compliance** — GDPR for EU placements; Uganda DPA 2019, Kenya DPA 2019, Tanzania PDPA 2022 elsewhere; data residency on Campus and Consortium plans.
+- **Accessibility** — stated target of WCAG 2.2 AA; visible focus, reduced-motion, 4.5:1 minimum contrast on text.
+
+Not yet global: interface language (English only), tax and payroll treatment, and credential verification across borders.
+
 ## The requirements model
 
 Six fields per placement, set by the university with the host organisation:

@@ -710,3 +710,7 @@ svg{display:block}
 .tier .tier-cta .btn:hover{background:var(--ink);color:var(--paper)}
 .tier.dark .tier-cta .btn{background:var(--green);border-color:var(--green);color:#fff}
 .tier.dark .tier-cta .btn:hover{background:#17543a;border-color:#17543a}
+
+.util select.cur{background:transparent;border:0;color:#E4E0D4;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;outline:0;cursor:pointer;padding:2px 0}
+.util select.cur:hover{color:#fff}
+.util select.cur option{color:#0E1114;background:#fff;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px}

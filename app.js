@@ -24,73 +24,116 @@ const ORGS = [
   {id:"o9", name:"Brac Uganda", type:"NGO", sector:"Development", loc:"Kampala", seal:"BU",
    about:"Development organisation working on livelihoods, education and financial inclusion."},
   {id:"o10", name:"Makerere University — School of Computing", type:"University", sector:"Research", loc:"Kampala", seal:"MU",
-   about:"Research group on human-computer interaction and public-interest technology."}
+   about:"Research group on human-computer interaction and public-interest technology."},
+  {id:"o11", name:"Meridian Bank", type:"Company", sector:"Financial services", loc:"London", seal:"MB",
+   about:"Mid-sized UK bank with a structured internship pipeline into risk and analytics."},
+  {id:"o12", name:"Orbital AI", type:"Company", sector:"Software", loc:"Remote", seal:"OA",
+   about:"Distributed product team building analysis tools for research institutions."},
+  {id:"o13", name:"Fieldnote", type:"NGO", sector:"Research", loc:"Remote", seal:"FN",
+   about:"Research collective studying work, health and public services."}
 ];
 
 const COURSES = ["Computer Science","Information Technology","Design","Economics","Public Health","Law","Engineering","Statistics","Mass Communication","Business"];
 
 const PLACEMENTS = [
-  {id:"p1", title:"Product Design Intern", orgId:"o4", courses:["Design","Computer Science"], grade:"CGPA 3.0+", loc:"Remote", mode:"Remote",
-   duration:"12 weeks", stipend:"$2,400 / month", deadline:"12 Mar 2026", slots:4, status:"Open", applicants:41,
+  {id:"p1", title:"Product Design Intern", orgId:"o4", courses:["Design","Computer Science"], grade:"CGPA 3.0+",
+   country:"Netherlands", region:"Europe", loc:"Amsterdam, hybrid", mode:"Hybrid", duration:"12 weeks",
+   stipendLocal:"€2,200 / month", usd:2390, currency:"EUR", visa:"sponsorship", deadline:"12 Mar 2026", slots:4, status:"Open", applicants:41,
    docs:["Transcript","Student ID","Portfolio"], testimonial:true,
    about:"You will own one workstream from brief to handover, review weekly with a named mentor and present at the end-of-term critique.",
    duties:["Own one end-to-end product workstream","Join weekly critiques and ship to production","Present at the end-of-term review"]},
-  {id:"p2", title:"Data Analyst Intern", orgId:"o2", courses:["Statistics","Computer Science","Economics"], grade:"Second Class Upper", loc:"Kampala", mode:"On-site",
-   duration:"6 months", stipend:"UGX 1,200,000 / month", deadline:"28 Feb 2026", slots:6, status:"Open", applicants:87,
+  {id:"p2", title:"Data Analyst Intern", orgId:"o2", courses:["Statistics","Computer Science","Economics"], grade:"Second Class Upper",
+   country:"Uganda", region:"East Africa", loc:"Kampala, on-site", mode:"On-site", duration:"6 months",
+   stipendLocal:"UGX 1,200,000 / month", usd:320, currency:"UGX", visa:"right-to-work", deadline:"28 Feb 2026", slots:6, status:"Open", applicants:87,
    docs:["Transcript","National ID","Recommendation letter"], testimonial:true,
    about:"Placement within the national data office, supporting dashboards used by ministries and district offices.",
    duties:["Maintain national indicator dashboards","Clean and reconcile district datasets","Prepare monthly briefings"]},
-  {id:"p3", title:"Software Engineering Intern", orgId:"o5", courses:["Computer Science","Information Technology","Engineering"], grade:"CGPA 3.4+", loc:"Berlin", mode:"Hybrid",
-   duration:"6 months", stipend:"€1,900 / month", deadline:"09 Mar 2026", slots:3, status:"Open", applicants:120,
+  {id:"p3", title:"Software Engineering Intern", orgId:"o5", courses:["Computer Science","Information Technology","Engineering"], grade:"CGPA 3.4+",
+   country:"Germany", region:"Europe", loc:"Berlin, hybrid", mode:"Hybrid", duration:"6 months",
+   stipendLocal:"€1,900 / month", usd:2065, currency:"EUR", visa:"sponsorship", deadline:"09 Mar 2026", slots:3, status:"Open", applicants:120,
    docs:["Transcript","CV","Portfolio"], testimonial:false,
    about:"Payments engineering team. You will work on merchant onboarding flows and internal tooling.",
    duties:["Ship features in a two-week cycle","Write tests for onboarding flows","Join incident reviews"]},
-  {id:"p4", title:"Health Records Intern", orgId:"o6", courses:["Public Health","Statistics","Information Technology"], grade:"Second Class Lower", loc:"Nairobi", mode:"On-site",
-   duration:"4 months", stipend:"KSh 75,000 / month", deadline:"21 Feb 2026", slots:8, status:"Closing", applicants:64,
+  {id:"p4", title:"Health Records Intern", orgId:"o6", courses:["Public Health","Statistics","Information Technology"], grade:"Second Class Lower",
+   country:"Kenya", region:"East Africa", loc:"Nairobi, on-site", mode:"On-site", duration:"4 months",
+   stipendLocal:"KSh 75,000 / month", usd:580, currency:"KES", visa:"right-to-work", deadline:"21 Feb 2026", slots:8, status:"Closing", applicants:64,
    docs:["Transcript","Student ID","Immunisation card"], testimonial:true,
    about:"Support the digitisation of patient records across a 120-clinic network.",
    duties:["Digitise and validate patient files","Flag incomplete records","Support clinic audits"]},
-  {id:"p5", title:"Frontend Intern", orgId:"o7", courses:["Computer Science","Design","Information Technology"], grade:"CGPA 3.0+", loc:"Kampala", mode:"Hybrid",
-   duration:"6 months", stipend:"UGX 900,000 / month", deadline:"05 Mar 2026", slots:2, status:"Open", applicants:33,
+  {id:"p5", title:"Frontend Intern", orgId:"o7", courses:["Computer Science","Design","Information Technology"], grade:"CGPA 3.0+",
+   country:"Uganda", region:"East Africa", loc:"Kampala, hybrid", mode:"Hybrid", duration:"6 months",
+   stipendLocal:"UGX 900,000 / month", usd:240, currency:"UGX", visa:"right-to-work", deadline:"05 Mar 2026", slots:2, status:"Open", applicants:33,
    docs:["Transcript","Portfolio"], testimonial:false,
    about:"Build the passenger-facing experience for route planning and fare payment.",
    duties:["Build accessible booking flows","Improve offline behaviour","Test with conductors in the field"]},
-  {id:"p6", title:"Policy Research Assistant", orgId:"o1", courses:["Law","Economics","Mass Communication"], grade:"Second Class Upper", loc:"Kampala", mode:"On-site",
-   duration:"5 months", stipend:"UGX 1,000,000 / month", deadline:"18 Mar 2026", slots:5, status:"Open", applicants:52,
+  {id:"p6", title:"Policy Research Assistant", orgId:"o1", courses:["Law","Economics","Mass Communication"], grade:"Second Class Upper",
+   country:"Uganda", region:"East Africa", loc:"Kampala, on-site", mode:"On-site", duration:"5 months",
+   stipendLocal:"UGX 1,000,000 / month", usd:267, currency:"UGX", visa:"right-to-work", deadline:"18 Mar 2026", slots:5, status:"Open", applicants:52,
    docs:["Transcript","Recommendation letter","Writing sample"], testimonial:true,
    about:"Support the ICT policy unit with comparative research, briefings and stakeholder mapping.",
    duties:["Draft policy briefs","Map stakeholder positions","Support consultation workshops"]},
-  {id:"p7", title:"Civic Data Intern", orgId:"o8", courses:["Statistics","Economics","Public Health"], grade:"CGPA 3.0+", loc:"Dar es Salaam", mode:"Hybrid",
-   duration:"3 months", stipend:"TZS 700,000 / month", deadline:"02 Apr 2026", slots:4, status:"Open", applicants:29,
+  {id:"p7", title:"Civic Data Intern", orgId:"o8", courses:["Statistics","Economics","Public Health"], grade:"CGPA 3.0+",
+   country:"Tanzania", region:"East Africa", loc:"Dar es Salaam, hybrid", mode:"Hybrid", duration:"3 months",
+   stipendLocal:"TZS 700,000 / month", usd:270, currency:"TZS", visa:"right-to-work", deadline:"02 Apr 2026", slots:4, status:"Open", applicants:29,
    docs:["Transcript","Student ID","Writing sample"], testimonial:false,
    about:"Work with the survey team on public service delivery data used in national advocacy.",
    duties:["Clean survey data","Produce district summaries","Support field enumerators"]},
-  {id:"p8", title:"Urban Planning Intern", orgId:"o3", courses:["Engineering","Economics","Design"], grade:"Second Class Lower", loc:"Kampala", mode:"On-site",
-   duration:"6 months", stipend:"UGX 850,000 / month", deadline:"25 Feb 2026", slots:3, status:"Closing", applicants:47,
+  {id:"p8", title:"Urban Planning Intern", orgId:"o3", courses:["Engineering","Economics","Design"], grade:"Second Class Lower",
+   country:"Uganda", region:"East Africa", loc:"Kampala, on-site", mode:"On-site", duration:"6 months",
+   stipendLocal:"UGX 850,000 / month", usd:227, currency:"UGX", visa:"right-to-work", deadline:"25 Feb 2026", slots:3, status:"Closing", applicants:47,
    docs:["Transcript","Student ID","Recommendation letter"], testimonial:true,
    about:"Support the planning directorate on transport corridors and market redevelopment.",
    duties:["Survey corridor usage","Draft planning notes","Support community consultations"]},
-  {id:"p9", title:"Development Programmes Intern", orgId:"o9", courses:["Business","Economics","Public Health"], grade:"Second Class Lower", loc:"Kampala", mode:"On-site",
-   duration:"4 months", stipend:"UGX 750,000 / month", deadline:"30 Mar 2026", slots:7, status:"Open", applicants:71,
+  {id:"p9", title:"Development Programmes Intern", orgId:"o9", courses:["Business","Economics","Public Health"], grade:"Second Class Lower",
+   country:"Uganda", region:"East Africa", loc:"Kampala, on-site", mode:"On-site", duration:"4 months",
+   stipendLocal:"UGX 750,000 / month", usd:200, currency:"UGX", visa:"right-to-work", deadline:"30 Mar 2026", slots:7, status:"Open", applicants:71,
    docs:["Transcript","National ID","Recommendation letter"], testimonial:true,
    about:"Support field programme delivery and monitoring across three districts.",
    duties:["Support monitoring visits","Maintain programme records","Draft field notes"]},
-  {id:"p10", title:"HCI Research Assistant", orgId:"o10", courses:["Computer Science","Design","Statistics"], grade:"CGPA 3.6+", loc:"Kampala", mode:"On-site",
-   duration:"10 weeks", stipend:"UGX 700,000 / month", deadline:"15 Mar 2026", slots:2, status:"Open", applicants:18,
+  {id:"p10", title:"HCI Research Assistant", orgId:"o10", courses:["Computer Science","Design","Statistics"], grade:"CGPA 3.6+",
+   country:"Uganda", region:"East Africa", loc:"Kampala, on-site", mode:"On-site", duration:"10 weeks",
+   stipendLocal:"UGX 700,000 / month", usd:187, currency:"UGX", visa:"right-to-work", deadline:"15 Mar 2026", slots:2, status:"Open", applicants:18,
    docs:["Transcript","Recommendation letter","Writing sample"], testimonial:true,
    about:"Join a research group studying public-interest technology in Kampala.",
    duties:["Run interview studies","Code and synthesise transcripts","Co-author a short paper"]},
-  {id:"p11", title:"Brand Design Intern", orgId:"o4", courses:["Design","Mass Communication"], grade:"CGPA 3.0+", loc:"Remote", mode:"Remote",
-   duration:"8 weeks", stipend:"$1,200 / month", deadline:"20 Apr 2026", slots:2, status:"Open", applicants:26,
+  {id:"p11", title:"Brand Design Intern", orgId:"o4", courses:["Design","Mass Communication"], grade:"CGPA 3.0+",
+   country:"Global", region:"Remote", loc:"Remote, worldwide", mode:"Remote", duration:"8 weeks",
+   stipendLocal:"$1,200 / month", usd:1200, currency:"USD", visa:"remote", deadline:"20 Apr 2026", slots:2, status:"Open", applicants:26,
    docs:["Portfolio","CV"], testimonial:false,
-   about:"Identity and campaign design for a studio launch.",
+   about:"Identity and campaign design for a studio launch, delivered remotely across three time zones.",
    duties:["Build identity variants","Produce campaign assets","Document the system"]},
-  {id:"p12", title:"Monitoring & Evaluation Intern", orgId:"o2", courses:["Statistics","Economics","Business"], grade:"Second Class Upper", loc:"Kampala", mode:"On-site",
-   duration:"5 months", stipend:"UGX 950,000 / month", deadline:"08 Apr 2026", slots:4, status:"Open", applicants:39,
-   docs:["Transcript","Student ID","Writing sample"], testimonial:true,
-   about:"Track outcomes across national digital skills programmes.",
-   duties:["Maintain indicator frameworks","Run quarterly reviews","Produce analysis notes"]}
+  {id:"p12", title:"Risk Analyst Intern", orgId:"o11", courses:["Economics","Statistics","Business"], grade:"Second Class Upper",
+   country:"United Kingdom", region:"Europe", loc:"London, on-site", mode:"On-site", duration:"3 months",
+   stipendLocal:"£2,100 / month", usd:2660, currency:"GBP", visa:"sponsorship", deadline:"05 Mar 2026", slots:2, status:"Open", applicants:96,
+   docs:["Transcript","CV","Right-to-work evidence"], testimonial:false,
+   about:"Risk modelling for a mid-sized bank, working alongside the credit analytics team.",
+   duties:["Build and validate models","Prepare risk summaries","Support audit requests"]},
+  {id:"p13", title:"Product Intern", orgId:"o12", courses:["Business","Computer Science","Design"], grade:"CGPA 3.0+",
+   country:"Global", region:"Remote", loc:"Remote, worldwide", mode:"Remote", duration:"10 weeks",
+   stipendLocal:"$2,000 / month", usd:2000, currency:"USD", visa:"remote", deadline:"15 Apr 2026", slots:3, status:"Open", applicants:58,
+   docs:["CV","Portfolio","Writing sample"], testimonial:true,
+   about:"Work with a distributed product team on onboarding and activation experiments.",
+   duties:["Run activation experiments","Write specs for small features","Analyse funnel data"]},
+  {id:"p14", title:"Research Assistant", orgId:"o13", courses:["Public Health","Statistics","Research"], grade:"CGPA 3.4+",
+   country:"Global", region:"Remote", loc:"Remote, worldwide", mode:"Remote", duration:"10 weeks",
+   stipendLocal:"$1,600 / month", usd:1600, currency:"USD", visa:"remote", deadline:"11 Apr 2026", slots:2, status:"Open", applicants:22,
+   docs:["CV","Writing sample","Recommendation letter"], testimonial:true,
+   about:"Qualitative research on remote work and public health services.",
+   duties:["Run interview studies","Synthesise transcripts","Co-author findings"]}
 ];
+
+const GRADE_EQ = {
+  "CGPA 3.6+":"UK First · ECTS A · US 3.6",
+  "CGPA 3.4+":"UK 2:1 high · ECTS B+ · US 3.4",
+  "CGPA 3.0+":"UK 2:1 · ECTS B · US 3.0",
+  "Second Class Upper":"US GPA 3.3 · ECTS B",
+  "Second Class Lower":"US GPA 2.7 · ECTS C"
+};
+const VISA = {
+  sponsorship:"Visa sponsorship",
+  "right-to-work":"Right to work required",
+  remote:"Remote, worldwide"
+};
 
 const GRAD_ROLES = [
   {id:"g1", title:"Junior Product Designer", org:"Lumen Labs", loc:"Remote", pay:"$34,000 / yr", type:"Full time", closes:"18 Mar"},
@@ -128,7 +171,22 @@ const ACTIVITY = [
   ["Amina Nakato", "submitted application", "2 days ago"]
 ];
 
-const state = {route:"home", type:"All", sector:"All", course:"All", q:"", role:null, dash:"overview", pid:null, modal:null};
+const state = {route:"home", type:"All", sector:"All", course:"All", region:"All", visa:"All", q:"", role:null, dash:"overview", pid:null, modal:null, currency:"local"};
+
+const FX = {USD:1, EUR:0.92, GBP:0.79};
+const SYM = {USD:"$", EUR:"€", GBP:"£"};
+function money(p){
+  if(state.currency === "local") return p.stipendLocal;
+  return SYM[state.currency] + Math.round(p.usd * FX[state.currency]).toLocaleString("en-US");
+}
+function moneyNote(p){
+  return state.currency === "local" ? "≈ $" + p.usd.toLocaleString("en-US") : "≈ " + p.stipendLocal;
+}
+function visaTag(p){
+  const cls = p.visa==="sponsorship" ? "blue" : p.visa==="remote" ? "green" : "";
+  return `<span class="tg ${cls}">${VISA[p.visa]}</span>`;
+}
+function setCurrency(v){ state.currency = v; go(state.route); }
 
 /* ---------------- helpers ---------------- */
 const $ = (s)=>document.querySelector(s);
@@ -265,8 +323,8 @@ function viewHome(){
     </div>
     <div class="wrap">
       <div class="trust">
-        <span>Makerere University</span><span>University of Nairobi</span><span>Kyambogo</span>
-        <span>Addis Ababa University</span><span>Ashesi</span><span>University of Dar es Salaam</span>
+        <span>Makerere</span><span>Nairobi</span><span>TU Berlin</span>
+        <span>Amsterdam</span><span>Ashesi</span><span>Addis Ababa</span>
       </div>
       <div class="freebar">
         <div><b>Free for students</b><span>Applications, pack and verified documents — forever.</span></div>
@@ -380,7 +438,7 @@ function viewHome(){
         <p>Every row shows the organisation type, the eligible courses and the closing date. Nothing is hidden behind a sign-up.</p>
       </div>
       <table class="ptable">
-        <thead><tr><th>Placement</th><th>Organisation</th><th>Type</th><th>Courses</th><th>Closes</th><th></th></tr></thead>
+        <thead><tr><th>Placement</th><th>Organisation</th><th>Type</th><th>Stipend</th><th>Closes</th><th></th></tr></thead>
         <tbody>${latest}</tbody>
       </table>
       <div style="display:flex;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:10px">
@@ -439,8 +497,10 @@ function refreshList(){
     const t = state.type === "All" || o.type === state.type;
     const s = state.sector === "All" || o.sector === state.sector;
     const c = state.course === "All" || p.courses.includes(state.course);
-    const q = !state.q || (p.title+" "+o.name).toLowerCase().includes(state.q.toLowerCase());
-    return t && s && c && q;
+    const rg = state.region === "All" || p.region === state.region;
+    const vs = state.visa === "All" || p.visa === state.visa;
+    const q = !state.q || (p.title+" "+o.name+" "+p.country).toLowerCase().includes(state.q.toLowerCase());
+    return t && s && c && rg && vs && q;
   });
   const tb = $("#plistBody");
   if(tb) tb.innerHTML = list.map(placementRow).join("") || `<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted)">No placements match these filters.</td></tr>`;
@@ -451,10 +511,10 @@ function placementRow(p){
   const o = org(p.orgId);
   return `
   <tr onclick="openPlacement('${p.id}')">
-    <td class="r"><b>${esc(p.title)}</b><span>${p.slots} slots · ${p.duration}</span></td>
-    <td>${esc(o.name)}</td>
+    <td class="r"><b>${esc(p.title)}</b><span>${p.duration} · ${VISA[p.visa]}</span></td>
+    <td>${esc(o.name)}<div style="font-size:10.5px;color:var(--muted);margin-top:1px">${esc(p.country)}</div></td>
     <td class="type">${o.type}</td>
-    <td style="font-size:11.5px;color:var(--ink-2)">${p.courses.slice(0,2).join(", ")}${p.courses.length>2?" +":""}</td>
+    <td style="font-size:11.5px;color:var(--ink-2);white-space:nowrap">${money(p)}<div style="font-size:10px;color:var(--muted);margin-top:1px">${moneyNote(p)}</div></td>
     <td class="dead">${esc(p.deadline)}</td>
     <td style="text-align:right" class="arr">${ic("arrow",13)}</td>
   </tr>`;
@@ -467,8 +527,10 @@ function viewPlacements(){
     const t = state.type === "All" || o.type === state.type;
     const s = state.sector === "All" || o.sector === state.sector;
     const c = state.course === "All" || p.courses.includes(state.course);
-    const q = !state.q || (p.title+" "+o.name).toLowerCase().includes(state.q.toLowerCase());
-    return t && s && c && q;
+    const rg = state.region === "All" || p.region === state.region;
+    const vs = state.visa === "All" || p.visa === state.visa;
+    const q = !state.q || (p.title+" "+o.name+" "+p.country).toLowerCase().includes(state.q.toLowerCase());
+    return t && s && c && rg && vs && q;
   });
   return `
   <div class="phead">
@@ -495,17 +557,27 @@ function viewPlacements(){
           ${["All",...COURSES].map(c=>`<option ${state.course===c?"selected":""}>${c==="All"?"Any course":c}</option>`).join("")}
         </select>
       </div>
+      <div class="fld"><label class="lbl">Region</label>
+        <select onchange="state.region=this.value;go('placements')">
+          ${["All","East Africa","Europe","Remote"].map(r=>`<option ${state.region===r?"selected":""}>${r==="All"?"All regions":r}</option>`).join("")}
+        </select>
+      </div>
+      <div class="fld"><label class="lbl">Work authorisation</label>
+        <select onchange="state.visa=this.value;go('placements')">
+          ${["All","sponsorship","right-to-work","remote"].map(v=>`<option value="${v}" ${state.visa===v?"selected":""}>${v==="All"?"Any":VISA[v]}</option>`).join("")}
+        </select>
+      </div>
       <div class="fld" style="min-width:200px"><label class="lbl">Search</label>
         <input id="pq" placeholder="Role or organisation" value="${esc(state.q)}" oninput="state.q=this.value;refreshList()">
       </div>
       <div class="spacer"></div>
-      <button class="btn btn-sm" onclick="state.type='All';state.sector='All';state.course='All';state.q='';go('placements')">Reset</button>
+      <button class="btn btn-sm" onclick="state.type='All';state.sector='All';state.course='All';state.region='All';state.visa='All';state.q='';go('placements')">Reset</button>
     </div>
 
     <div class="dgrid" style="padding-top:0">
       <div>
         <table class="ptable">
-          <thead><tr><th>Placement</th><th>Organisation</th><th>Type</th><th>Courses</th><th>Closes</th><th></th></tr></thead>
+          <thead><tr><th>Placement</th><th>Organisation</th><th>Type</th><th>Stipend</th><th>Closes</th><th></th></tr></thead>
           <tbody id="plistBody">${list.map(placementRow).join("") || `<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted)">No placements match these filters.</td></tr>`}</tbody>
         </table>
       </div>
@@ -546,7 +618,7 @@ function viewPlacement(id){
       <div class="crumb"><a href="#" onclick="go('home');return false" class="lbl">Home</a><span class="lbl">/</span>
         <a href="#" onclick="go('placements');return false" class="lbl">Placements</a><span class="lbl">/</span><span class="lbl ink">${esc(o.type)}</span></div>
       <h1>${esc(p.title)}</h1>
-      <p>${esc(o.name)} · ${esc(p.loc)} · ${esc(p.duration)} · closes ${esc(p.deadline)}</p>
+      <p>${esc(o.name)} · ${esc(p.loc)} · ${esc(p.country)} · ${esc(p.duration)} · closes ${esc(p.deadline)}</p>
     </div>
   </div>
   <div class="wrap">
@@ -571,9 +643,10 @@ function viewPlacement(id){
           <h3>Requirements</h3>
           <div style="border:1px solid var(--rule)">
             <div class="reqrow" style="padding:11px 12px"><div class="k">Courses</div><div class="doclist">${p.courses.map(c=>`<span class="doc">${c}</span>`).join("")}</div></div>
-            <div class="reqrow" style="padding:11px 12px"><div class="k">Minimum grade</div><div><b>${esc(p.grade)}</b></div></div>
+            <div class="reqrow" style="padding:11px 12px"><div class="k">Minimum grade</div><div><b>${esc(p.grade)}</b><div style="font-size:10.5px;color:var(--muted);margin-top:2px">${GRADE_EQ[p.grade]||""}</div></div></div>
             <div class="reqrow" style="padding:11px 12px"><div class="k">Documents</div><div class="doclist">${p.docs.map(d=>`<span class="doc">${ic("doc",10)} ${d}</span>`).join("")}</div></div>
-            <div class="reqrow" style="padding:11px 12px;border-bottom:0"><div class="k">Testimonial</div><div>${p.testimonial?"Required from a previous supervisor":"Not required"}</div></div>
+            <div class="reqrow" style="padding:11px 12px"><div class="k">Testimonial</div><div>${p.testimonial?"Required from a previous supervisor":"Not required"}</div></div>
+            <div class="reqrow" style="padding:11px 12px;border-bottom:0"><div class="k">Work authorisation</div><div>${visaTag(p)} <span style="font-size:10.5px;color:var(--muted);margin-left:6px">${p.visa==="sponsorship"?"the employer sponsors the visa":p.visa==="remote"?"no relocation required":"you must already hold the right to work"}</span></div></div>
           </div>
 
           <h3>Testimonials from past placements</h3>
@@ -592,12 +665,13 @@ function viewPlacement(id){
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <span class="lbl">Placement</span><span class="tg ${p.status==="Open"?"green":"gold"}">${p.status}</span>
           </div>
-          <div class="serif" style="font-size:28px;line-height:1.1">${esc(p.stipend)}</div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(p.duration)} · ${esc(p.mode)}</div>
+          <div class="serif" style="font-size:28px;line-height:1.1">${money(p)}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${moneyNote(p)} · ${esc(p.duration)} · ${esc(p.mode)}</div>
           <div style="margin:14px 0 12px;border-top:1px dashed var(--rule-2)"></div>
           <div style="display:grid;gap:7px;font-size:12px">
             <div style="display:flex;justify-content:space-between"><span class="muted">Slots</span><b>${p.slots}</b></div>
             <div style="display:flex;justify-content:space-between"><span class="muted">Applicants</span><b>${p.applicants}</b></div>
+            <div style="display:flex;justify-content:space-between"><span class="muted">Country</span><b>${esc(p.country)}</b></div>
             <div style="display:flex;justify-content:space-between"><span class="muted">Closes</span><b>${esc(p.deadline)}</b></div>
             <div style="display:flex;justify-content:space-between"><span class="muted">Your grade</span><b>${STUDENT.cgpa} · ${esc(STUDENT.course)}</b></div>
           </div>
@@ -837,12 +911,34 @@ function viewAbout(){
     </div>
   </section>
 
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-h">
+        <div><span class="lbl">03 — Global standards</span><h2 style="margin-top:12px">One record, four<br>academic systems.</h2></div>
+        <p>A grade means something different in Kampala, Berlin and London. INTERN keeps the local requirement and publishes the equivalence beside it, so an employer in Amsterdam can read a Makerere transcript without a conversion table.</p>
+      </div>
+      <div class="plan-table">
+        <div class="pt-row head"><div>Requirement band</div><div>United Kingdom</div><div>Europe (ECTS)</div><div>United States</div></div>
+        <div class="pt-row"><div><b style="font-weight:600">CGPA 3.6+</b></div><div>First</div><div>A</div><div>3.6 and above</div></div>
+        <div class="pt-row"><div><b style="font-weight:600">CGPA 3.4+</b></div><div>2:1 high</div><div>B+</div><div>3.4</div></div>
+        <div class="pt-row"><div><b style="font-weight:600">CGPA 3.0+</b></div><div>2:1</div><div>B</div><div>3.0</div></div>
+        <div class="pt-row"><div><b style="font-weight:600">Second Class Upper</b></div><div>2:1</div><div>B</div><div>3.3</div></div>
+        <div class="pt-row"><div><b style="font-weight:600">Second Class Lower</b></div><div>2:2</div><div>C</div><div>2.7</div></div>
+      </div>
+      <div class="offers" style="margin-top:22px">
+        <div class="offer"><b>Work authorisation</b><p>Every placement states one of three: visa sponsorship, right to work required, or remote worldwide. Filter by it before applying.</p></div>
+        <div class="offer"><b>Data protection</b><p>GDPR for EU placements; Uganda DPA 2019, Kenya DPA 2019 and Tanzania PDPA 2022 elsewhere. Data residency on Campus and Consortium plans.</p></div>
+        <div class="offer"><b>Accessibility</b><p>Built to WCAG 2.2 AA — 4.5:1 contrast, full keyboard paths, visible focus and reduced-motion support.</p></div>
+      </div>
+    </div>
+  </section>
+
   <section class="band-dark">
     <div class="wrap band-grid">
       <div>
-        <span class="lbl">03 — The office</span>
+        <span class="lbl">04 — The office</span>
         <h2 style="margin-top:12px">Small team.<br>One <em>record</em>.</h2>
-        <p>We are a placement-software team working with universities in Uganda, Kenya, Tanzania and Ethiopia. We do not sell candidate data and we do not rank students for employers beyond the published criteria.</p>
+        <p>We are a placement-software team working with universities, employers and agencies in 41 countries, with offices in Kampala, Nairobi and Berlin. We do not sell candidate data and we do not rank students for employers beyond the published criteria.</p>
         <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
           <button class="btn" style="border-color:#4A5D77;color:#EDEAE0" onclick="go('contact')">Contact the office</button>
           <button class="btn" style="border-color:transparent;color:#9DBBB2" onclick="go('universities')">For universities</button>
@@ -1175,7 +1271,7 @@ function adminPlacements(){
           ${PLACEMENTS.slice(0,9).map(p=>{const o=org(p.orgId);return `
             <tr>
               <td class="who"><b>${p.title}</b><span>${p.slots} slots · ${p.duration}</span></td>
-              <td>${o.name}</td>
+              <td>${o.name}<div style="font-size:10px;color:var(--muted)">${p.country}</div></td>
               <td><span class="tg ${o.type==="Government"?"blue":o.type==="NGO"?"green":o.type==="University"?"gold":""}">${o.type}</span></td>
               <td class="hide-xs" style="font-size:11px;color:var(--ink-2)">${p.courses.length} courses</td>
               <td class="num">${p.grade}</td>
@@ -1327,8 +1423,8 @@ function studentPlacements(){
       <tbody>
         ${PLACEMENTS.map(p=>{const o=org(p.orgId);const ok=eligible(p);return `
           <tr>
-            <td class="who"><b>${p.title}</b><span>${p.duration} · ${p.stipend}</span></td>
-            <td>${o.name}</td>
+            <td class="who"><b>${p.title}</b><span>${p.duration} · ${money(p)}</span></td>
+            <td>${o.name}<div style="font-size:10px;color:var(--muted)">${p.country}</div></td>
             <td class="hide-xs"><span class="tg ${o.type==="Government"?"blue":o.type==="NGO"?"green":o.type==="University"?"gold":""}">${o.type}</span></td>
             <td class="num">${p.grade}</td>
             <td class="num">${p.deadline}</td>

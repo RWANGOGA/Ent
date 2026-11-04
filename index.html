@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INTERN — university placement system</title>
+<meta name="description" content="INTERN is the placement office in software. Universities list internships from companies, government agencies and NGOs, with stated requirements, document upload and verification.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12.5l5 5L20 6.5" stroke-linecap="square"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12h15M14 6l6 6-6 6" stroke-linecap="square"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.7-4.7" stroke-linecap="square"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 17v3h16v-3"/></symbol>
+  <symbol id="i-bldg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 21V6l8-3v18"/><path d="M12 10h8v11"/><path d="M7 9h2M7 13h2M7 17h2M16 14h1M16 17h1"/></symbol>
+  <symbol id="i-gov" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M9 10v9M15 10v9M19 10v9M3 21h18"/></symbol>
+  <symbol id="i-uni" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 12v6c0 1.5 3 3 6 3s6-1.5 6-3v-6"/></symbol>
+  <symbol id="i-brief" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="18" height="13"/><path d="M9 7V4h6v3"/><path d="M3 12h18"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 16V10a6 6 0 0112 0v6l2 2H4z"/><path d="M10 20h4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></symbol>
+</defs></svg>
+
+<!-- ================= PUBLIC SITE ================= -->
+<div id="site">
+
+  <div class="util">
+    <div class="wrap">
+      <span>Placement office in software · 41 universities · 620 employers and agencies</span>
+      <div class="u-r">
+        <a href="#" onclick="go('contact');return false">Contact the office</a>
+        <a href="#" onclick="go('signin');return false">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="hdr">
+    <div class="wrap">
+      <a href="#" class="logo" onclick="go('home');return false">
+        <i></i><span><b>INTERN</b><small>PLACEMENT SYSTEM</small></span>
+      </a>
+
+      <ul class="nav">
+        <li>
+          <button aria-haspopup="true">Placements <span class="caret"></span></button>
+          <div class="menu">
+            <div class="m-h lbl">Browse the index</div>
+            <a href="#" onclick="go('placements');return false">All placements</a>
+            <a href="#" onclick="setType('Companies');go('placements');return false">Companies</a>
+            <a href="#" onclick="setType('Government');go('placements');return false">Government agencies</a>
+            <a href="#" onclick="setType('NGO');go('placements');return false">NGOs and foundations</a>
+            <a href="#" onclick="setType('University');go('placements');return false">University departments</a>
+          </div>
+        </li>
+        <li>
+          <button aria-haspopup="true">Universities <span class="caret"></span></button>
+          <div class="menu">
+            <div class="m-h lbl">For the placement office</div>
+            <a href="#" onclick="go('universities');return false">Why INTERN</a>
+            <a href="#" onclick="go('universities');return false">List a placement</a>
+            <a href="#" onclick="go('universities');return false">Requirements &amp; verification</a>
+            <a href="#" onclick="go('signin');return false">Open dashboard</a>
+          </div>
+        </li>
+        <li>
+          <button aria-haspopup="true">Employers <span class="caret"></span></button>
+          <div class="menu">
+            <div class="m-h lbl">For host organisations</div>
+            <a href="#" onclick="go('employers');return false">Post a placement</a>
+            <a href="#" onclick="go('employers');return false">How candidates arrive</a>
+            <a href="#" onclick="go('signin');return false">Employer sign in</a>
+          </div>
+        </li>
+        <li><a href="#" onclick="go('plans');return false">Plans</a></li>
+        <li><a href="#" onclick="go('about');return false">About</a></li>
+        <li><a href="#" onclick="go('contact');return false">Contact</a></li>
+      </ul>
+
+      <div class="hdr-actions">
+        <a href="#" class="btn btn-sm btn-ghost" onclick="go('signin');return false">Sign in</a>
+        <a href="#" class="btn btn-sm btn-blue" onclick="go('signin');return false">List a placement</a>
+        <button class="burger" onclick="openMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="siteMain"></main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="fgrid">
+        <div>
+          <div class="logo" style="margin-bottom:12px"><i></i><span><b>INTERN</b><small>PLACEMENT SYSTEM</small></span></div>
+          <p>Placements from companies, government agencies and NGOs — listed by universities, with requirements stated before anyone applies.</p>
+        </div>
+        <div>
+          <h5>Students</h5>
+          <a href="#" onclick="go('placements');return false">Browse placements</a>
+          <a href="#" onclick="go('signin');return false">Student sign in</a>
+          <a href="#" onclick="go('signin');return false">Job seeker sign in</a>
+        </div>
+        <div>
+          <h5>Universities</h5>
+          <a href="#" onclick="go('universities');return false">List a placement</a>
+          <a href="#" onclick="go('universities');return false">Verification</a>
+          <a href="#" onclick="go('contact');return false">Request a demo</a>
+        </div>
+        <div>
+          <h5>Office</h5>
+          <a href="#" onclick="go('about');return false">About INTERN</a>
+          <a href="#" onclick="go('contact');return false">Contact</a>
+          <a href="#">Privacy</a>
+          <a href="#">Accessibility</a>
+        </div>
+      </div>
+      <div class="fbase">
+        <span>© 2026 INTERN. Kampala · Nairobi · Berlin.</span>
+        <span>Requirements and eligibility are set by each university.</span>
+        <a href="#" onclick="window.scrollTo({top:0});return false">Back to top ↑</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- mobile menu -->
+<div class="mmenu" id="mmenu">
+  <div class="m-top">
+    <div class="logo"><i></i><span><b>INTERN</b><small>PLACEMENT SYSTEM</small></span></div>
+    <button onclick="closeMenu()" aria-label="Close"><svg class="ic" width="18" height="18"><use href="#i-x"/></svg></button>
+  </div>
+  <details open>
+    <summary>Placements</summary>
+    <a href="#" onclick="closeMenu();go('placements')">All placements</a>
+    <a href="#" onclick="closeMenu();setType('Companies');go('placements')">Companies</a>
+    <a href="#" onclick="closeMenu();setType('Government');go('placements')">Government agencies</a>
+    <a href="#" onclick="closeMenu();setType('NGO');go('placements')">NGOs and foundations</a>
+  </details>
+  <details>
+    <summary>Universities</summary>
+    <a href="#" onclick="closeMenu();go('universities')">Why INTERN</a>
+    <a href="#" onclick="closeMenu();go('universities')">Requirements</a>
+    <a href="#" onclick="closeMenu();go('signin')">Dashboard</a>
+  </details>
+  <details>
+    <summary>Employers</summary>
+    <a href="#" onclick="closeMenu();go('employers')">Post a placement</a>
+    <a href="#" onclick="closeMenu();go('signin')">Employer sign in</a>
+  </details>
+  <a href="#" style="display:block;padding:15px 0;border-bottom:1px solid var(--rule);font-size:17px;font-family:var(--serif)" onclick="closeMenu();go('plans')">Plans</a>
+  <a href="#" style="display:block;padding:15px 0;border-bottom:1px solid var(--rule);font-size:17px;font-family:var(--serif)" onclick="closeMenu();go('about')">About</a>
+  <a href="#" style="display:block;padding:15px 0;border-bottom:1px solid var(--rule);font-size:17px;font-family:var(--serif)" onclick="closeMenu();go('contact')">Contact</a>
+  <div class="m-cta">
+    <button class="btn btn-block" onclick="closeMenu();go('signin')">Sign in</button>
+    <button class="btn btn-blue btn-block" onclick="closeMenu();go('placements')">Browse placements</button>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="app">
+  <aside class="side" id="side"></aside>
+  <div class="main">
+    <div class="dash-top">
+      <div class="left">
+        <button class="iconbtn side-toggle" onclick="openSide()" aria-label="Menu"><svg class="ic" width="15" height="15"><use href="#i-menu"/></svg></button>
+        <a href="#" onclick="go('home');return false" class="iconbtn" title="Back to site"><svg class="ic" width="14" height="14"><use href="#i-home"/></svg></a>
+        <div class="sep"></div>
+        <h1 id="dashTitle">Overview</h1>
+        <span class="crumbs" id="dashCrumb"></span>
+      </div>
+      <div class="dash-actions">
+        <button class="iconbtn" onclick="toast('No new notifications')" aria-label="Notifications"><svg class="ic" width="14" height="14"><use href="#i-bell"/></svg></button>
+        <div class="me">
+          <span class="av" id="meAv">AK</span>
+          <div><b id="meName">Amina Nakato</b><span id="meRole">Student</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="dpane" id="dashMain"></div>
+  </div>
+</div>
+
+<div class="sidedrawer" id="sideDrawer"></div>
+<div class="drawer-veil" id="veil" onclick="closeSide()"></div>
+
+
+<button class="chat-fab" onclick="openChat()"><span class="dot"></span> Ask INTERN</button>
+<div class="drawer-veil" id="chatVeil" onclick="closeChat()"></div>
+<aside class="chat" id="chat">
+  <div class="chat-h">
+    <div><b>INTERN assistant</b><div class="st"><i></i> knows placements, requirements and your record</div></div>
+    <button onclick="closeChat()" aria-label="Close"><svg class="ic" width="16" height="16"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="chat-b" id="chatLog">
+    <div class="msg bot"><div class="who">INTERN</div>I can check whether you qualify for a placement, list the documents you still need, or explain how verification works. You are signed in as a Design student with a 3.7 CGPA.</div>
+  </div>
+  <div class="chat-q">
+    <button onclick="askChat('Am I eligible for the Data Analyst Intern?')">Am I eligible?</button>
+    <button onclick="askChat('What documents do I still need?')">What do I need to upload?</button>
+    <button onclick="askChat('Which government placements are open?')">Government placements</button>
+    <button onclick="askChat('How does verification work?')">How verification works</button>
+  </div>
+  <div class="chat-in">
+    <input id="chatText" placeholder="Ask about a placement, a requirement or your file" onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()" aria-label="Send"><svg class="ic" width="15" height="15"><use href="#i-arrow"/></svg></button>
+  </div>
+</aside>
+
+<div class="modal" id="modal">
+  <div class="mcard">
+    <div class="mh"><h3 id="modalTitle">Title</h3><button onclick="closeModal()" aria-label="Close"><svg class="ic" width="16" height="16"><use href="#i-x"/></svg></button></div>
+    <div class="mb" id="modalBody"></div>
+    <div class="mf"><button class="btn btn-sm" onclick="closeModal()">Cancel</button><button class="btn btn-sm btn-blue" id="modalOk" onclick="modalConfirm()">Save</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

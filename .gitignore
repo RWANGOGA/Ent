@@ -1,0 +1,13 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Editors / OS
+.DS_Store
+*.swp
+
+# Local env
+.env*.local

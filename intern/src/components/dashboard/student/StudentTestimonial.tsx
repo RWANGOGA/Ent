@@ -1,0 +1,117 @@
+"use client";
+
+import React, { useState } from "react";
+import { useApp } from "../../../context/AppContext";
+import { Icon } from "../../icons/Icons";
+
+export function StudentTestimonial() {
+  const { toast } = useApp();
+  const [supervisor, setSupervisor] = useState("");
+  const [role, setRole] = useState("");
+  const [project, setProject] = useState("");
+  const [testimonial, setTestimonial] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast("Testimonial submitted for verification");
+    setSupervisor("");
+    setRole("");
+    setProject("");
+    setTestimonial("");
+  };
+
+  return (
+    <>
+      <div className="dpane-h">
+        <div>
+          <h2>Testimonial</h2>
+          <p>Required by 9 of your 12 eligible placements</p>
+        </div>
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.4fr 1fr",
+          gap: "14px",
+        }}
+        className="reqgrid"
+      >
+        <div className="panel">
+          <div className="ph">
+            <span className="lbl">Submit a testimonial</span>
+          </div>
+          <div className="pb">
+            <form className="form" onSubmit={handleSubmit}>
+              <div className="row2">
+                <div className="field">
+                  <label>Supervisor name</label>
+                  <input
+                    placeholder="Dr. Sarah Nabukeera"
+                    value={supervisor}
+                    onChange={(e) => setSupervisor(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label>Role</label>
+                  <input
+                    placeholder="Senior lecturer"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label>Placement or project</label>
+                <input
+                  placeholder="Kite Campus design system"
+                  value={project}
+                  onChange={(e) => setProject(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label>Testimonial</label>
+                <textarea
+                  placeholder="Describe the work and how it was supervised."
+                  value={testimonial}
+                  onChange={(e) => setTestimonial(e.target.value)}
+                ></textarea>
+              </div>
+              <div>
+                <button className="btn btn-sm btn-blue" type="submit">
+                  Submit for verification
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div className="panel">
+          <div className="ph">
+            <span className="lbl">Status</span>
+          </div>
+          <div className="pb">
+            <div className="check">
+              <div className="ci todo">
+                <span className="box"></span>
+                <div className="t">
+                  <b>Not submitted</b>
+                  <span>Needed for Ministry of ICT</span>
+                </div>
+                <span className="st">Action</span>
+              </div>
+              <div className="ci done">
+                <span className="box">
+                  <Icon name="check" size={9} />
+                </span>
+                <div className="t">
+                  <b>Transcript verified</b>
+                  <span>12 Feb 2026</span>
+                </div>
+                <span className="st">Met</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

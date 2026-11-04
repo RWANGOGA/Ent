@@ -1,0 +1,104 @@
+import React from "react";
+
+export type IconName =
+  | "doc"
+  | "check"
+  | "arrow"
+  | "search"
+  | "upload"
+  | "bldg"
+  | "gov"
+  | "uni"
+  | "brief"
+  | "user"
+  | "clock"
+  | "bell"
+  | "x"
+  | "plus"
+  | "menu"
+  | "home";
+
+export function SvgDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
+      <defs>
+        <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M6 3h8l4 4v14H6z" />
+          <path d="M14 3v4h4" />
+          <path d="M9 12h6M9 16h6" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M4 12.5l5 5L20 6.5" strokeLinecap="square" />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M4 12h15M14 6l6 6-6 6" strokeLinecap="square" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M20 20l-4.7-4.7" strokeLinecap="square" />
+        </symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M12 16V4M7 9l5-5 5 5" />
+          <path d="M4 17v3h16v-3" />
+        </symbol>
+        <symbol id="i-bldg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M4 21V6l8-3v18" />
+          <path d="M12 10h8v11" />
+          <path d="M7 9h2M7 13h2M7 17h2M16 14h1M16 17h1" />
+        </symbol>
+        <symbol id="i-gov" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M3 10l9-6 9 6" />
+          <path d="M5 10v9M9 10v9M15 10v9M19 10v9M3 21h18" />
+        </symbol>
+        <symbol id="i-uni" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M2 9l10-5 10 5-10 5z" />
+          <path d="M6 12v6c0 1.5 3 3 6 3s6-1.5 6-3v-6" />
+        </symbol>
+        <symbol id="i-brief" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <rect x="3" y="7" width="18" height="13" />
+          <path d="M9 7V4h6v3" />
+          <path d="M3 12h18" />
+        </symbol>
+        <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5" />
+        </symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 7v5l3 2" />
+        </symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M6 16V10a6 6 0 0112 0v6l2 2H4z" />
+          <path d="M10 20h4" />
+        </symbol>
+        <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 6h18M3 12h18M3 18h18" />
+        </symbol>
+        <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M3 11l9-7 9 7" />
+          <path d="M5 10v10h14V10" />
+        </symbol>
+      </defs>
+    </svg>
+  );
+}
+
+interface IconProps {
+  name: IconName;
+  size?: number;
+  className?: string;
+}
+
+export function Icon({ name, size = 14, className = "ic" }: IconProps) {
+  return (
+    <svg className={className} width={size} height={size} aria-hidden="true">
+      <use href={`#i-${name}`} />
+    </svg>
+  );
+}

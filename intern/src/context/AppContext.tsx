@@ -249,6 +249,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else if (raw === "ask") {
       setRoute("home");
       setTimeout(() => setIsChatOpen(true), 300);
+    } else if (raw === "top") {
+      // In-page fragment used by the footer "Back to top" link. It is not a
+      // route: without this guard an unknown hash falls through to the
+      // public-site switch and silently sends the visitor to Home.
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setRoute(raw);
     }

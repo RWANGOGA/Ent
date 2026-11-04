@@ -11,6 +11,7 @@
   --ink:#0E1114;
   --ink-2:#333A41;
   --muted:#6C7075;
+  --muted-strong:#5C6065; /* AA-safe on --paper-2: 5.08:1, where --muted is only 4.00:1 */
   --faint:#989B9E;
   --rule:#D9D4C5;
   --rule-2:#BFB9A6;
@@ -272,12 +273,12 @@ svg{display:block}
 
 /* footer */
 .foot{background:var(--paper-2);border-top:1px solid var(--ink);padding:46px 0 22px}
-.fgrid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px}
-.foot h5{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:500}
-.foot a{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
-.foot a:hover{color:var(--blue)}
-.foot p{font-size:12px;color:var(--muted);max-width:250px;line-height:1.7}
-.fbase{display:flex;justify-content:space-between;gap:18px;margin-top:34px;padding-top:14px;border-top:1px solid var(--rule-2);font-size:10.5px;color:var(--muted);flex-wrap:wrap}
+.fgrid{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:28px}
+.foot h5{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-strong);margin-bottom:12px;font-weight:500}
+.foot nav a{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.foot nav a:hover{color:var(--blue)}
+.foot p{font-size:12px;color:var(--muted-strong);max-width:250px;line-height:1.7}
+.fbase{display:flex;justify-content:space-between;gap:18px;margin-top:34px;padding-top:14px;border-top:1px solid var(--rule-2);font-size:10.5px;color:var(--muted-strong);flex-wrap:wrap}
 
 /* ---------------- page header (inner pages) ---------------- */
 .phead{border-bottom:1px solid var(--ink);padding:34px 0 26px;background:var(--white)}

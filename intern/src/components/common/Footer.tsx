@@ -1,124 +1,122 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
+import { UserRole } from "../../types";
+
+type FooterLink =
+  | { label: string; route: string }
+  | { label: string; role: UserRole };
+
+const COLUMNS: { heading: string; links: FooterLink[] }[] = [
+  {
+    heading: "Students",
+    links: [
+      { label: "Browse placements", route: "placements" },
+      { label: "Student sign in", role: "student" },
+      { label: "Job seeker sign in", role: "jobseeker" },
+    ],
+  },
+  {
+    heading: "Universities",
+    links: [
+      { label: "List a placement", route: "universities" },
+      { label: "How verification works", route: "about" },
+      { label: "Admin sign in", role: "admin" },
+    ],
+  },
+  {
+    heading: "Employers",
+    links: [
+      { label: "Post a placement", route: "employers" },
+      { label: "Plans and pricing", route: "plans" },
+      { label: "Employer sign in", role: "employer" },
+    ],
+  },
+  {
+    heading: "Office",
+    links: [
+      { label: "Contact", route: "contact" },
+      { label: "Privacy", route: "privacy" },
+      { label: "Accessibility", route: "accessibility" },
+    ],
+  },
+];
 
 export function Footer() {
-  const { go } = useApp();
+  const { go, signIn } = useApp();
+  // Hydrated from the visitor's clock; a hardcoded year silently rots.
+  const [year] = useState(() => new Date().getFullYear());
+
+  const handleLink = (link: FooterLink) => {
+    if ("role" in link) signIn(link.role);
+    else go(link.route);
+  };
+
+  const backToTop = () => {
+    // CSS cannot suppress a scripted scroll, so reduced-motion has to be
+    // honoured here rather than relying on the prefers-reduced-motion rule.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  };
 
   return (
     <footer className="foot">
       <div className="wrap">
         <div className="fgrid">
           <div>
-            <div className="logo" style={{ marginBottom: "12px" }}>
+            <a
+              href="#home"
+              className="logo"
+              style={{ marginBottom: "12px" }}
+              onClick={(e) => {
+                e.preventDefault();
+                go("home");
+              }}
+            >
               <i></i>
               <span>
                 <b>INTERN</b>
                 <small>PLACEMENT SYSTEM</small>
               </span>
-            </div>
+            </a>
             <p>
-              Placements from companies, government agencies and NGOs — listed by
-              universities, with requirements stated before anyone applies.
+              Placements from companies, government agencies and NGOs — listed
+              by universities, with requirements stated before anyone applies.
             </p>
           </div>
-          <div>
-            <h5>Students</h5>
-            <a
-              href="#placements"
-              onClick={(e) => {
-                e.preventDefault();
-                go("placements");
-              }}
-            >
-              Browse placements
-            </a>
-            <a
-              href="#signin"
-              onClick={(e) => {
-                e.preventDefault();
-                go("signin");
-              }}
-            >
-              Student sign in
-            </a>
-            <a
-              href="#signin"
-              onClick={(e) => {
-                e.preventDefault();
-                go("signin");
-              }}
-            >
-              Job seeker sign in
-            </a>
-          </div>
-          <div>
-            <h5>Universities</h5>
-            <a
-              href="#universities"
-              onClick={(e) => {
-                e.preventDefault();
-                go("universities");
-              }}
-            >
-              List a placement
-            </a>
-            <a
-              href="#universities"
-              onClick={(e) => {
-                e.preventDefault();
-                go("universities");
-              }}
-            >
-              Verification
-            </a>
-            <a
-              href="#contact"
-              onClick={(e) => {
-                e.preventDefault();
-                go("contact");
-              }}
-            >
-              Request a demo
-            </a>
-          </div>
-          <div>
-            <h5>Office</h5>
-            <a
-              href="#about"
-              onClick={(e) => {
-                e.preventDefault();
-                go("about");
-              }}
-            >
-              About INTERN
-            </a>
-            <a
-              href="#contact"
-              onClick={(e) => {
-                e.preventDefault();
-                go("contact");
-              }}
-            >
-              Contact
-            </a>
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              Privacy
-            </a>
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              Accessibility
-            </a>
-          </div>
+
+          {COLUMNS.map((col) => (
+            <nav key={col.heading} aria-label={col.heading}>
+              <h5>{col.heading}</h5>
+              {col.links.map((link) => (
+                <a
+                  key={link.label}
+                  href={"role" in link ? "#signin" : `#${link.route}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLink(link);
+                  }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          ))}
         </div>
+
         <div className="fbase">
-          <span>© 2026 INTERN. Kampala · Nairobi · Berlin.</span>
-          <span>Requirements and eligibility are set by each university.</span>
+          <span>
+            © {year} INTERN. Kampala · Nairobi · Berlin.
+          </span>
+          <span>
+            Requirements and eligibility are set by each university.
+          </span>
           <a
             href="#top"
             onClick={(e) => {
               e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              backToTop();
             }}
           >
             Back to top ↑

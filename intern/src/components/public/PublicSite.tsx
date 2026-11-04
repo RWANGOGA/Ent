@@ -14,6 +14,7 @@ import { EmployersView } from "./EmployersView";
 import { ContactView } from "./ContactView";
 import { PlansView } from "./PlansView";
 import { SignInView } from "./SignInView";
+import { PrivacyView, AccessibilityView } from "./LegalView";
 
 export function PublicSite() {
   const { route } = useApp();
@@ -38,6 +39,10 @@ export function PublicSite() {
         return <PlansView />;
       case "signin":
         return <SignInView />;
+      case "privacy":
+        return <PrivacyView />;
+      case "accessibility":
+        return <AccessibilityView />;
       default:
         return <HomeView />;
     }

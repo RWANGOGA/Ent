@@ -1,46 +1,153 @@
 "use client";
 
-import React from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  MouseEvent,
+  KeyboardEvent,
+} from "react";
 import { useApp } from "../../context/AppContext";
+import { UserRole } from "../../types";
+
+/*
+  A menu entry is a route, an organisation-type filter (a route plus a preset
+  filter), or a role-specific sign in. Describing them as data rather than
+  hand-written <a> tags is what keeps every entry pointed at a destination
+  that nothing else in the bar already occupies.
+*/
+type Entry =
+  | { label: string; route: string }
+  | { label: string; filter: string }
+  | { label: string; role: UserRole };
+
+type Group = {
+  key: string;
+  label: string;
+  heading: string;
+  entries: Entry[];
+};
+
+const GROUPS: Group[] = [
+  {
+    key: "placements",
+    label: "Placements",
+    heading: "Browse the index",
+    entries: [
+      { label: "All placements", route: "placements" },
+      { label: "Companies", filter: "Company" },
+      { label: "Government agencies", filter: "Government" },
+      { label: "NGOs and foundations", filter: "NGO" },
+      { label: "University departments", filter: "University" },
+    ],
+  },
+  {
+    key: "universities",
+    label: "Universities",
+    heading: "For the placement office",
+    entries: [
+      { label: "Why INTERN", route: "universities" },
+      { label: "How verification works", route: "about" },
+      { label: "Plans for institutions", route: "plans" },
+    ],
+  },
+  {
+    key: "employers",
+    label: "Employers",
+    heading: "For host organisations",
+    entries: [
+      { label: "How host organisations use it", route: "employers" },
+      { label: "Employer sign in", role: "employer" },
+      { label: "Talk to the office", route: "contact" },
+    ],
+  },
+];
+
+const PLAIN = [
+  { label: "Plans", route: "plans" },
+  { label: "About", route: "about" },
+  { label: "Contact", route: "contact" },
+];
+
+const entryHref = (entry: Entry) =>
+  "filter" in entry ? "#placements" : "role" in entry ? "#signin" : `#${entry.route}`;
 
 export function Header() {
-  const { go, setType, openMenu } = useApp();
+  const { go, setType, signIn, openMenu, route, isMenuOpen } = useApp();
+
+  /*
+    The panel used to open on :hover alone, so its links were unreachable by
+    keyboard and by touch. State makes the disclosure explicit; CSS keeps the
+    hover behaviour for pointer visitors.
+  */
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const lastTrigger = useRef<HTMLButtonElement | null>(null);
+
+  const close = useCallback(() => setOpenKey(null), []);
+
+  useEffect(() => {
+    if (!openKey) return;
+    const onPointerDown = (e: globalThis.MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setOpenKey(null);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [openKey]);
+
+  // Navigating away must not leave a panel open behind the new page.
+  useEffect(() => {
+    setOpenKey(null);
+  }, [route]);
+
+  const toggle = (group: Group, e: MouseEvent<HTMLButtonElement>) => {
+    const el = e.currentTarget;
+    if (openKey === group.key) {
+      setOpenKey(null);
+      // The panel holding focus is about to unmount; hand focus back.
+      el.focus();
+      return;
+    }
+    lastTrigger.current = el;
+    setOpenKey(group.key);
+  };
+
+  const onHeaderKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key !== "Escape" || !openKey) return;
+    const trigger = lastTrigger.current;
+    setOpenKey(null);
+    trigger?.focus();
+  };
+
+  const run = (entry: Entry) => {
+    close();
+    if ("filter" in entry) setType(entry.filter);
+    else if ("role" in entry) signIn(entry.role);
+    else go(entry.route);
+  };
 
   return (
     <>
       <div className="util">
         <div className="wrap">
-          <span>Placement office in software · 41 universities · 620 employers and agencies</span>
-          <div className="u-r">
-            <a
-              href="#contact"
-              onClick={(e) => {
-                e.preventDefault();
-                go("contact");
-              }}
-            >
-              Contact the office
-            </a>
-            <a
-              href="#signin"
-              onClick={(e) => {
-                e.preventDefault();
-                go("signin");
-              }}
-            >
-              Sign in
-            </a>
-          </div>
+          <span>
+            Placement office in software · 41 universities · 620 employers and
+            agencies
+          </span>
         </div>
       </div>
 
-      <header className="hdr">
+      <header className="hdr" ref={headerRef} onKeyDown={onHeaderKeyDown}>
         <div className="wrap">
           <a
             href="#home"
             className="logo"
             onClick={(e) => {
               e.preventDefault();
+              close();
               go("home");
             }}
           >
@@ -51,180 +158,69 @@ export function Header() {
             </span>
           </a>
 
-          <ul className="nav">
-            <li>
-              <button type="button" aria-haspopup="true">
-                Placements <span className="caret"></span>
-              </button>
-              <div className="menu">
-                <div className="m-h lbl">Browse the index</div>
-                <a
-                  href="#placements"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("placements");
-                  }}
-                >
-                  All placements
-                </a>
-                <a
-                  href="#placements"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setType("Company");
-                  }}
-                >
-                  Companies
-                </a>
-                <a
-                  href="#placements"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setType("Government");
-                  }}
-                >
-                  Government agencies
-                </a>
-                <a
-                  href="#placements"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setType("NGO");
-                  }}
-                >
-                  NGOs and foundations
-                </a>
-                <a
-                  href="#placements"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setType("University");
-                  }}
-                >
-                  University departments
-                </a>
-              </div>
-            </li>
-            <li>
-              <button type="button" aria-haspopup="true">
-                Universities <span className="caret"></span>
-              </button>
-              <div className="menu">
-                <div className="m-h lbl">For the placement office</div>
-                <a
-                  href="#universities"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("universities");
-                  }}
-                >
-                  Why INTERN
-                </a>
-                <a
-                  href="#universities"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("universities");
-                  }}
-                >
-                  List a placement
-                </a>
-                <a
-                  href="#universities"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("universities");
-                  }}
-                >
-                  Requirements &amp; verification
-                </a>
-                <a
-                  href="#signin"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("signin");
-                  }}
-                >
-                  Open dashboard
-                </a>
-              </div>
-            </li>
-            <li>
-              <button type="button" aria-haspopup="true">
-                Employers <span className="caret"></span>
-              </button>
-              <div className="menu">
-                <div className="m-h lbl">For host organisations</div>
-                <a
-                  href="#employers"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("employers");
-                  }}
-                >
-                  Post a placement
-                </a>
-                <a
-                  href="#employers"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("employers");
-                  }}
-                >
-                  How candidates arrive
-                </a>
-                <a
-                  href="#signin"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    go("signin");
-                  }}
-                >
-                  Employer sign in
-                </a>
-              </div>
-            </li>
-            <li>
-              <a
-                href="#plans"
-                onClick={(e) => {
-                  e.preventDefault();
-                  go("plans");
-                }}
-              >
-                Plans
-              </a>
-            </li>
-            <li>
-              <a
-                href="#about"
-                onClick={(e) => {
-                  e.preventDefault();
-                  go("about");
-                }}
-              >
-                About
-              </a>
-            </li>
-            <li>
-              <a
-                href="#contact"
-                onClick={(e) => {
-                  e.preventDefault();
-                  go("contact");
-                }}
-              >
-                Contact
-              </a>
-            </li>
-          </ul>
+          <nav aria-label="Primary">
+            <ul className="nav">
+              {GROUPS.map((group) => {
+                const isOpen = openKey === group.key;
+                const active = group.entries.some(
+                  (entry) => "route" in entry && entry.route === route
+                );
+                return (
+                  <li key={group.key}>
+                    <button
+                      type="button"
+                      aria-haspopup="true"
+                      aria-expanded={isOpen}
+                      className={active ? "on" : undefined}
+                      onClick={(e) => toggle(group, e)}
+                    >
+                      {group.label} <span className="caret"></span>
+                    </button>
+                    <div className={`menu${isOpen ? " on" : ""}`}>
+                      <div className="m-h lbl">{group.heading}</div>
+                      {group.entries.map((entry) => (
+                        <a
+                          key={entry.label}
+                          href={entryHref(entry)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            run(entry);
+                          }}
+                        >
+                          {entry.label}
+                        </a>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+
+              {PLAIN.map((item) => (
+                <li key={item.route}>
+                  <a
+                    href={`#${item.route}`}
+                    aria-current={route === item.route ? "page" : undefined}
+                    className={route === item.route ? "on" : undefined}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      close();
+                      go(item.route);
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <div className="hdr-actions">
             <a
               href="#signin"
-              className="btn btn-sm btn-ghost"
+              className="hdr-signin"
               onClick={(e) => {
                 e.preventDefault();
+                close();
                 go("signin");
               }}
             >
@@ -232,10 +228,11 @@ export function Header() {
             </a>
             <a
               href="#signin"
-              className="btn btn-sm btn-blue"
+              className="btn btn-blue"
               onClick={(e) => {
                 e.preventDefault();
-                go("signin");
+                close();
+                signIn("employer");
               }}
             >
               List a placement
@@ -243,8 +240,13 @@ export function Header() {
             <button
               type="button"
               className="burger"
-              onClick={openMenu}
+              onClick={() => {
+                close();
+                openMenu();
+              }}
               aria-label="Menu"
+              aria-expanded={isMenuOpen}
+              aria-controls="mmenu"
             >
               <span></span>
               <span></span>

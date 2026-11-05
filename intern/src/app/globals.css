@@ -133,35 +133,50 @@ svg{display:block}
 
 /* ---------------- header ---------------- */
 .util{background:var(--ink);color:#C9C5B8;font-size:11px}
-.util .wrap{display:flex;justify-content:space-between;align-items:center;height:34px;gap:20px}
+.util .wrap{display:flex;justify-content:space-between;align-items:center;height:30px;gap:20px}
 .util a{color:#E4E0D4}
 .util a:hover{color:#fff}
 .util .u-r{display:flex;gap:18px;align-items:center}
 
-.hdr{position:sticky;top:0;z-index:70;background:rgba(245,243,237,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--ink)}
-.hdr .wrap{display:flex;align-items:center;justify-content:space-between;height:66px;gap:24px}
+.hdr{position:sticky;top:0;z-index:70;background:rgba(245,243,237,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between;height:76px;gap:24px}
 .logo{display:flex;align-items:center;gap:9px}
 .logo b{font-family:var(--sans);font-weight:700;font-size:19px;letter-spacing:.22em;line-height:1}
 .logo i{width:8px;height:8px;background:var(--red);display:block;flex:none}
 .logo small{display:block;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;color:var(--muted);margin-top:3px}
 
+nav[aria-label="Primary"]{display:flex}
 .nav{display:flex;align-items:center;gap:4px}
 .nav > li{position:relative}
 .nav > li > a,.nav > li > button{
-  display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:12.5px;font-weight:500;color:var(--ink-2);
-  border-radius:var(--r-sm);
+  display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;font-size:12.5px;font-weight:500;color:var(--ink-2);
+  border-radius:var(--r-sm);background:transparent;transition:color .14s var(--ease),background .14s var(--ease);
 }
 .nav > li > a:hover,.nav > li > button:hover{color:var(--ink);background:var(--paper-2)}
-.nav .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.6}
+/* Current section. The benchmark marks nothing; a placement office should
+   say which desk you are standing at. */
+.nav > li > a.on,.nav > li > button.on{color:var(--blue);background:var(--blue-tint)}
+.nav > li > a.on::after,.nav > li > button.on::after{
+  content:"";width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.7;margin-left:2px;
+}
+.nav .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.6;transition:transform .16s var(--ease)}
+.nav > li > button[aria-expanded="true"] .caret{transform:rotate(-135deg) translateY(-2px)}
 .menu{
-  position:absolute;top:calc(100% + 8px);left:0;min-width:260px;background:var(--white);
+  position:absolute;top:calc(100% + 8px);left:0;min-width:300px;background:var(--white);
   border:1px solid var(--rule);border-radius:var(--r-md);box-shadow:var(--shadow);padding:8px;display:none;z-index:80;
 }
-.nav li:hover > .menu,.nav li:focus-within > .menu{display:block}
-.menu a{display:block;padding:9px 11px;font-size:12.5px;border-radius:var(--r-sm)}
+/* Hover and focus-within stay as the no-JavaScript fallback; .on is what an
+   actual click or Escape sets, which is what makes the panel reachable by
+   keyboard and on a touchscreen. */
+.nav li:hover > .menu,.nav li:focus-within > .menu,.menu.on{display:block}
+.menu a{display:flex;align-items:center;min-height:38px;padding:0 11px;font-size:12.5px;border-radius:var(--r-sm)}
 .menu a:hover{background:var(--paper)}
 .menu .m-h{padding:8px 11px 6px;border-bottom:1px solid var(--rule);margin-bottom:6px}
 .hdr-actions{display:flex;align-items:center;gap:10px}
+/* One filled action, one text link: the benchmark's hierarchy. The old ghost
+   button painted solid black on hover, which read as a different control. */
+.hdr-signin{display:flex;align-items:center;height:46px;padding:0 10px;font-size:13px;font-weight:600;color:var(--ink-2);border-radius:var(--r-sm)}
+.hdr-signin:hover{color:var(--blue)}
 .burger{display:none;width:40px;height:40px;border:1px solid var(--rule-2);border-radius:var(--r-sm);align-items:center;justify-content:center;flex-direction:column;gap:4px}
 .burger span{display:block;width:16px;height:1px;background:var(--ink)}
 
@@ -173,6 +188,7 @@ svg{display:block}
 .mmenu summary{list-style:none;display:flex;justify-content:space-between;padding:15px 0;font-size:17px;font-family:var(--serif);cursor:pointer}
 .mmenu summary::-webkit-details-marker{display:none}
 .mmenu details a{display:block;padding:9px 0 9px 14px;font-size:13.5px;color:var(--ink-2);border-left:1px solid var(--rule)}
+.mmenu > a.plain{display:block;padding:15px 0;border-bottom:1px solid var(--rule);font-size:17px;font-family:var(--serif)}
 .mmenu .m-cta{margin-top:24px;display:grid;gap:8px}
 
 /* ---------------- hero ---------------- */
@@ -527,7 +543,9 @@ svg{display:block}
   .ptable .hide-s{display:none}
 }
 @media (max-width:620px){
-  .util .u-r a:not(:last-child){display:none}
+  .util{display:none}
+  .hdr .wrap{height:66px;gap:12px}
+  .hdr-signin{display:none}
   .hero h1{font-size:38px}
   .ptable th:nth-child(3),.ptable td:nth-child(3){display:none}
   .kpis{grid-template-columns:1fr 1fr}

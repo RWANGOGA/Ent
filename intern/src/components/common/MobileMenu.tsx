@@ -1,11 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useApp } from "../../context/AppContext";
 import { Icon } from "../icons/Icons";
 
 export function MobileMenu() {
   const { isMenuOpen, closeMenu, go, setType } = useApp();
+
+  // The desktop bar's panels close on Escape; this sheet does the same.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMenuOpen, closeMenu]);
 
   return (
     <div className={`mmenu ${isMenuOpen ? "on" : ""}`} id="mmenu">
@@ -17,7 +27,7 @@ export function MobileMenu() {
             <small>PLACEMENT SYSTEM</small>
           </span>
         </div>
-        <button type="button" onClick={closeMenu} aria-label="Close">
+        <button type="button" onClick={closeMenu} aria-label="Close menu">
           <Icon name="x" size={18} />
         </button>
       </div>
@@ -64,6 +74,16 @@ export function MobileMenu() {
         >
           NGOs and foundations
         </a>
+        <a
+          href="#placements"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            setType("University");
+          }}
+        >
+          University departments
+        </a>
       </details>
 
       <details>
@@ -79,24 +99,24 @@ export function MobileMenu() {
           Why INTERN
         </a>
         <a
-          href="#universities"
+          href="#about"
           onClick={(e) => {
             e.preventDefault();
             closeMenu();
-            go("universities");
+            go("about");
           }}
         >
-          Requirements
+          How verification works
         </a>
         <a
-          href="#signin"
+          href="#plans"
           onClick={(e) => {
             e.preventDefault();
             closeMenu();
-            go("signin");
+            go("plans");
           }}
         >
-          Dashboard
+          Plans for institutions
         </a>
       </details>
 
@@ -110,7 +130,7 @@ export function MobileMenu() {
             go("employers");
           }}
         >
-          Post a placement
+          How host organisations use it
         </a>
         <a
           href="#signin"
@@ -122,17 +142,21 @@ export function MobileMenu() {
         >
           Employer sign in
         </a>
+        <a
+          href="#contact"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            go("contact");
+          }}
+        >
+          Talk to the office
+        </a>
       </details>
 
       <a
+        className="plain"
         href="#plans"
-        style={{
-          display: "block",
-          padding: "15px 0",
-          borderBottom: "1px solid var(--rule)",
-          fontSize: "17px",
-          fontFamily: "var(--serif)",
-        }}
         onClick={(e) => {
           e.preventDefault();
           closeMenu();
@@ -142,14 +166,8 @@ export function MobileMenu() {
         Plans
       </a>
       <a
+        className="plain"
         href="#about"
-        style={{
-          display: "block",
-          padding: "15px 0",
-          borderBottom: "1px solid var(--rule)",
-          fontSize: "17px",
-          fontFamily: "var(--serif)",
-        }}
         onClick={(e) => {
           e.preventDefault();
           closeMenu();
@@ -159,14 +177,8 @@ export function MobileMenu() {
         About
       </a>
       <a
+        className="plain"
         href="#contact"
-        style={{
-          display: "block",
-          padding: "15px 0",
-          borderBottom: "1px solid var(--rule)",
-          fontSize: "17px",
-          fontFamily: "var(--serif)",
-        }}
         onClick={(e) => {
           e.preventDefault();
           closeMenu();

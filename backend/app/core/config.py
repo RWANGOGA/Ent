@@ -1,0 +1,33 @@
+"""Application settings.
+
+Single source of truth for environment configuration. The Groq key and the
+database URL are read from the environment (or a local ``.env``); they are
+never committed. Swapping Postgres for Neon/Render is a URL change only.
+"""
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    app_name: str = "Intern API"
+    environment: str = "development"
+    # Postgres in Docker for dev/prod; the test harness overrides this to an
+    # in-memory SQLite URL through the DATABASE_URL environment variable.
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/intern"
+    # Advisor model (B3). Empty by default so the API boots without a key.
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+
+    @property
+    def is_test(self) -> bool:
+        return self.environment == "test"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

@@ -1,0 +1,14 @@
+# secrets / local env
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# local sqlite artifacts
+*.db
+*.sqlite3

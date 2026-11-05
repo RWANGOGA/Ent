@@ -70,6 +70,12 @@ interface AppContextType {
   setPlanSeg: (s: string) => void;
   setStatement: (statement: string) => void;
 
+  // Skills profile
+  addSkill: (name: string) => void;
+  removeSkill: (name: string) => void;
+  toggleSkill: (name: string) => void;
+  setSkills: (skills: string[]) => void;
+
   go: (route: string) => void;
   openPlacement: (id: string) => void;
   setType: (t: string) => void;
@@ -849,6 +855,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPack((prev) => ({ ...prev, statement }));
   }, []);
 
+  // Skills profile. Mutated on the student record so it persists across
+  // dashboard views for the session; the backend will own this eventually.
+  const setSkills = useCallback((skills: string[]) => {
+    setStudent((prev) => ({ ...prev, skills }));
+  }, []);
+
+  const addSkill = useCallback((name: string) => {
+    setStudent((prev) =>
+      prev.skills.includes(name) ? prev : { ...prev, skills: [...prev.skills, name] }
+    );
+  }, []);
+
+  const removeSkill = useCallback((name: string) => {
+    setStudent((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((s) => s !== name),
+    }));
+  }, []);
+
+  const toggleSkill = useCallback((name: string) => {
+    setStudent((prev) => ({
+      ...prev,
+      skills: prev.skills.includes(name)
+        ? prev.skills.filter((s) => s !== name)
+        : [...prev.skills, name],
+    }));
+  }, []);
+
   const editPack = useCallback(() => {
     let currentVal = pack.statement;
     openModal(
@@ -1033,6 +1067,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSearchQuery,
         setPlanSeg,
         setStatement,
+
+        addSkill,
+        removeSkill,
+        toggleSkill,
+        setSkills,
 
         go,
         openPlacement,

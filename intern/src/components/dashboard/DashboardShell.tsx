@@ -13,6 +13,7 @@ import { AdminRequirements } from "./admin/AdminRequirements";
 import { AdminStudents } from "./admin/AdminStudents";
 
 import { StudentOverview } from "./student/StudentOverview";
+import { SkillProfile } from "./student/SkillProfile";
 import { StudentPlacements } from "./student/StudentPlacements";
 import { StudentDocs } from "./student/StudentDocs";
 import { StudentPack } from "./student/StudentPack";
@@ -43,6 +44,7 @@ export function DashboardShell() {
 
   const titles: Record<string, string> = {
     overview: "Overview",
+    skills: "Skills profile",
     placements: "Placements",
     requirements: "Requirements",
     students: "Students",
@@ -75,6 +77,8 @@ export function DashboardShell() {
       switch (dash) {
         case "overview":
           return <StudentOverview />;
+        case "skills":
+          return <SkillProfile />;
         case "placements":
           return <StudentPlacements />;
         case "documents":

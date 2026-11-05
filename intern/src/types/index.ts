@@ -48,6 +48,9 @@ export interface Student {
   year: string;
   cgpa: number;
   uni: string;
+  // Confirmed skills on the profile. Seeded, then edited by the student from
+  // pasted projects/CV text. Drives the match score.
+  skills: string[];
 }
 
 export interface DocItem {
@@ -96,6 +99,7 @@ export type UserRole = "student" | "jobseeker" | "employer" | "admin";
 
 export type DashboardView =
   | "overview"
+  | "skills"
   | "placements"
   | "requirements"
   | "students"

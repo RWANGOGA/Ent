@@ -431,6 +431,7 @@ export const INITIAL_STUDENT: Student = {
   year: "Year 3",
   cgpa: 3.7,
   uni: "Makerere University",
+  skills: ["Figma", "UI Design", "Prototyping", "Communication", "Teamwork"],
 };
 
 export const GRADE_RANK: Record<string, number> = {
@@ -837,10 +838,11 @@ export const INITIAL_PACK: ApplicationPack = {
 export const NAV: Record<UserRole, [string, string, string][]> = {
   student: [
     ["overview", "Overview", "01"],
-    ["placements", "Placements", "02"],
-    ["documents", "Documents", "03"],
-    ["pack", "Application pack", "04"],
-    ["testimonial", "Testimonial", "05"],
+    ["skills", "Skills profile", "02"],
+    ["placements", "Placements", "03"],
+    ["documents", "Documents", "04"],
+    ["pack", "Application pack", "05"],
+    ["testimonial", "Testimonial", "06"],
   ],
   jobseeker: [
     ["overview", "Overview", "01"],

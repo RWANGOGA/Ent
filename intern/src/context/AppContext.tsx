@@ -33,6 +33,7 @@ import {
   ACTIVITY,
   INITIAL_PACK,
 } from "../data";
+import { matchPlacement } from "../lib/skills";
 
 interface AppContextType {
   route: string;
@@ -355,6 +356,104 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (query: string): string => {
       const q = query.toLowerCase();
 
+      // Skills-driven career guidance. These run first because the product's
+      // core claim is advising from the student's actual profile, not generic
+      // FAQs. Deterministic for now; the FastAPI advisor will reuse the same
+      // matchPlacement() output.
+      const ranked = placements
+        .map((p) => ({
+          p,
+          m: matchPlacement(p, student.skills, student.course, student.cgpa),
+        }))
+        .sort((a, b) => b.m.score - a.m.score);
+
+      // Which missing skill unlocks the most placements the student could
+      // realistically land (course + grade already fit).
+      const skillImpact = (): { skill: string; count: number }[] => {
+        const have = new Set(student.skills);
+        const tally = new Map<string, number>();
+        for (const { p, m } of ranked) {
+          if (!m.courseFit || !m.gradeFit) continue;
+          for (const miss of m.missing) {
+            if (have.has(miss)) continue;
+            tally.set(miss, (tally.get(miss) || 0) + 1);
+          }
+        }
+        return [...tally.entries()]
+          .map(([skill, count]) => ({ skill, count }))
+          .sort((a, b) => b.count - a.count);
+      };
+
+      if (
+        q.includes("learn") ||
+        q.includes("skill") ||
+        q.includes("improve") ||
+        q.includes("gap") ||
+        q.includes("boost") ||
+        q.includes("stronger") ||
+        q.includes("increase")
+      ) {
+        const impact = skillImpact();
+        if (!impact.length) {
+          const top = ranked[0];
+          return `Your profile already covers every required skill for your best fit${
+            top ? ` (<b>${top.p.title}</b> at ${top.m.score}% match)` : ""
+          }. To widen your options, add adjacent skills on your Skills profile — pick a placement you cannot reach yet and learn the skills its row lists as missing.`;
+        }
+        const lead = impact.slice(0, 2);
+        return `Based on your record (${student.skills.length} skills, ${
+          student.course
+        }, CGPA ${student.cgpa}), the fastest wins are: ${lead
+          .map(
+            (i) =>
+              `<b>${i.skill}</b> (unlocks ${i.count} placement${
+                i.count > 1 ? "s" : ""
+              } you already clear on course and grade)`
+          )
+          .join(", ")}. Add ${
+          lead[0].skill
+        } to your Skills profile and watch those match scores jump. Paste a project or CV line into the extractor if you have used it before — it will claim the skill for you.`;
+      }
+
+      if (
+        q.includes("best") ||
+        q.includes("recommend") ||
+        q.includes("where do i fit") ||
+        q.includes("most match") ||
+        q.includes("top match") ||
+        q.includes("should i apply") ||
+        q.includes("fits me") ||
+        q.includes("good for me") ||
+        q.includes("which placement")
+      ) {
+        const top = ranked[0];
+        if (!top)
+          return `Ask about a specific role and I will score it against your skills, course and grade.`;
+        const org = getOrg(top.p.orgId);
+        const near = ranked[1];
+        const gapText = top.m.missing.length
+          ? ` The only skills you are missing there: ${top.m.missing.join(
+              ", "
+            )}.`
+          : ` You already match every skill it asks for.`;
+        return `Your strongest fit right now is <b>${top.p.title}</b> at ${
+          org?.name || "a host organisation"
+        } — ${top.m.score}% match, closing ${top.p.deadline}.${gapText}${
+          near
+            ? ` Next best is ${near.p.title} at ${near.m.score}%.`
+            : ""
+        } Open your Placements tab to see the full ranking, or the Skills profile to close that gap and re-score.`;
+      }
+
+      if (
+        q.includes("match") ||
+        q.includes("score") ||
+        q.includes("how are you ranking") ||
+        q.includes("how do you calculate")
+      ) {
+        return `Match is weighted: your skill coverage of a placement's required skills is 60%, whether your course (${student.course}) is on its list is 25%, and whether your CGPA (${student.cgpa}) clears its minimum grade is 15%. It is fully explainable — every placement row lists the skills it needs and the exact ones you already bring. Nothing is a black box, and when the advisor moves server-side the same score is what the API returns.`;
+      }
+
       if (
         q.includes("eligible") ||
         q.includes("qualify") ||
@@ -468,7 +567,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return `INTERN is a placement system, not a job board. Universities publish placements from companies, government agencies and NGOs; each carries its eligible courses, minimum grade, required documents and testimonial rule. Students see eligibility before applying, the office verifies documents, and employers receive only qualified files.`;
       }
 
-      return `I can check your eligibility against any placement, list the documents you still need, explain verification, or show the next deadlines. Ask about a specific role and I will use its actual requirements.`;
+      return `I can rank placements against your skills and tell you which one fits best, name the single skill that would unlock the most roles for you, check your eligibility for a specific placement, list the documents you still need, or show the next deadlines. Ask about a role or say "what should I learn" and I will use your actual profile.`;
     },
     [placements, pid, getPlacement, isEligible, student, getOrg, docs]
   );

@@ -39,7 +39,7 @@ export function ChatDrawer() {
           <div>
             <b>INTERN assistant</b>
             <div className="st">
-              <i></i> knows placements, requirements and your record
+              <i></i> knows your skills, placements and your record
             </div>
           </div>
           <button type="button" onClick={closeChat} aria-label="Close">
@@ -86,15 +86,15 @@ export function ChatDrawer() {
           </button>
           <button
             type="button"
-            onClick={() => askChat("Which government placements are open?")}
+            onClick={() => askChat("Which placement fits me best?")}
           >
-            Government placements
+            Which placement fits me best?
           </button>
           <button
             type="button"
-            onClick={() => askChat("How does verification work?")}
+            onClick={() => askChat("What should I learn to get more matches?")}
           >
-            How verification works
+            What should I learn?
           </button>
         </div>
 

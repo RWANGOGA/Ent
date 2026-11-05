@@ -2,19 +2,34 @@
 
 import React from "react";
 import { useApp } from "../../../context/AppContext";
+import { matchPlacement } from "../../../lib/skills";
+
+function scoreTone(score: number): { color: string; label: string } {
+  if (score >= 70) return { color: "var(--green)", label: "Strong" };
+  if (score >= 40) return { color: "var(--gold)", label: "Possible" };
+  return { color: "var(--muted)", label: "Low" };
+}
 
 export function StudentPlacements() {
-  const { placements, getOrg, isEligible, applyTo, openPlacement } = useApp();
-  const eligibleCount = placements.filter(isEligible).length;
+  const { placements, getOrg, student, applyTo, openPlacement } = useApp();
+
+  const ranked = placements
+    .map((p) => ({
+      p,
+      match: matchPlacement(p, student.skills, student.course, student.cgpa),
+    }))
+    .sort((a, b) => b.match.score - a.match.score);
+
+  const strongCount = ranked.filter((r) => r.match.score >= 70).length;
 
   return (
     <>
       <div className="dpane-h">
         <div>
-          <h2>Placements open to you</h2>
+          <h2>Placements ranked for you</h2>
           <p>
-            Filtered by your course and grade — {eligibleCount} of{" "}
-            {placements.length} match
+            Scored against your skills, course and grade — {strongCount} of{" "}
+            {placements.length} are a strong match
           </p>
         </div>
       </div>
@@ -26,16 +41,17 @@ export function StudentPlacements() {
                 <th>Placement</th>
                 <th>Organisation</th>
                 <th className="hide-xs">Type</th>
-                <th>Grade</th>
+                <th>Match</th>
+                <th className="hide-xs">Skills you bring</th>
                 <th>Closes</th>
-                <th>Eligibility</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {placements.map((p) => {
+              {ranked.map(({ p, match }) => {
                 const o = getOrg(p.orgId);
-                const ok = isEligible(p);
+                const tone = scoreTone(match.score);
+                const eligible = match.courseFit && match.gradeFit;
                 return (
                   <tr key={p.id}>
                     <td className="who">
@@ -60,15 +76,32 @@ export function StudentPlacements() {
                         {o?.type}
                       </span>
                     </td>
-                    <td className="num">{p.grade}</td>
-                    <td className="num">{p.deadline}</td>
-                    <td>
-                      <span className={`tg ${ok ? "green" : "red"}`}>
-                        {ok ? "Eligible" : "Not eligible"}
+                    <td style={{ minWidth: 120 }}>
+                      <div
+                        className="bar-track"
+                        title={`${tone.label} match — missing: ${
+                          match.missing.length ? match.missing.join(", ") : "none"
+                        }`}
+                      >
+                        <div
+                          className="bar-fill"
+                          style={{ width: `${match.score}%`, background: tone.color }}
+                        />
+                      </div>
+                      <span className="num" style={{ fontSize: 12 }}>
+                        {match.score}% · {tone.label}
                       </span>
                     </td>
+                    <td className="hide-xs">
+                      <span style={{ fontSize: 12 }}>
+                        {match.matched.length
+                          ? match.matched.join(", ")
+                          : "No overlapping skills yet"}
+                      </span>
+                    </td>
+                    <td className="num">{p.deadline}</td>
                     <td className="act">
-                      {ok ? (
+                      {eligible ? (
                         <button
                           type="button"
                           className="btn btn-sm btn-blue"

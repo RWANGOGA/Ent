@@ -80,3 +80,14 @@ class ExtractRequest(BaseModel):
 
 class ExtractResponse(BaseModel):
     skills: list[str]
+
+
+class AdvisorRequest(BaseModel):
+    message: str
+    skills: list[str] = []
+    course: str = ""
+    cgpa: float = 0.0
+
+
+class AdvisorResponse(BaseModel):
+    reply: str

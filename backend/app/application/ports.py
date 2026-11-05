@@ -28,3 +28,17 @@ class PlacementRepository(ABC):
     @abstractmethod
     def get(self, placement_id: str) -> Optional[Placement]:
         """Return a single placement by id, or None."""
+
+
+class LLMClient(ABC):
+    """Port for the language model behind the career advisor.
+
+    The advisor depends on this abstraction, so production can talk to Groq
+    while tests inject a deterministic fake — no network, no API key, fully
+    offline. (SOLID: DIP.)
+    """
+
+    @abstractmethod
+    def complete(self, prompt: str) -> str:
+        """Return the model's answer to a single prompt."""
+

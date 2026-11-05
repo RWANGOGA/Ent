@@ -10,6 +10,9 @@ import os
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["ENVIRONMENT"] = "test"
+# Force the advisor model to be unset so the default Groq adapter raises
+# before any network call — tests either override the LLM port or expect a 503.
+os.environ["GROQ_MODEL"] = ""
 
 import pytest
 from fastapi.testclient import TestClient

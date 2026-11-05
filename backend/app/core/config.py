@@ -11,7 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=(".env", ".env.local"), env_file_encoding="utf-8", extra="ignore"
     )
 
     app_name: str = "Intern API"
@@ -19,9 +19,10 @@ class Settings(BaseSettings):
     # Postgres in Docker for dev/prod; the test harness overrides this to an
     # in-memory SQLite URL through the DATABASE_URL environment variable.
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/intern"
-    # Advisor model (B3). Empty by default so the API boots without a key.
+    # Groq credentials + model come from the environment only (never committed,
+    # never hardcoded). Empty by default so the API boots without an advisor.
     groq_api_key: str = ""
-    groq_model: str = "llama-3.1-8b-instant"
+    groq_model: str = ""
 
     @property
     def is_test(self) -> bool:

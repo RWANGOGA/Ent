@@ -35,6 +35,7 @@ import {
   INITIAL_PACK,
 } from "../data";
 import { matchPlacement } from "../lib/skills";
+import { fetchCatalog, isApiEnabled } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
 // this many placements, then the fee applies. Mirrors the site's "first three
@@ -319,6 +320,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return () => window.removeEventListener("hashchange", handleHashChange);
     }
   }, [navigateByHash]);
+
+  // Catalog read cutover (B5.1). When an API base URL is configured, the
+  // placements and organisations come from the database via GET /placements;
+  // otherwise (e.g. the GitHub Pages static build) we keep the bundled seed.
+  // The seed is also the graceful fallback if the request fails, so the site
+  // never blanks out because the backend is unreachable.
+  useEffect(() => {
+    if (!isApiEnabled) return;
+    let cancelled = false;
+    fetchCatalog()
+      .then(({ placements: fromApi, orgs: apiOrgs }) => {
+        if (cancelled) return;
+        if (fromApi.length) setPlacements(fromApi);
+        if (apiOrgs.length) setOrgs(apiOrgs);
+      })
+      .catch(() => {
+        /* backend unreachable — silently keep the seed */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const go = useCallback(
     (newRoute: string) => {

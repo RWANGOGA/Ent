@@ -4,15 +4,37 @@ import React from "react";
 import { useApp } from "../../../context/AppContext";
 
 export function EmployerPlacements() {
-  const { placements, newPlacement, editRequirements } = useApp();
+  const {
+    placements,
+    newPlacement,
+    editRequirements,
+    subscription,
+    isPremium,
+    freeAllowance,
+    employerLiveCount,
+  } = useApp();
   const employerPlacements = placements.filter((p) => p.orgId === "o4");
+  const remaining = Math.max(0, freeAllowance - employerLiveCount);
 
   return (
     <>
       <div className="dpane-h">
         <div>
           <h2>My placements</h2>
-          <p>2 live · 1 draft</p>
+          <p>
+            {employerLiveCount} published ·{" "}
+            {isPremium ? (
+              <>
+                <b>{subscription.plan}</b> plan · unlimited postings
+                {subscription.since ? ` since ${subscription.since}` : ""}
+              </>
+            ) : (
+              <>
+                {remaining} free posting{remaining === 1 ? "" : "s"} left, then a
+                placement fee
+              </>
+            )}
+          </p>
         </div>
         <button
           type="button"

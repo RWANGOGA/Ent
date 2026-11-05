@@ -21,6 +21,7 @@ import {
   DashboardView,
   ChatMessage,
   ModalConfig,
+  Subscription,
 } from "../types";
 import {
   ORGS,
@@ -34,6 +35,13 @@ import {
   INITIAL_PACK,
 } from "../data";
 import { matchPlacement } from "../lib/skills";
+
+// Placement-fee model. Free host organisations (seed org "o4") publish up to
+// this many placements, then the fee applies. Mirrors the site's "first three
+// placements free" promise and turns it into enforced behaviour.
+const FREE_ALLOWANCE = 3;
+const EMPLOYER_ORG_ID = "o4";
+const SUBSCRIPTION_KEY = "intern:subscription";
 
 interface AppContextType {
   route: string;
@@ -113,6 +121,18 @@ interface AppContextType {
   showEmbed: () => void;
   planAction: (tier: string) => void;
 
+  // Billing / placement fees
+  subscription: Subscription;
+  isPremium: boolean;
+  freeAllowance: number;
+  employerLiveCount: number;
+  activatePlan: (
+    plan: string,
+    billing: "Card" | "Invoice",
+    seats: number
+  ) => void;
+  cancelPlan: () => void;
+
   // Helpers
   getOrg: (id: string) => Org | undefined;
   getPlacement: (id: string) => Placement | undefined;
@@ -140,6 +160,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
   const [activity, setActivity] = useState<ActivityItem[]>(ACTIVITY);
   const [pack, setPack] = useState<ApplicationPack>(INITIAL_PACK);
+
+  // Billing. Free host organisations publish up to FREE_ALLOWANCE placements,
+  // then a placement fee unlocks unlimited posting. Persisted so refreshing
+  // keeps the plan; in Phase 2 the FastAPI backend owns this record.
+  const [subscription, setSubscription] = useState<Subscription>({
+    plan: "Free",
+    billing: "",
+    seats: 1,
+    since: "",
+  });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
@@ -826,7 +856,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [getPlacement, openModal, toast]
   );
 
-  const newPlacement = useCallback(() => {
+  // Billing actions and derived state. Declared before the domain actions so
+  // newPlacement's placement-fee gate can read them.
+  const isPremium = subscription.plan !== "Free";
+  const employerLiveCount = placements.filter(
+    (p) => p.orgId === EMPLOYER_ORG_ID
+  ).length;
+
+  const activatePlan = useCallback(
+    (plan: string, billing: "Card" | "Invoice", seats: number) => {
+      setSubscription({
+        plan,
+        billing,
+        seats: Math.max(1, seats),
+        since: new Date().toISOString().slice(0, 10),
+      });
+      toast(`${plan} plan active · placement fee applied`);
+    },
+    [toast]
+  );
+
+  const cancelPlan = useCallback(() => {
+    setSubscription({ plan: "Free", billing: "", seats: 1, since: "" });
+    toast("Moved to Free · posting capped at 3 placements");
+  }, [toast]);
+
+  // Hydrate the persisted plan once, then keep localStorage in sync.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(SUBSCRIPTION_KEY);
+      if (raw) setSubscription(JSON.parse(raw) as Subscription);
+    } catch {
+      /* ignore malformed storage */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(subscription));
+    } catch {
+      /* storage may be unavailable (private mode) — plan still works in-session */
+    }
+  }, [subscription]);
+
+  const openNewPlacementForm = useCallback(() => {
     openModal(
       "New placement",
       <div className="form">
@@ -842,7 +915,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           </div>
           <div className="field">
             <label>Organisation</label>
-            <select id="npOrg" defaultValue={orgs[0]?.id}>
+            <select id="npOrg" defaultValue={EMPLOYER_ORG_ID}>
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name} — {o.type}
@@ -854,30 +927,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <div className="row2">
           <div className="field">
             <label>Placement title</label>
-            <input placeholder="Data Analyst Intern" />
+            <input id="npTitle" placeholder="Data Analyst Intern" />
           </div>
           <div className="field">
             <label>Location</label>
-            <input placeholder="Kampala" />
+            <input id="npLoc" placeholder="Kampala" />
           </div>
         </div>
         <div className="row3">
           <div className="field">
             <label>Duration</label>
-            <input placeholder="6 months" />
+            <input id="npDuration" placeholder="6 months" />
           </div>
           <div className="field">
             <label>Stipend</label>
-            <input placeholder="UGX 1,200,000 / month" />
+            <input id="npStipend" placeholder="UGX 1,200,000 / month" />
           </div>
           <div className="field">
             <label>Slots</label>
-            <input type="number" defaultValue={4} />
+            <input id="npSlots" type="number" defaultValue={4} />
           </div>
         </div>
         <div className="field">
           <label>Eligible courses</label>
-          <div className="checks">
+          <div className="checks" id="npCourses">
             {COURSES.map((c) => (
               <label key={c}>
                 <input type="checkbox" />
@@ -889,7 +962,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <div className="row2">
           <div className="field">
             <label>Minimum grade</label>
-            <select>
+            <select id="npGrade">
               {Object.keys(GRADE_RANK).map((g) => (
                 <option key={g} value={g}>
                   {g}
@@ -899,12 +972,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           </div>
           <div className="field">
             <label>Closing date</label>
-            <input type="date" />
+            <input id="npDeadline" type="date" />
           </div>
         </div>
         <div className="field">
           <label>Required documents</label>
-          <div className="checks">
+          <div className="checks" id="npDocs">
             {[
               "Transcript",
               "Student ID",
@@ -925,10 +998,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </div>,
       "Publish placement",
       () => {
-        toast("Placement published · visible to eligible students");
+        const val = (id: string) =>
+          (document.getElementById(id) as HTMLInputElement | null)?.value?.trim() ||
+          "";
+        const checked = (containerId: string) => {
+          const el = document.getElementById(containerId);
+          if (!el) return [] as string[];
+          return Array.from(
+            el.querySelectorAll('input[type="checkbox"]:checked')
+          ).map(
+            (cb) =>
+              (cb.closest("label")?.textContent || "").trim()
+          );
+        };
+
+        const title = val("npTitle") || "Untitled placement";
+        const orgId =
+          (document.getElementById("npOrg") as HTMLSelectElement | null)?.value ||
+          EMPLOYER_ORG_ID;
+        const grade =
+          (document.getElementById("npGrade") as HTMLSelectElement | null)
+            ?.value || "B";
+
+        const placement: Placement = {
+          id: `p${Date.now()}`,
+          title,
+          orgId,
+          courses: checked("npCourses"),
+          grade,
+          loc: val("npLoc") || "Kampala",
+          mode: "On-site",
+          duration: val("npDuration") || "6 months",
+          stipend: val("npStipend") || "Unpaid",
+          deadline: val("npDeadline") || "—",
+          slots: Number(val("npSlots")) || 1,
+          status: "Open",
+          applicants: 0,
+          docs: checked("npDocs"),
+          testimonial: false,
+          about: `Newly published ${title.toLowerCase()} listing.`,
+          duties: [],
+        };
+
+        setPlacements((prev) => [placement, ...prev]);
+        toast(`${title} published · visible to eligible students`);
       }
     );
   }, [openModal, orgs, toast]);
+
+  const newPlacement = useCallback(() => {
+    // Placement fee gate: free hosts publish up to FREE_ALLOWANCE, then pay.
+    if (!isPremium && employerLiveCount >= FREE_ALLOWANCE) {
+      openModal(
+        `Placement fee · ${FREE_ALLOWANCE} free listings used`,
+        <div className="form">
+          <p style={{ fontSize: "13px", color: "var(--ink-2)", lineHeight: 1.6 }}>
+            Your organisation has published its {FREE_ALLOWANCE} free placements.
+            Additional listings require a placement fee. Students never pay —
+            employers fund verification, search and reporting.
+          </p>
+          <div style={{ fontSize: "11.5px", color: "var(--muted)", lineHeight: 1.6 }}>
+            Current plan: <b>{subscription.plan}</b>. Activating a plan unlocks
+            unlimited postings and is billed per seat.
+          </div>
+        </div>,
+        "Unlock unlimited postings",
+        () => {
+          activatePlan("Growth", "Card", 3);
+          openNewPlacementForm();
+        }
+      );
+      return;
+    }
+    openNewPlacementForm();
+  }, [
+    isPremium,
+    employerLiveCount,
+    subscription.plan,
+    openModal,
+    activatePlan,
+    openNewPlacementForm,
+  ]);
+
 
   const uploadDoc = useCallback(
     (name: string) => {
@@ -1079,7 +1230,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const planAction = useCallback(
     (tier: string) => {
       if (tier === "Free" || tier === "Student") {
-        toast("Free plan · no card required");
+        cancelPlan();
         go("signin");
         return;
       }
@@ -1089,6 +1240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tier === "Consortium" ||
         tier === "Network"
       ) {
+        // High-touch sales tiers are quoted, not self-served.
         go("contact");
         return;
       }
@@ -1099,21 +1251,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
           <div className="row2">
             <div className="field">
               <label>Organisation</label>
-              <input placeholder="Lumen Labs" />
+              <input id="planOrg" placeholder="Lumen Labs" />
             </div>
             <div className="field">
               <label>Work email</label>
-              <input placeholder="you@organisation.org" />
+              <input id="planEmail" placeholder="you@organisation.org" />
             </div>
           </div>
           <div className="row2">
             <div className="field">
               <label>Seats</label>
-              <input placeholder="3" />
+              <input id="planSeats" type="number" min={1} defaultValue={3} />
             </div>
             <div className="field">
               <label>Billing</label>
-              <select>
+              <select id="planBilling" defaultValue="Card">
                 <option value="Card">Card</option>
                 <option value="Invoice">Invoice</option>
               </select>
@@ -1125,11 +1277,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         </div>,
         "Start trial",
         () => {
-          toast(`${tier} trial started · 30 days`);
+          const seats = Number(
+            (document.getElementById("planSeats") as HTMLInputElement | null)?.value
+          );
+          const billing = (document.getElementById(
+            "planBilling"
+          ) as HTMLSelectElement | null)?.value === "Invoice"
+            ? "Invoice"
+            : "Card";
+          activatePlan(tier, billing, Number.isFinite(seats) ? seats : 1);
         }
       );
     },
-    [toast, go, openModal]
+    [toast, go, openModal, cancelPlan, activatePlan]
   );
 
   return (
@@ -1201,6 +1361,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         previewPack,
         showEmbed,
         planAction,
+
+        subscription,
+        isPremium,
+        freeAllowance: FREE_ALLOWANCE,
+        employerLiveCount,
+        activatePlan,
+        cancelPlan,
 
         getOrg,
         getPlacement,

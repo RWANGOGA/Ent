@@ -97,6 +97,19 @@ export interface ApplicationPack {
 
 export type UserRole = "student" | "jobseeker" | "employer" | "admin";
 
+// A host organisation's live billing state. Free accounts publish up to
+// FREE_PLACEMENT_ALLOWANCE placements, then a placement fee is required. The
+// "premium for universities" side of the business is the same shape on an
+// institution plan. Persisted to localStorage so it survives reloads; the
+// backend will own it in Phase 2.
+export interface Subscription {
+  plan: string; // e.g. "Growth", or "Free"
+  billing: "Card" | "Invoice" | "";
+  seats: number;
+  since: string; // ISO date the paid plan started, "" for free
+}
+
+
 export type DashboardView =
   | "overview"
   | "skills"

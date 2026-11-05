@@ -3,6 +3,7 @@
 import React from "react";
 import { useApp } from "../../context/AppContext";
 import { Icon } from "../icons/Icons";
+import { matchPlacement, requiredSkillsFor } from "../../lib/skills";
 
 export function PlacementDetailView() {
   const {
@@ -23,6 +24,8 @@ export function PlacementDetailView() {
   const o = getOrg(p.orgId);
   const ok = isEligible(p);
   const saved = isSaved(p.id);
+  const required = requiredSkillsFor(p);
+  const match = matchPlacement(p, student.skills, student.course, student.cgpa);
 
   return (
     <>
@@ -153,6 +156,41 @@ export function PlacementDetailView() {
                   </div>
                 </div>
               </div>
+
+              <h3>Skills match</h3>
+              {required.length === 0 ? (
+                <p style={{ fontSize: "13px", color: "var(--muted)" }}>
+                  This placement has no published skill profile yet.
+                </p>
+              ) : (
+                <div className="skillmatch">
+                  <div className="sm-head">
+                    <b>{match.score}% match</b>
+                    <span>
+                      {match.matched.length} of {required.length} required skills
+                      you already bring
+                    </span>
+                  </div>
+                  <div className="sm-chips">
+                    {required.map((s) => {
+                      const has = match.matched.includes(s);
+                      return (
+                        <span key={s} className={`smpill ${has ? "yes" : "no"}`}>
+                          <Icon name={has ? "check" : "plus"} size={10} /> {s}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {match.missing.length > 0 && (
+                    <div className="sm-note">
+                      Close the gap on{" "}
+                      <b>{match.missing.slice(0, 2).join(" and ")}</b> to lift
+                      this match — your Skills profile can claim them from a
+                      project or CV.
+                    </div>
+                  )}
+                </div>
+              )}
 
               <h3>Testimonials from past placements</h3>
               <div

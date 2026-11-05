@@ -102,6 +102,18 @@ async function getJson<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`API ${res.status} on ${path}`);
+  }
+  return (await res.json()) as T;
+}
+
 export interface Catalog {
   placements: Placement[];
   orgs: Org[];
@@ -118,4 +130,27 @@ export async function fetchCatalog(): Promise<Catalog> {
     if (p.org && !byId.has(p.org.id)) byId.set(p.org.id, mapOrg(p.org));
   }
   return { placements, orgs: [...byId.values()] };
+}
+
+// ---- Saved placements (bookmarks) -----------------------------------------
+
+// GET /saved -> the ids this user has bookmarked.
+export async function fetchSaved(userId: string): Promise<string[]> {
+  const data = await getJson<{ saved_ids: string[] }>(
+    `/saved?user_id=${encodeURIComponent(userId)}`
+  );
+  return data.saved_ids;
+}
+
+// POST /saved/toggle -> flips the bookmark and returns the new flag plus the
+// full updated shortlist, so the client can reconcile without a second GET.
+export async function toggleSavedApi(
+  userId: string,
+  placementId: string
+): Promise<{ saved: boolean; savedIds: string[] }> {
+  const data = await postJson<{ saved: boolean; saved_ids: string[] }>(
+    "/saved/toggle",
+    { user_id: userId, placement_id: placementId }
+  );
+  return { saved: data.saved, savedIds: data.saved_ids };
 }

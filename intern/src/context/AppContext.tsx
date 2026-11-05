@@ -35,7 +35,7 @@ import {
   INITIAL_PACK,
 } from "../data";
 import { matchPlacement } from "../lib/skills";
-import { fetchCatalog, isApiEnabled } from "../lib/api";
+import { fetchCatalog, fetchSaved, isApiEnabled, toggleSavedApi } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
 // this many placements, then the fee applies. Mirrors the site's "first three
@@ -44,6 +44,9 @@ const FREE_ALLOWANCE = 3;
 const EMPLOYER_ORG_ID = "o4";
 const SUBSCRIPTION_KEY = "intern:subscription";
 const SAVED_KEY = "intern:saved";
+// There is no auth yet, so the demo student has a stable id the API can key
+// saved/applications state against. A real login will replace this.
+const CURRENT_USER_ID = "u-amina";
 
 interface AppContextType {
   route: string;
@@ -933,6 +936,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [subscription]);
 
   const toggleSave = useCallback((id: string) => {
+    if (isApiEnabled) {
+      // Optimistic flip, then reconcile with the server's authoritative list.
+      setSaved((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      );
+      toggleSavedApi(CURRENT_USER_ID, id)
+        .then(({ savedIds }) => setSaved(savedIds))
+        .catch(() => {
+          /* server unreachable — keep the optimistic local change */
+        });
+      return;
+    }
     setSaved((prev) => {
       const next = prev.includes(id)
         ? prev.filter((x) => x !== id)
@@ -949,6 +964,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isSaved = useCallback((id: string) => saved.includes(id), [saved]);
 
   useEffect(() => {
+    if (isApiEnabled) {
+      fetchSaved(CURRENT_USER_ID)
+        .then(setSaved)
+        .catch(() => {
+          /* backend unreachable — start with an empty shortlist */
+        });
+      return;
+    }
     try {
       const raw = window.localStorage.getItem(SAVED_KEY);
       if (raw) setSaved(JSON.parse(raw) as string[]);

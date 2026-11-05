@@ -7,7 +7,7 @@ is what keeps the domain swappable and the tests offline (SOLID: DIP + ISP).
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.domain.entities import Placement
+from app.domain.entities import Application, Placement, Subscription
 
 
 class PlacementRepository(ABC):
@@ -41,4 +41,47 @@ class LLMClient(ABC):
     @abstractmethod
     def complete(self, prompt: str) -> str:
         """Return the model's answer to a single prompt."""
+
+
+class SavedRepository(ABC):
+    """A user's bookmarked placements."""
+
+    @abstractmethod
+    def list(self, user_id: str) -> list[str]:
+        """Placement ids the user has saved (deterministic order)."""
+
+    @abstractmethod
+    def is_saved(self, user_id: str, placement_id: str) -> bool: ...
+
+    @abstractmethod
+    def toggle(self, user_id: str, placement_id: str) -> bool:
+        """Add if absent, remove if present. Return the new saved state."""
+
+
+class ApplicationRepository(ABC):
+    """Submissions students make to placements."""
+
+    @abstractmethod
+    def add(self, application: Application) -> Application: ...
+
+    @abstractmethod
+    def find(self, user_id: str, placement_id: str) -> Optional[Application]: ...
+
+    @abstractmethod
+    def list_for_user(self, user_id: str) -> list[Application]: ...
+
+    @abstractmethod
+    def list_for_placement(self, placement_id: str) -> list[Application]: ...
+
+
+class SubscriptionRepository(ABC):
+    """Host organisations' billing state."""
+
+    @abstractmethod
+    def get(self, org_id: str) -> Subscription:
+        """Return the org's subscription, or a Free default if none exists."""
+
+    @abstractmethod
+    def save(self, subscription: Subscription) -> Subscription: ...
+
 

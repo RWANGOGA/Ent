@@ -1,10 +1,11 @@
 """Test harness.
 
-Pins the environment to an in-memory SQLite database *before* the app is
-imported, so the very same code path (engine → repository → service → router)
-that runs on Postgres in production runs here — just against a different, fast,
-Docker-free adapter. This is the payoff of depending on a port, not a concrete
-database.
+Each test gets its own isolated, seeded in-memory SQLite database. We override
+``get_session`` on the *mounted sub-app* (not the parent) because Starlette
+resolves dependencies against the app that owns the route — a mounted sub-app
+keeps its own ``dependency_overrides``. The engine is reached through the same
+repository port the API uses, so tests exercise the identical code path as
+Postgres in production.
 """
 import os
 
@@ -16,24 +17,37 @@ os.environ["GROQ_MODEL"] = ""
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.infrastructure.db import Base, SessionLocal, engine
+from app.infrastructure import orm  # noqa: F401 (register all ORM models)
+from app.infrastructure.db import Base, get_session
 from app.infrastructure.seed import seed_if_empty
 from app.presentation.main import create_app
 
 
-@pytest.fixture(scope="session")
-def _prepared_db():
+@pytest.fixture
+def session_factory():
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as session:
-        seed_if_empty(session)
-    yield
-    Base.metadata.drop_all(bind=engine)
+    factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    session = factory()
+    seed_if_empty(session)
+    session.close()
+    try:
+        yield factory
+    finally:
+        engine.dispose()
 
 
 @pytest.fixture
-def session(_prepared_db):
-    s = SessionLocal()
+def session(session_factory):
+    s = session_factory()
     try:
         yield s
     finally:
@@ -41,7 +55,21 @@ def session(_prepared_db):
 
 
 @pytest.fixture
-def client(_prepared_db):
-    app = create_app()
+def app(session_factory):
+    a = create_app(sub_prefix="/")  # mount features at root so paths keep working
+
+    def _override():
+        s = session_factory()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    a.state.sub_app.dependency_overrides[get_session] = _override
+    return a
+
+
+@pytest.fixture
+def client(app):
     with TestClient(app) as c:
         yield c

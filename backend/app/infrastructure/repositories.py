@@ -7,12 +7,23 @@ store) without touching a single use case.
 """
 from typing import Optional
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.application.ports import PlacementRepository
-from app.domain.entities import Organisation, Placement
-from app.infrastructure.orm import OrganisationORM, PlacementORM
+from app.application.ports import (
+    ApplicationRepository,
+    PlacementRepository,
+    SavedRepository,
+    SubscriptionRepository,
+)
+from app.domain.entities import Application, Organisation, Placement, Subscription
+from app.infrastructure.orm import (
+    ApplicationORM,
+    OrganisationORM,
+    PlacementORM,
+    SavedORM,
+    SubscriptionORM,
+)
 
 
 class SqlAlchemyPlacementRepository(PlacementRepository):
@@ -90,3 +101,126 @@ class SqlAlchemyPlacementRepository(PlacementRepository):
         if row is None:
             return None
         return self._to_domain(row[0], row[1])
+
+
+class SqlAlchemySavedRepository(SavedRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def list(self, user_id: str) -> list[str]:
+        rows = (
+            self._session.query(SavedORM.placement_id)
+            .filter(SavedORM.user_id == user_id)
+            .order_by(SavedORM.placement_id)
+            .all()
+        )
+        return [r[0] for r in rows]
+
+    def is_saved(self, user_id: str, placement_id: str) -> bool:
+        return (
+            self._session.query(SavedORM)
+            .filter_by(user_id=user_id, placement_id=placement_id)
+            .first()
+            is not None
+        )
+
+    def toggle(self, user_id: str, placement_id: str) -> bool:
+        existing = (
+            self._session.query(SavedORM)
+            .filter_by(user_id=user_id, placement_id=placement_id)
+            .first()
+        )
+        if existing is not None:
+            self._session.delete(existing)
+            self._session.commit()
+            return False
+        self._session.add(SavedORM(user_id=user_id, placement_id=placement_id))
+        self._session.commit()
+        return True
+
+
+class SqlAlchemyApplicationRepository(ApplicationRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: ApplicationORM) -> Application:
+        return Application(
+            id=row.id,
+            user_id=row.user_id,
+            placement_id=row.placement_id,
+            status=row.status,
+            statement=row.statement or "",
+            created_at=row.created_at or "",
+        )
+
+    def add(self, application: Application) -> Application:
+        self._session.add(
+            ApplicationORM(
+                id=application.id,
+                user_id=application.user_id,
+                placement_id=application.placement_id,
+                status=application.status,
+                statement=application.statement,
+                created_at=application.created_at,
+            )
+        )
+        self._session.commit()
+        return application
+
+    def find(self, user_id: str, placement_id: str) -> Optional[Application]:
+        row = (
+            self._session.query(ApplicationORM)
+            .filter_by(user_id=user_id, placement_id=placement_id)
+            .first()
+        )
+        return self._to_domain(row) if row is not None else None
+
+    def list_for_user(self, user_id: str) -> list[Application]:
+        rows = (
+            self._session.query(ApplicationORM)
+            .filter_by(user_id=user_id)
+            .order_by(ApplicationORM.created_at.desc(), ApplicationORM.id)
+            .all()
+        )
+        return [self._to_domain(r) for r in rows]
+
+    def list_for_placement(self, placement_id: str) -> list[Application]:
+        rows = (
+            self._session.query(ApplicationORM)
+            .filter_by(placement_id=placement_id)
+            .order_by(ApplicationORM.created_at.desc(), ApplicationORM.id)
+            .all()
+        )
+        return [self._to_domain(r) for r in rows]
+
+
+class SqlAlchemySubscriptionRepository(SubscriptionRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def get(self, org_id: str) -> Subscription:
+        row = self._session.query(SubscriptionORM).filter_by(org_id=org_id).first()
+        if row is None:
+            return Subscription(org_id=org_id)  # Free default
+        return Subscription(
+            org_id=row.org_id,
+            plan=row.plan,
+            billing=row.billing or "",
+            seats=row.seats or 1,
+            since=row.since or "",
+        )
+
+    def save(self, subscription: Subscription) -> Subscription:
+        row = (
+            self._session.query(SubscriptionORM).filter_by(org_id=subscription.org_id).first()
+        )
+        if row is None:
+            row = SubscriptionORM(org_id=subscription.org_id)
+            self._session.add(row)
+        row.plan = subscription.plan
+        row.billing = subscription.billing
+        row.seats = subscription.seats
+        row.since = subscription.since
+        self._session.commit()
+        return subscription

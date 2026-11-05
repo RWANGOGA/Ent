@@ -1,8 +1,6 @@
-"""Application factory and composition root.
-
-This is the only module that knows about every layer at once: it builds tables,
-seeds the catalogue and mounts routers. Everything else depends inward on
-abstractions, so this file is where the object graph is assembled.
+"""Composition root: a thin top-level app that keeps system endpoints and
+mounts the feature sub-application. Feature routers live in
+``app.presentation.sub`` so this file never bloats with domain routes.
 """
 from contextlib import asynccontextmanager
 
@@ -13,7 +11,7 @@ from app.core.config import get_settings
 from app.infrastructure.db import Base, SessionLocal, engine
 from app.infrastructure.orm import OrganisationORM, PlacementORM  # noqa: F401 (register tables)
 from app.infrastructure.seed import seed_if_empty
-from app.presentation.routers import advisor, matching, placements
+from app.presentation.sub import create_sub_app
 
 
 def _init_db() -> None:
@@ -24,15 +22,24 @@ def _init_db() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Dev/test convenience: ensure tables + seed exist on boot. When the schema
-    # starts evolving, replace this with Alembic migrations.
     _init_db()
     yield
 
 
-def create_app() -> FastAPI:
+def create_app(sub_prefix: str = "/api", sub: FastAPI | None = None) -> FastAPI:
+    """Build the top-level app.
+
+    ``sub_prefix`` is where the feature app is mounted: ``/api`` in production,
+    ``/`` in tests so existing routes keep their paths without the prefix.
+    ``sub`` may be injected (tests) — mounted sub-apps keep their own
+    ``dependency_overrides``, so we expose it on ``app.state.sub_app``.
+    """
     settings = get_settings()
-    app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title=f"{settings.app_name} (gateway)",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
 
     app.add_middleware(
         CORSMiddleware,
@@ -43,11 +50,15 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["system"])
     def health() -> dict:
-        return {"status": "ok", "service": settings.app_name, "environment": settings.environment}
+        return {
+            "status": "ok",
+            "service": settings.app_name,
+            "environment": settings.environment,
+        }
 
-    app.include_router(placements.router)
-    app.include_router(matching.router)
-    app.include_router(advisor.router)
+    sub = sub or create_sub_app()
+    app.state.sub_app = sub
+    app.mount(sub_prefix, sub)
     return app
 
 

@@ -91,3 +91,64 @@ class AdvisorRequest(BaseModel):
 
 class AdvisorResponse(BaseModel):
     reply: str
+
+
+# ---------------- B4: user state (saved, applications, subscription) -------
+
+
+class SavedListResponse(BaseModel):
+    saved_ids: list[str]
+
+
+class ToggleSavedRequest(BaseModel):
+    user_id: str
+    placement_id: str
+
+
+class ToggleSavedResponse(BaseModel):
+    saved: bool
+    saved_ids: list[str]
+
+
+class ApplicationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    placement_id: str
+    status: str
+    statement: str
+    created_at: str
+
+
+class ApplyRequest(BaseModel):
+    user_id: str
+    placement_id: str
+    statement: str = ""
+
+
+class ApplicationsResponse(BaseModel):
+    total: int
+    items: list[ApplicationRead]
+
+
+class SubscriptionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    org_id: str
+    plan: str
+    billing: str
+    seats: int
+    since: str
+    is_premium: bool
+
+
+class ActivatePlanRequest(BaseModel):
+    org_id: str
+    plan: str
+    billing: str = "Card"
+    seats: int = 1
+
+
+class CancelPlanRequest(BaseModel):
+    org_id: str

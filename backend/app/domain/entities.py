@@ -39,3 +39,39 @@ class Placement:
     about: str = ""
     duties: list[str] = field(default_factory=list)
     org: Optional[Organisation] = None
+
+
+# Application workflow statuses (kept as plain strings to stay persistence-friendly).
+APPLICATION_STATUSES = ("Submitted", "In Review", "Accepted", "Rejected")
+
+
+@dataclass(frozen=True)
+class Application:
+    """A student's submission to a placement. One row per (user, placement)."""
+
+    id: str
+    user_id: str
+    placement_id: str
+    status: str = "Submitted"
+    statement: str = ""
+    created_at: str = ""
+
+
+@dataclass(frozen=True)
+class Subscription:
+    """A host organisation's live billing state (placement-fee plan).
+
+    ``plan == "Free"`` means no paid plan; the free posting allowance then
+    applies. Premium lives with employers/institutions, never students.
+    """
+
+    org_id: str
+    plan: str = "Free"
+    billing: str = ""
+    seats: int = 1
+    since: str = ""
+
+    @property
+    def is_premium(self) -> bool:
+        return self.plan != "Free"
+

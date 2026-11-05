@@ -1,9 +1,17 @@
 """Domain/infrastructure error types shared across layers."""
 
 
-class LLMNotConfigured(RuntimeError):
-    """Raised when the advisor is called but Groq is not configured.
+class DomainError(Exception):
+    """Base for application/domain rule violations."""
 
-    The API turns this into a clear 503 instead of a stack trace, so the app
-    boots and every other endpoint works even before a key/model is set.
-    """
+
+class PlacementNotFound(DomainError):
+    """No placement exists with the requested id."""
+
+
+class PlacementNotOpen(DomainError):
+    """The placement exists but is Closed and can't accept new applications."""
+
+
+class LLMNotConfigured(RuntimeError):
+    """Raised when the advisor is called but Groq is not configured."""

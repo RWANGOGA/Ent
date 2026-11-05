@@ -1,8 +1,16 @@
 """Application services — thin use-case orchestrators over the ports."""
+from datetime import date
 from typing import Optional
+from uuid import uuid4
 
-from app.application.ports import PlacementRepository
-from app.domain.entities import Placement
+from app.application.ports import (
+    ApplicationRepository,
+    PlacementRepository,
+    SavedRepository,
+    SubscriptionRepository,
+)
+from app.core.errors import PlacementNotFound, PlacementNotOpen
+from app.domain.entities import Application, Placement, Subscription
 from app.domain.matching import RankedPlacement, match_placement
 
 
@@ -65,3 +73,87 @@ class MatchingService:
         ]
         ranked.sort(key=lambda r: (-r.match.score, r.placement.id))
         return ranked[:limit] if limit else ranked
+
+
+class SavedService:
+    """Use cases for a user's bookmarked placements."""
+
+    def __init__(self, repo: SavedRepository) -> None:
+        self._repo = repo
+
+    def list(self, user_id: str) -> list[str]:
+        return self._repo.list(user_id)
+
+    def is_saved(self, user_id: str, placement_id: str) -> bool:
+        return self._repo.is_saved(user_id, placement_id)
+
+    def toggle(self, user_id: str, placement_id: str) -> "tuple[bool, list[str]]":
+        now_saved = self._repo.toggle(user_id, placement_id)
+        return now_saved, self._repo.list(user_id)
+
+
+class ApplicationService:
+    """Use cases for applying to placements.
+
+    Holds the two real business rules: you can only apply to an existing, open
+    placement, and applying twice for the same placement is idempotent.
+    """
+
+    def __init__(self, placements: PlacementRepository, apps: ApplicationRepository) -> None:
+        self._placements = placements
+        self._apps = apps
+
+    def apply(self, *, user_id: str, placement_id: str, statement: str = "") -> Application:
+        placement = self._placements.get(placement_id)
+        if placement is None:
+            raise PlacementNotFound(placement_id)
+        if placement.status == "Closed":
+            raise PlacementNotOpen(placement_id)
+
+        existing = self._apps.find(user_id, placement_id)
+        if existing is not None:
+            return existing  # idempotent: no duplicate applications
+
+        application = Application(
+            id=uuid4().hex,
+            user_id=user_id,
+            placement_id=placement_id,
+            status="Submitted",
+            statement=statement,
+            created_at=date.today().isoformat(),
+        )
+        return self._apps.add(application)
+
+    def list_for_user(self, user_id: str) -> list[Application]:
+        return self._apps.list_for_user(user_id)
+
+    def list_for_placement(self, placement_id: str) -> list[Application]:
+        return self._apps.list_for_placement(placement_id)
+
+
+class BillingService:
+    """Use cases for the host organisation's placement-fee plan."""
+
+    def __init__(self, repo: SubscriptionRepository) -> None:
+        self._repo = repo
+
+    def get(self, org_id: str) -> Subscription:
+        return self._repo.get(org_id)
+
+    def activate(
+        self, org_id: str, plan: str, billing: str, seats: int
+    ) -> Subscription:
+        return self._repo.save(
+            Subscription(
+                org_id=org_id,
+                plan=plan,
+                billing=billing,
+                seats=max(1, seats),
+                since=date.today().isoformat(),
+            )
+        )
+
+    def cancel(self, org_id: str) -> Subscription:
+        return self._repo.save(
+            Subscription(org_id=org_id, plan="Free", billing="", seats=1, since="")
+        )

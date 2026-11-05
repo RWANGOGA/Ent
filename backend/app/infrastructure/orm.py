@@ -43,3 +43,31 @@ class PlacementORM(Base):
     testimonial: Mapped[bool] = mapped_column(Boolean, default=False)
     about: Mapped[str] = mapped_column(Text, default="")
     duties: Mapped[list] = mapped_column(JSON, default=list)
+
+
+class SavedORM(Base):
+    __tablename__ = "saved_placements"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    placement_id: Mapped[str] = mapped_column(String, primary_key=True)
+
+
+class ApplicationORM(Base):
+    __tablename__ = "applications"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    placement_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String, default="Submitted")
+    statement: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[str] = mapped_column(String, default="")
+
+
+class SubscriptionORM(Base):
+    __tablename__ = "subscriptions"
+
+    org_id: Mapped[str] = mapped_column(String, primary_key=True)
+    plan: Mapped[str] = mapped_column(String, default="Free")
+    billing: Mapped[str] = mapped_column(String, default="")
+    seats: Mapped[int] = mapped_column(Integer, default=1)
+    since: Mapped[str] = mapped_column(String, default="")

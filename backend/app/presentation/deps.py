@@ -9,10 +9,21 @@ from sqlalchemy.orm import Session
 
 from app.application.advisor import AdvisorService
 from app.application.ports import LLMClient
-from app.application.services import MatchingService, PlacementService
+from app.application.services import (
+    ApplicationService,
+    BillingService,
+    MatchingService,
+    PlacementService,
+    SavedService,
+)
 from app.infrastructure.db import get_session
 from app.infrastructure.groq import GroqClient
-from app.infrastructure.repositories import SqlAlchemyPlacementRepository
+from app.infrastructure.repositories import (
+    SqlAlchemyApplicationRepository,
+    SqlAlchemyPlacementRepository,
+    SqlAlchemySavedRepository,
+    SqlAlchemySubscriptionRepository,
+)
 
 
 def get_placement_service(session: Session = Depends(get_session)) -> PlacementService:
@@ -33,3 +44,19 @@ def get_advisor_service(
     llm: LLMClient = Depends(get_llm_client),
 ) -> AdvisorService:
     return AdvisorService(MatchingService(SqlAlchemyPlacementRepository(session)), llm)
+
+
+def get_saved_service(session: Session = Depends(get_session)) -> SavedService:
+    return SavedService(SqlAlchemySavedRepository(session))
+
+
+def get_application_service(
+    session: Session = Depends(get_session),
+) -> ApplicationService:
+    return ApplicationService(
+        SqlAlchemyPlacementRepository(session), SqlAlchemyApplicationRepository(session)
+    )
+
+
+def get_billing_service(session: Session = Depends(get_session)) -> BillingService:
+    return BillingService(SqlAlchemySubscriptionRepository(session))

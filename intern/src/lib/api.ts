@@ -215,3 +215,23 @@ export async function activateSubscriptionApi(
 export async function cancelSubscriptionApi(orgId: string): Promise<SubscriptionDto> {
   return postJson<SubscriptionDto>("/subscription/cancel", { org_id: orgId });
 }
+
+// ---- AI advisor ------------------------------------------------------------
+
+// POST /advisor -> a Groq-generated reply grounded by the server-side matcher.
+// Throws when Groq isn't configured (503) so the caller can fall back to the
+// built-in deterministic assistant.
+export async function askAdvisor(
+  message: string,
+  skills: string[],
+  course: string,
+  cgpa: number
+): Promise<string> {
+  const data = await postJson<{ reply: string }>("/advisor", {
+    message,
+    skills,
+    course,
+    cgpa,
+  });
+  return data.reply;
+}

@@ -38,6 +38,7 @@ import { matchPlacement } from "../lib/skills";
 import {
   activateSubscriptionApi,
   applyApi,
+  askAdvisor,
   cancelSubscriptionApi,
   fetchCatalog,
   fetchSaved,
@@ -671,8 +672,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { id: typingMsgId, who: "INTERN", text: "···", isTyping: true },
       ]);
 
-      setTimeout(() => {
-        const reply = answerChat(trimmed);
+      const finalize = (reply: string) =>
         setChatMessages((prev) =>
           prev
             .filter((m) => m.id !== typingMsgId)
@@ -682,9 +682,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
               text: reply,
             })
         );
-      }, 650);
+
+      // Prefer the Groq advisor (grounded by the server-side matcher). If the
+      // API is off/unreachable or Groq isn't configured (503), fall back to the
+      // built-in deterministic assistant so the chat always answers.
+      if (isApiEnabled) {
+        askAdvisor(trimmed, student.skills, student.course, student.cgpa)
+          .then(finalize)
+          .catch(() => finalize(answerChat(trimmed)));
+        return;
+      }
+
+      setTimeout(() => finalize(answerChat(trimmed)), 650);
     },
-    [answerChat]
+    [answerChat, student]
   );
 
   const askChat = useCallback(

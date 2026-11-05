@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { COURSES } from "../../data";
 import { Icon } from "../icons/Icons";
@@ -20,7 +20,10 @@ export function PlacementsView() {
     setSearchQuery,
     go,
     signIn,
+    saved,
   } = useApp();
+
+  const [savedOnly, setSavedOnly] = useState(false);
 
   const sectors = useMemo(() => {
     const list = placements.map((p) => getOrg(p.orgId)?.sector).filter(Boolean) as string[];
@@ -31,6 +34,7 @@ export function PlacementsView() {
     return placements.filter((p) => {
       const o = getOrg(p.orgId);
       if (!o) return false;
+      if (savedOnly && !saved.includes(p.id)) return false;
       const t = typeFilter === "All" || o.type === typeFilter;
       const s = sectorFilter === "All" || o.sector === sectorFilter;
       const c = courseFilter === "All" || p.courses.includes(courseFilter);
@@ -39,13 +43,14 @@ export function PlacementsView() {
         (p.title + " " + o.name).toLowerCase().includes(searchQuery.toLowerCase());
       return t && s && c && q;
     });
-  }, [placements, getOrg, typeFilter, sectorFilter, courseFilter, searchQuery]);
+  }, [placements, getOrg, typeFilter, sectorFilter, courseFilter, searchQuery, savedOnly, saved]);
 
   const handleReset = () => {
     setTypeFilter("All");
     setSectorFilter("All");
     setCourseFilter("All");
     setSearchQuery("");
+    setSavedOnly(false);
   };
 
   return (
@@ -125,6 +130,15 @@ export function PlacementsView() {
             />
           </div>
           <div className="spacer"></div>
+          <button
+            type="button"
+            className={`chip ${savedOnly ? "on" : ""}`}
+            aria-pressed={savedOnly}
+            onClick={() => setSavedOnly((v) => !v)}
+          >
+            <Icon name="save" size={13} /> Saved
+            <b>{saved.length}</b>
+          </button>
           <button
             type="button"
             className="btn btn-sm"

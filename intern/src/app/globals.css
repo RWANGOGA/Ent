@@ -370,6 +370,15 @@ nav[aria-label="Primary"]{display:flex}
 .fld select,.fld input{border:1px solid var(--rule-2);background:var(--white);height:40px;padding:0 12px;font-size:12.5px;border-radius:var(--r-sm);outline:0}
 .fld select:focus,.fld input:focus{border-color:var(--blue)}
 .fbar .spacer{flex:1}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;
+  border:1px solid var(--rule-2);border-radius:var(--r-pill);background:var(--white);
+  font-size:12.5px;font-weight:500;color:var(--ink-2);
+  transition:border-color .14s var(--ease),background .14s var(--ease),color .14s var(--ease);
+}
+.chip:hover{border-color:var(--blue)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:var(--paper)}
+.chip b{font-family:var(--mono);font-size:10px;font-weight:600;opacity:.8}
 
 /* detail page */
 .dgrid{display:grid;grid-template-columns:1fr 330px;gap:30px;align-items:start;padding:32px 0 60px}

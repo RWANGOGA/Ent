@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { useApp } from "../../context/AppContext";
 import { COURSES } from "../../data";
 import { Icon } from "../icons/Icons";
+import { PlacementCard } from "./PlacementCard";
 
 export function PlacementsView() {
   const {
@@ -17,7 +18,6 @@ export function PlacementsView() {
     setCourseFilter,
     searchQuery,
     setSearchQuery,
-    openPlacement,
     go,
     signIn,
   } = useApp();
@@ -136,58 +136,25 @@ export function PlacementsView() {
 
         <div className="dgrid" style={{ paddingTop: 0 }}>
           <div>
-            <table className="ptable">
-              <thead>
-                <tr>
-                  <th>Placement</th>
-                  <th>Organisation</th>
-                  <th>Type</th>
-                  <th>Courses</th>
-                  <th>Closes</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="plistBody">
-                {filtered.length > 0 ? (
-                  filtered.map((p) => {
-                    const o = getOrg(p.orgId);
-                    return (
-                      <tr key={p.id} onClick={() => openPlacement(p.id)}>
-                        <td className="r">
-                          <b>{p.title}</b>
-                          <span>
-                            {p.slots} slots · {p.duration}
-                          </span>
-                        </td>
-                        <td>{o?.name}</td>
-                        <td className="type">{o?.type}</td>
-                        <td style={{ fontSize: "11.5px", color: "var(--ink-2)" }}>
-                          {p.courses.slice(0, 2).join(", ")}
-                          {p.courses.length > 2 ? " +" : ""}
-                        </td>
-                        <td className="dead">{p.deadline}</td>
-                        <td style={{ textAlign: "right" }} className="arr">
-                          <Icon name="arrow" size={13} />
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      style={{
-                        padding: "30px",
-                        textAlign: "center",
-                        color: "var(--muted)",
-                      }}
-                    >
-                      No placements match these filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {filtered.length > 0 ? (
+              <div className="jcards" id="plistBody">
+                {filtered.map((p) => (
+                  <PlacementCard key={p.id} placement={p} />
+                ))}
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "30px",
+                  textAlign: "center",
+                  color: "var(--muted)",
+                  border: "1px solid var(--rule)",
+                  borderRadius: "var(--r-lg)",
+                }}
+              >
+                No placements match these filters.
+              </div>
+            )}
           </div>
 
           <aside className="side">

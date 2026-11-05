@@ -275,6 +275,50 @@ nav[aria-label="Primary"]{display:flex}
 .ptable .dead{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
 .ptable .arr{color:var(--faint)}
 
+/* job-board placement cards (benchmark: BrighterMonday / LinkedIn listings,
+   adopted as pattern only — hairline card, shared radius scale, no shadow
+   until hover, our colour and type). */
+.jcards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.jcard{
+  display:flex;gap:16px;padding:20px;
+  border:1px solid var(--rule);border-radius:var(--r-lg);background:var(--white);
+  cursor:pointer;transition:border-color .16s var(--ease),box-shadow .16s var(--ease),transform .16s var(--ease);
+}
+.jcard:hover{border-color:var(--rule-2);box-shadow:var(--shadow);transform:translateY(-2px)}
+.jcard:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.jlogo{
+  flex:none;width:52px;height:52px;border-radius:var(--r-sm);
+  display:grid;place-items:center;background:var(--blue-tint);color:var(--blue);
+  font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.04em;
+}
+.jbody{flex:1;min-width:0}
+.jtop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.jtitle{font-size:15px;font-weight:600;line-height:1.3;color:var(--ink)}
+.jsave{
+  flex:none;width:34px;height:34px;border-radius:var(--r-sm);color:var(--muted);
+  display:grid;place-items:center;transition:color .14s var(--ease),background .14s var(--ease);
+}
+.jsave:hover{color:var(--blue);background:var(--blue-tint)}
+.jsave.on{color:var(--blue)}
+.jsave.on svg{fill:var(--blue)}
+.jmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:12.5px;color:var(--ink-2)}
+.jorg{font-weight:500}
+.jdot{color:var(--faint)}
+.jloc{display:inline-flex;align-items:center;gap:3px;color:var(--muted-strong)}
+.jtags{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px}
+.jcourse{
+  display:inline-flex;align-items:center;padding:3px 9px;border-radius:var(--r-pill);
+  border:1px solid var(--rule-2);font-size:10.5px;color:var(--ink-2);
+}
+.jfoot{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--rule);font-size:12px;
+}
+.jpay{font-weight:600;color:var(--ink)}
+.jdur{color:var(--muted-strong)}
+.jclose{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted-strong);white-space:nowrap}
+@media (max-width:760px){.jcards{grid-template-columns:1fr}}
+
 /* dark university band */
 .band-dark{background:var(--blue-deep);color:var(--paper);padding:60px 0}
 .band-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}

@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { COURSES } from "../../data";
 import { Icon } from "../icons/Icons";
+import { PlacementCard } from "./PlacementCard";
 
 export function HomeView() {
   const {
     placements,
-    getOrg,
     go,
     setType,
     openPlacement,
@@ -371,41 +371,11 @@ export function HomeView() {
             </div>
             <p>Every row shows the organisation type, the eligible courses and the closing date. Nothing is hidden behind a sign-up.</p>
           </div>
-          <table className="ptable">
-            <thead>
-              <tr>
-                <th>Placement</th>
-                <th>Organisation</th>
-                <th>Type</th>
-                <th>Courses</th>
-                <th>Closes</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {latest.map((p) => {
-                const o = getOrg(p.orgId);
-                return (
-                  <tr key={p.id} onClick={() => openPlacement(p.id)}>
-                    <td className="r">
-                      <b>{p.title}</b>
-                      <span>{p.slots} slots · {p.duration}</span>
-                    </td>
-                    <td>{o?.name}</td>
-                    <td className="type">{o?.type}</td>
-                    <td style={{ fontSize: "11.5px", color: "var(--ink-2)" }}>
-                      {p.courses.slice(0, 2).join(", ")}
-                      {p.courses.length > 2 ? " +" : ""}
-                    </td>
-                    <td className="dead">{p.deadline}</td>
-                    <td style={{ textAlign: "right" }} className="arr">
-                      <Icon name="arrow" size={13} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="jcards">
+            {latest.map((p) => (
+              <PlacementCard key={p.id} placement={p} />
+            ))}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "16px", flexWrap: "wrap", gap: "10px" }}>
             <span className="lbl">Showing 6 of 1,284</span>
             <button

@@ -16,6 +16,8 @@ export type IconName =
   | "x"
   | "plus"
   | "menu"
+  | "save"
+  | "pin"
   | "home";
 
 export function SvgDefs() {
@@ -79,6 +81,13 @@ export function SvgDefs() {
         </symbol>
         <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M3 6h18M3 12h18M3 18h18" />
+        </symbol>
+        <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M6 4h12v16l-6-4-6 4z" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+          <path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z" />
+          <circle cx="12" cy="10" r="2.4" />
         </symbol>
         <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
           <path d="M3 11l9-7 9 7" />

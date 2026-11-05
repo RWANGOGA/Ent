@@ -42,6 +42,7 @@ import { matchPlacement } from "../lib/skills";
 const FREE_ALLOWANCE = 3;
 const EMPLOYER_ORG_ID = "o4";
 const SUBSCRIPTION_KEY = "intern:subscription";
+const SAVED_KEY = "intern:saved";
 
 interface AppContextType {
   route: string;
@@ -133,6 +134,11 @@ interface AppContextType {
   ) => void;
   cancelPlan: () => void;
 
+  // Saved placements (bookmark, persisted to localStorage)
+  saved: string[];
+  toggleSave: (id: string) => void;
+  isSaved: (id: string) => boolean;
+
   // Helpers
   getOrg: (id: string) => Org | undefined;
   getPlacement: (id: string) => Placement | undefined;
@@ -170,6 +176,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     seats: 1,
     since: "",
   });
+
+  // Bookmarked placements. Persisted so the shortlist survives reloads and is
+  // shared across the public index, the card button and the dashboard.
+  const [saved, setSaved] = useState<string[]>([]);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
@@ -899,6 +909,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [subscription]);
 
+  const toggleSave = useCallback((id: string) => {
+    setSaved((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      try {
+        window.localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore storage failures */
+      }
+      return next;
+    });
+  }, []);
+
+  const isSaved = useCallback((id: string) => saved.includes(id), [saved]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(SAVED_KEY);
+      if (raw) setSaved(JSON.parse(raw) as string[]);
+    } catch {
+      /* ignore malformed storage */
+    }
+  }, []);
+
   const openNewPlacementForm = useCallback(() => {
     openModal(
       "New placement",
@@ -1368,6 +1403,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         employerLiveCount,
         activatePlan,
         cancelPlan,
+
+        saved,
+        toggleSave,
+        isSaved,
 
         getOrg,
         getPlacement,

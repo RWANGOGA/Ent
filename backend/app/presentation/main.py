@@ -13,7 +13,7 @@ from app.core.config import get_settings
 from app.infrastructure.db import Base, SessionLocal, engine
 from app.infrastructure.orm import OrganisationORM, PlacementORM  # noqa: F401 (register tables)
 from app.infrastructure.seed import seed_if_empty
-from app.presentation.routers import placements
+from app.presentation.routers import matching, placements
 
 
 def _init_db() -> None:
@@ -46,6 +46,7 @@ def create_app() -> FastAPI:
         return {"status": "ok", "service": settings.app_name, "environment": settings.environment}
 
     app.include_router(placements.router)
+    app.include_router(matching.router)
     return app
 
 

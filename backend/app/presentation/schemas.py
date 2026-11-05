@@ -42,3 +42,41 @@ class PlacementRead(BaseModel):
 class PlacementListResponse(BaseModel):
     total: int
     items: list[PlacementRead]
+
+
+class MatchRead(BaseModel):
+    score: int
+    matched: list[str]
+    missing: list[str]
+    course_fit: bool
+    grade_fit: bool
+
+
+class RankedPlacementRead(BaseModel):
+    placement: PlacementRead
+    match: MatchRead
+
+
+class MatchRequest(BaseModel):
+    skills: list[str] = []
+    course: str = ""
+    cgpa: float = 0.0
+    # optional catalogue filters (same as GET /placements)
+    q: Optional[str] = None
+    org_type: Optional[str] = None
+    location: Optional[str] = None
+    mode: Optional[str] = None
+    limit: Optional[int] = None
+
+
+class MatchResponse(BaseModel):
+    total: int
+    items: list[RankedPlacementRead]
+
+
+class ExtractRequest(BaseModel):
+    text: str
+
+
+class ExtractResponse(BaseModel):
+    skills: list[str]

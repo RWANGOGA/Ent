@@ -23,10 +23,20 @@ class Settings(BaseSettings):
     # never hardcoded). Empty by default so the API boots without an advisor.
     groq_api_key: str = ""
     groq_model: str = ""
+    # Auth. The signing secret comes from the environment only; tokens are short
+    # lived. In production a real secret is required (guarded at startup).
+    secret_key: str = ""
+    access_token_ttl_minutes: int = 7 * 24 * 60  # one week
 
     @property
     def is_test(self) -> bool:
         return self.environment == "test"
+
+    @property
+    def effective_secret_key(self) -> str:
+        # A stable dev/test secret keeps local boot frictionless; production is
+        # forced to supply SECRET_KEY (see the startup guard in the app factory).
+        return self.secret_key or "dev-insecure-secret-change-me"
 
 
 @lru_cache

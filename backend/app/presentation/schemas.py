@@ -152,3 +152,34 @@ class ActivatePlanRequest(BaseModel):
 
 class CancelPlanRequest(BaseModel):
     org_id: str
+
+
+# ---------------- Auth ------------------------------------------------------
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    name: str = ""
+    role: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    name: str
+    role: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead
+

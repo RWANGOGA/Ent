@@ -71,3 +71,15 @@ class SubscriptionORM(Base):
     billing: Mapped[str] = mapped_column(String, default="")
     seats: Mapped[int] = mapped_column(Integer, default=1)
     since: Mapped[str] = mapped_column(String, default="")
+
+
+class UserORM(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, default="")
+    role: Mapped[str] = mapped_column(String, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[str] = mapped_column(String, default="")
+

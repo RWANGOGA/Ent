@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.infrastructure.db import Base, SessionLocal, engine
-from app.infrastructure.orm import OrganisationORM, PlacementORM  # noqa: F401 (register tables)
+from app.infrastructure.orm import OrganisationORM, PlacementORM, UserORM  # noqa: F401 (register tables)
 from app.infrastructure.seed import seed_if_empty
 from app.presentation.sub import create_sub_app
 

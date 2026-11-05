@@ -8,8 +8,9 @@ from app.application.ports import (
     PlacementRepository,
     SavedRepository,
     SubscriptionRepository,
+    UserRepository,
 )
-from app.domain.entities import Application, Placement, Subscription
+from app.domain.entities import Application, Placement, Subscription, User
 
 
 class FakeLLM(LLMClient):
@@ -88,3 +89,20 @@ class InMemorySubscriptionRepository(SubscriptionRepository):
     def save(self, subscription: Subscription) -> Subscription:
         self._by_org[subscription.org_id] = subscription
         return subscription
+
+
+class InMemoryUserRepository(UserRepository):
+    def __init__(self) -> None:
+        self._by_id: dict[str, User] = {}
+        self._by_email: dict[str, User] = {}
+
+    def add(self, user: User) -> User:
+        self._by_id[user.id] = user
+        self._by_email[user.email] = user
+        return user
+
+    def get_by_email(self, email: str) -> User | None:
+        return self._by_email.get(email)
+
+    def get_by_id(self, user_id: str) -> User | None:
+        return self._by_id.get(user_id)

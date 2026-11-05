@@ -15,14 +15,16 @@ from app.application.ports import (
     PlacementRepository,
     SavedRepository,
     SubscriptionRepository,
+    UserRepository,
 )
-from app.domain.entities import Application, Organisation, Placement, Subscription
+from app.domain.entities import Application, Organisation, Placement, Subscription, User
 from app.infrastructure.orm import (
     ApplicationORM,
     OrganisationORM,
     PlacementORM,
     SavedORM,
     SubscriptionORM,
+    UserORM,
 )
 
 
@@ -224,3 +226,41 @@ class SqlAlchemySubscriptionRepository(SubscriptionRepository):
         row.since = subscription.since
         self._session.commit()
         return subscription
+
+
+class SqlAlchemyUserRepository(UserRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: UserORM) -> User:
+        return User(
+            id=row.id,
+            email=row.email,
+            name=row.name,
+            role=row.role,
+            password_hash=row.password_hash,
+            created_at=row.created_at or "",
+        )
+
+    def add(self, user: User) -> User:
+        self._session.add(
+            UserORM(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                role=user.role,
+                password_hash=user.password_hash,
+                created_at=user.created_at,
+            )
+        )
+        self._session.commit()
+        return user
+
+    def get_by_email(self, email: str) -> Optional[User]:
+        row = self._session.query(UserORM).filter_by(email=email).first()
+        return self._to_domain(row) if row is not None else None
+
+    def get_by_id(self, user_id: str) -> Optional[User]:
+        row = self._session.query(UserORM).filter_by(id=user_id).first()
+        return self._to_domain(row) if row is not None else None

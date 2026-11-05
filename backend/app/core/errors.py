@@ -15,3 +15,20 @@ class PlacementNotOpen(DomainError):
 
 class LLMNotConfigured(RuntimeError):
     """Raised when the advisor is called but Groq is not configured."""
+
+
+class AuthenticationError(DomainError):
+    """Bad credentials or an invalid/expired token (maps to HTTP 401)."""
+
+
+class InvalidCredentials(AuthenticationError):
+    """Email/password did not match any account."""
+
+
+class EmailAlreadyExists(DomainError):
+    """Registration attempted with an email that is already taken."""
+
+
+class UserNotFound(DomainError):
+    """No account exists with the requested id."""
+

@@ -1,10 +1,15 @@
 """Seed data — the current catalogue, moved out of the frontend's hardcoded
-module and into the database. Idempotent: it only inserts when the tables are
-empty, so repeated startup (and the test harness) is safe.
+module and into the database. Idempotent per table: orgs/placements are only
+inserted when empty, and demo accounts only when the users table is empty, so
+repeated startup (and the test harness) is safe.
 """
+from datetime import date
+from uuid import uuid4
+
 from sqlalchemy.orm import Session
 
-from app.infrastructure.orm import OrganisationORM, PlacementORM
+from app.core.security import hash_password
+from app.infrastructure.orm import OrganisationORM, PlacementORM, UserORM
 
 ORGS: list[dict] = [
     {"id": "o1", "name": "Ministry of ICT and National Guidance", "type": "Government", "sector": "Public sector", "loc": "Kampala", "seal": "MIC", "about": "National ministry responsible for digital government services, ICT policy and public-sector innovation."},
@@ -35,9 +40,36 @@ PLACEMENTS: list[dict] = [
 ]
 
 
+# Demo accounts so the app is usable the moment the backend boots. These are
+# throwaway local credentials (never production), which is exactly the point:
+# identity now comes from real accounts + real tokens, not hardcoded constants.
+DEMO_PASSWORD = "password123"
+DEMO_USERS: list[dict] = [
+    {"email": "amina@makerere.ac.ug", "name": "Amina Nakato", "role": "student"},
+    {"email": "brian@example.com", "name": "Brian Ssekandi", "role": "jobseeker"},
+    {"email": "hiring@lumenlabs.example", "name": "Lumen Labs", "role": "employer"},
+    {"email": "office@makerere.ac.ug", "name": "Makerere University", "role": "admin"},
+]
+
+
 def seed_if_empty(session: Session) -> None:
-    if session.query(OrganisationORM).count() > 0:
-        return
-    session.add_all([OrganisationORM(**org) for org in ORGS])
-    session.add_all([PlacementORM(**p) for p in PLACEMENTS])
-    session.commit()
+    if session.query(OrganisationORM).count() == 0:
+        session.add_all([OrganisationORM(**org) for org in ORGS])
+        session.add_all([PlacementORM(**p) for p in PLACEMENTS])
+        session.commit()
+    if session.query(UserORM).count() == 0:
+        today = date.today().isoformat()
+        session.add_all(
+            [
+                UserORM(
+                    id=uuid4().hex,
+                    email=u["email"],
+                    name=u["name"],
+                    role=u["role"],
+                    password_hash=hash_password(DEMO_PASSWORD),
+                    created_at=today,
+                )
+                for u in DEMO_USERS
+            ]
+        )
+        session.commit()

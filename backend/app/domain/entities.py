@@ -75,3 +75,21 @@ class Subscription:
     def is_premium(self) -> bool:
         return self.plan != "Free"
 
+
+# Account roles. Mirrors the four dashboards the product exposes.
+USER_ROLES = ("student", "jobseeker", "employer", "admin")
+
+
+@dataclass(frozen=True)
+class User:
+    """An authenticated account. ``password_hash`` never leaves the domain —
+    the presentation layer exposes a safe view without it."""
+
+    id: str
+    email: str
+    name: str
+    role: str
+    password_hash: str
+    created_at: str = ""
+
+

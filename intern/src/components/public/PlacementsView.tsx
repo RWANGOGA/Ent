@@ -19,7 +19,6 @@ export function PlacementsView() {
     searchQuery,
     setSearchQuery,
     go,
-    signIn,
     saved,
   } = useApp();
 
@@ -197,7 +196,7 @@ export function PlacementsView() {
                   style={{ marginTop: "12px" }}
                   onClick={(e) => {
                     e.preventDefault();
-                    signIn("student");
+                    go("signin");
                   }}
                 >
                   Check my eligibility

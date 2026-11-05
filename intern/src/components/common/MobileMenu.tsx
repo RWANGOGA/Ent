@@ -5,7 +5,8 @@ import { useApp } from "../../context/AppContext";
 import { Icon } from "../icons/Icons";
 
 export function MobileMenu() {
-  const { isMenuOpen, closeMenu, go, setType } = useApp();
+  const { isMenuOpen, closeMenu, go, setType, session, openDashboardFor, role, signOut } =
+    useApp();
 
   // The desktop bar's panels close on Escape; this sheet does the same.
   useEffect(() => {
@@ -189,26 +190,53 @@ export function MobileMenu() {
       </a>
 
       <div className="m-cta">
-        <button
-          type="button"
-          className="btn btn-block"
-          onClick={() => {
-            closeMenu();
-            go("signin");
-          }}
-        >
-          Sign in
-        </button>
-        <button
-          type="button"
-          className="btn btn-blue btn-block"
-          onClick={() => {
-            closeMenu();
-            go("placements");
-          }}
-        >
-          Browse placements
-        </button>
+        {session ? (
+          <>
+            <button
+              type="button"
+              className="btn btn-blue btn-block"
+              onClick={() => {
+                closeMenu();
+                openDashboardFor(role);
+              }}
+            >
+              Open dashboard
+            </button>
+            <button
+              type="button"
+              className="btn btn-block"
+              onClick={() => {
+                closeMenu();
+                signOut();
+              }}
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="btn btn-block"
+              onClick={() => {
+                closeMenu();
+                go("signin");
+              }}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              className="btn btn-blue btn-block"
+              onClick={() => {
+                closeMenu();
+                go("placements");
+              }}
+            >
+              Browse placements
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

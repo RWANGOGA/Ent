@@ -5,9 +5,23 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentOverview() {
-  const { placements, getOrg, student, dashGo } = useApp();
-  const p = placements[1];
+  const { placements, getOrg, student, dashGo, session } = useApp();
+  // The catalog now arrives from the API, so it can legitimately be empty on
+  // first paint. Guard before indexing; full per-student application data is
+  // served by the backend in a later increment.
+  if (!placements.length) {
+    return (
+      <div className="dpane-h">
+        <div>
+          <h2>Loading your dashboard</h2>
+          <p>Fetching live placements from the server…</p>
+        </div>
+      </div>
+    );
+  }
+  const p = placements[1] || placements[0];
   const o = getOrg(p.orgId);
+  const firstName = (session?.name || "").trim().split(/\s+/)[0];
 
   const checklist: [string, boolean, string][] = [
     ["Course matches", true, "Design is an eligible course"],
@@ -22,7 +36,7 @@ export function StudentOverview() {
     <>
       <div className="dpane-h">
         <div>
-          <h2>Good morning, Amina</h2>
+          <h2>{firstName ? `Good morning, ${firstName}` : "Good morning"}</h2>
           <p>One application in review · two requirements outstanding</p>
         </div>
         <button

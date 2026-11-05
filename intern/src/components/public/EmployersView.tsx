@@ -4,7 +4,7 @@ import React from "react";
 import { useApp } from "../../context/AppContext";
 
 export function EmployersView() {
-  const { signIn, go } = useApp();
+  const { go } = useApp();
 
   return (
     <>
@@ -35,7 +35,7 @@ export function EmployersView() {
             <button
               type="button"
               className="btn btn-blue"
-              onClick={() => signIn("employer")}
+              onClick={() => go("signin")}
             >
               Open employer dashboard
             </button>

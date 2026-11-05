@@ -15,7 +15,6 @@ export function PlacementDetailView() {
     docs,
     go,
     applyTo,
-    signIn,
     toggleSave,
     isSaved,
   } = useApp();
@@ -287,7 +286,7 @@ export function PlacementDetailView() {
                 type="button"
                 className="btn btn-block"
                 style={{ marginTop: "8px" }}
-                onClick={() => signIn("student")}
+                onClick={() => go("signin")}
               >
                 Open my documents
               </button>
@@ -329,7 +328,7 @@ export function PlacementDetailView() {
                   type="button"
                   className="btn btn-sm btn-block"
                   style={{ marginTop: "10px" }}
-                  onClick={() => signIn("student")}
+                  onClick={() => go("signin")}
                 >
                   Upload missing
                 </button>

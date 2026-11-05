@@ -74,7 +74,8 @@ const entryHref = (entry: Entry) =>
   "filter" in entry ? "#placements" : "role" in entry ? "#signin" : `#${entry.route}`;
 
 export function Header() {
-  const { go, setType, signIn, openMenu, route, isMenuOpen } = useApp();
+  const { go, setType, openMenu, route, isMenuOpen, session, role, openDashboardFor } =
+    useApp();
 
   /*
     The panel used to open on :hover alone, so its links were unreachable by
@@ -125,7 +126,7 @@ export function Header() {
   const run = (entry: Entry) => {
     close();
     if ("filter" in entry) setType(entry.filter);
-    else if ("role" in entry) signIn(entry.role);
+    else if ("role" in entry) go("signin");
     else go(entry.route);
   };
 
@@ -134,8 +135,7 @@ export function Header() {
       <div className="util">
         <div className="wrap">
           <span>
-            Placement office in software · 41 universities · 620 employers and
-            agencies
+            Placement office in software · universities, employers and agencies
           </span>
         </div>
       </div>
@@ -215,28 +215,44 @@ export function Header() {
           </nav>
 
           <div className="hdr-actions">
-            <a
-              href="#signin"
-              className="hdr-signin"
-              onClick={(e) => {
-                e.preventDefault();
-                close();
-                go("signin");
-              }}
-            >
-              Sign in
-            </a>
-            <a
-              href="#signin"
-              className="btn btn-blue"
-              onClick={(e) => {
-                e.preventDefault();
-                close();
-                signIn("employer");
-              }}
-            >
-              List a placement
-            </a>
+            {session ? (
+              <a
+                href={`#dashboard-${role}-overview`}
+                className="btn btn-blue"
+                onClick={(e) => {
+                  e.preventDefault();
+                  close();
+                  openDashboardFor(role);
+                }}
+              >
+                Open dashboard
+              </a>
+            ) : (
+              <>
+                <a
+                  href="#signin"
+                  className="hdr-signin"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    close();
+                    go("signin");
+                  }}
+                >
+                  Sign in
+                </a>
+                <a
+                  href="#signin"
+                  className="btn btn-blue"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    close();
+                    go("signin");
+                  }}
+                >
+                  List a placement
+                </a>
+              </>
+            )}
             <button
               type="button"
               className="burger"

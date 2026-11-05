@@ -44,12 +44,12 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
 ];
 
 export function Footer() {
-  const { go, signIn } = useApp();
+  const { go } = useApp();
   // Hydrated from the visitor's clock; a hardcoded year silently rots.
   const [year] = useState(() => new Date().getFullYear());
 
   const handleLink = (link: FooterLink) => {
-    if ("role" in link) signIn(link.role);
+    if ("role" in link) go("signin");
     else go(link.route);
   };
 

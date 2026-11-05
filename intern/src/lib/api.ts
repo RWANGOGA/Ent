@@ -16,6 +16,45 @@ export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
 
 export const isApiEnabled = API_BASE.length > 0;
 
+// ---- Session token store ---------------------------------------------------
+
+// The Bearer token lives in localStorage so a reload restores the session
+// without hitting /auth/login again; /auth/me validates it on boot.
+const TOKEN_KEY = "intern:token";
+
+let _token: string | null =
+  typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+
+export function getToken(): string | null {
+  return _token;
+}
+
+export function setToken(token: string | null): void {
+  _token = token;
+  if (typeof window === "undefined") return;
+  try {
+    if (token) window.localStorage.setItem(TOKEN_KEY, token);
+    else window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* private mode — session simply won't persist across reloads */
+  }
+}
+
+function authHeader(): Record<string, string> {
+  return _token ? { Authorization: `Bearer ${_token}` } : {};
+}
+
+// Typed error carrying the HTTP status so callers can branch (e.g. show the
+// backend's "Incorrect email or password" on 401 instead of a generic failure).
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 // ---- Backend DTO shapes (snake_case) ---------------------------------------
 
 interface ApiOrg {
@@ -92,25 +131,37 @@ function mapPlacement(p: ApiPlacement): Placement {
 
 // ---- Requests --------------------------------------------------------------
 
+async function readError(res: Response, path: string): Promise<never> {
+  // Prefer the backend's structured { detail } message; fall back to status.
+  let detail = `API ${res.status} on ${path}`;
+  try {
+    const body = await res.json();
+    if (body && typeof body.detail === "string") detail = body.detail;
+  } catch {
+    /* non-JSON error body — keep the status-derived message */
+  }
+  throw new ApiError(res.status, detail);
+}
+
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Accept: "application/json" },
+    headers: { Accept: "application/json", ...authHeader() },
   });
-  if (!res.ok) {
-    throw new Error(`API ${res.status} on ${path}`);
-  }
+  if (!res.ok) await readError(res, path);
   return (await res.json()) as T;
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeader(),
+    },
     body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    throw new Error(`API ${res.status} on ${path}`);
-  }
+  if (!res.ok) await readError(res, path);
   return (await res.json()) as T;
 }
 
@@ -234,4 +285,58 @@ export async function askAdvisor(
     cgpa,
   });
   return data.reply;
+}
+
+// ---- Auth (real accounts + tokens) ----------------------------------------
+
+export interface ApiUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+interface ApiAuthResponse {
+  access_token: string;
+  token_type: string;
+  user: ApiUser;
+}
+
+// POST /auth/login -> stores the Bearer token and returns the safe user view.
+// Throws ApiError(401, "Incorrect email or password") on bad credentials.
+export async function loginApi(email: string, password: string): Promise<ApiUser> {
+  const data = await postJson<ApiAuthResponse>("/auth/login", { email, password });
+  setToken(data.access_token);
+  return data.user;
+}
+
+// POST /auth/register -> creates the account and signs straight in.
+export async function registerApi(
+  email: string,
+  name: string,
+  role: string,
+  password: string
+): Promise<ApiUser> {
+  const data = await postJson<ApiAuthResponse>("/auth/register", {
+    email,
+    name,
+    role,
+    password,
+  });
+  setToken(data.access_token);
+  return data.user;
+}
+
+// GET /auth/me -> the current account for a stored token, or null when there is
+// no token. Clears a token the server rejects so a stale session can't linger.
+export async function fetchMe(): Promise<ApiUser | null> {
+  if (!_token) return null;
+  try {
+    return await getJson<ApiUser>("/auth/me");
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      setToken(null);
+    }
+    return null;
+  }
 }

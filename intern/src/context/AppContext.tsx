@@ -24,9 +24,7 @@ import {
   Subscription,
 } from "../types";
 import {
-  ORGS,
   COURSES,
-  PLACEMENTS,
   INITIAL_STUDENT,
   GRADE_RANK,
   INITIAL_DOCS,
@@ -41,10 +39,15 @@ import {
   askAdvisor,
   cancelSubscriptionApi,
   fetchCatalog,
+  fetchMe,
   fetchSaved,
   fetchSubscription,
   isApiEnabled,
+  loginApi,
+  registerApi,
+  setToken,
   toggleSavedApi,
+  type ApiUser,
   type SubscriptionDto,
 } from "../lib/api";
 
@@ -52,12 +55,10 @@ import {
 // this many placements, then the fee applies. Mirrors the site's "first three
 // placements free" promise and turns it into enforced behaviour.
 const FREE_ALLOWANCE = 3;
+// Transitional: the employer->org linkage isn't on the User model yet (R1d
+// derives it from the token). A logged-in employer account stands in for it.
 const EMPLOYER_ORG_ID = "o4";
 const SUBSCRIPTION_KEY = "intern:subscription";
-const SAVED_KEY = "intern:saved";
-// There is no auth yet, so the demo student has a stable id the API can key
-// saved/applications state against. A real login will replace this.
-const CURRENT_USER_ID = "u-amina";
 
 // Maps the backend subscription DTO onto the UI's Subscription shape.
 function toLocalSubscription(s: SubscriptionDto): Subscription {
@@ -67,6 +68,12 @@ function toLocalSubscription(s: SubscriptionDto): Subscription {
     seats: s.seats,
     since: s.since,
   };
+}
+
+// The four dashboards are selected by an account's role. Guard against a bad
+// value from the API so role-dependent lookups stay total.
+function mapApiRole(r: string): UserRole {
+  return r === "jobseeker" || r === "employer" || r === "admin" ? r : "student";
 }
 
 interface AppContextType {
@@ -79,6 +86,9 @@ interface AppContextType {
   planSeg: string;
   role: UserRole;
   dash: DashboardView;
+  session: ApiUser | null;
+  isAuthed: boolean;
+  authReady: boolean;
 
   // Data
   orgs: Org[];
@@ -114,7 +124,15 @@ interface AppContextType {
   go: (route: string) => void;
   openPlacement: (id: string) => void;
   setType: (t: string) => void;
-  signIn: (role: UserRole) => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    name: string,
+    role: UserRole,
+    password: string
+  ) => Promise<void>;
+  signOut: () => void;
+  openDashboardFor: (r: UserRole) => void;
   dashGo: (view: DashboardView) => void;
 
   openMenu: () => void;
@@ -183,9 +201,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [planSeg, setPlanSeg] = useState<string>("companies");
   const [role, setRole] = useState<UserRole>("student");
   const [dash, setDash] = useState<DashboardView>("overview");
+  // The signed-in account (id/email/name/role). Null until /auth/me or a login
+  // resolves. It is the single source of identity for the whole app now.
+  const [session, setSession] = useState<ApiUser | null>(null);
+  // True once the initial /auth/me check has finished, so we never flash a
+  // "not signed in" redirect while the stored session is still being restored.
+  const [authReady, setAuthReady] = useState<boolean>(false);
 
-  const [orgs, setOrgs] = useState<Org[]>(ORGS);
-  const [placements, setPlacements] = useState<Placement[]>(PLACEMENTS);
+  // Catalogue comes only from the API now — no bundled seed fallback — so it
+  // starts empty and fills from GET /placements on mount.
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [placements, setPlacements] = useState<Placement[]>([]);
   const [student, setStudent] = useState<Student>(INITIAL_STUDENT);
   const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
   const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
@@ -345,27 +371,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [navigateByHash]);
 
-  // Catalog read cutover (B5.1). When an API base URL is configured, the
-  // placements and organisations come from the database via GET /placements;
-  // otherwise (e.g. the GitHub Pages static build) we keep the bundled seed.
-  // The seed is also the graceful fallback if the request fails, so the site
-  // never blanks out because the backend is unreachable.
+  // Catalog read: the placements and organisations come from the database via
+  // GET /placements. There is no seed fallback, so the catalogue is only ever
+  // what the backend reports (empty when the API isn't configured/reachable).
   useEffect(() => {
     if (!isApiEnabled) return;
     let cancelled = false;
     fetchCatalog()
       .then(({ placements: fromApi, orgs: apiOrgs }) => {
         if (cancelled) return;
-        if (fromApi.length) setPlacements(fromApi);
-        if (apiOrgs.length) setOrgs(apiOrgs);
+        setPlacements(fromApi);
+        setOrgs(apiOrgs);
       })
       .catch(() => {
-        /* backend unreachable — silently keep the seed */
+        /* backend unreachable — the catalogue is simply empty */
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Restore the session once from a stored token. /auth/me is the anchor: it
+  // both validates the token and returns the account whose role drives which
+  // dashboard the user sees.
+  useEffect(() => {
+    if (!isApiEnabled) {
+      setAuthReady(true);
+      return;
+    }
+    fetchMe()
+      .then((user) => {
+        if (user) {
+          setSession(user);
+          setRole(mapApiRole(user.role));
+        }
+      })
+      .finally(() => setAuthReady(true));
+  }, []);
+
+  // The dashboard now requires a real, signed-in account: if the session has
+  // resolved to nothing and a dashboard is opened (deep link included), route to
+  // the sign-in screen instead of showing an identity-less dashboard.
+  useEffect(() => {
+    if (
+      isApiEnabled &&
+      authReady &&
+      !session &&
+      route === "dashboard" &&
+      typeof window !== "undefined"
+    ) {
+      window.location.hash = "#signin";
+      setRoute("signin");
+    }
+  }, [isApiEnabled, authReady, session, route]);
 
   const go = useCallback(
     (newRoute: string) => {
@@ -409,21 +467,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const openDashboardFor = useCallback((r: UserRole) => {
+    setDash("overview");
+    setRoute("dashboard");
+    if (typeof window !== "undefined") {
+      window.location.hash = `#dashboard-${r}-overview`;
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, []);
+
+  // Real login: authenticate against the backend, persist the Bearer token, and
+  // let the account's own role drive which dashboard opens. Throws on failure
+  // so the sign-in screen can surface the backend's error message.
   const signIn = useCallback(
-    (newRole: UserRole) => {
-      setRole(newRole);
-      setDash("overview");
-      if (newRole === "student") {
-        setStudent((prev) => ({ ...prev, name: "Amina Nakato" }));
-      }
-      setRoute("dashboard");
-      if (typeof window !== "undefined") {
-        window.location.hash = `#dashboard-${newRole}-overview`;
-        window.scrollTo({ top: 0, behavior: "instant" });
-      }
+    async (email: string, password: string) => {
+      if (!isApiEnabled) throw new Error("Sign-in needs the backend API.");
+      const user = await loginApi(email, password);
+      const r = mapApiRole(user.role);
+      setSession(user);
+      setRole(r);
+      if (r === "student") setStudent((prev) => ({ ...prev, name: user.name }));
+      openDashboardFor(r);
     },
-    []
+    [openDashboardFor]
   );
+
+  const signUp = useCallback(
+    async (
+      email: string,
+      name: string,
+      userRole: UserRole,
+      password: string
+    ) => {
+      if (!isApiEnabled) throw new Error("Sign-up needs the backend API.");
+      const user = await registerApi(email, name, userRole, password);
+      const r = mapApiRole(user.role);
+      setSession(user);
+      setRole(r);
+      if (r === "student") setStudent((prev) => ({ ...prev, name: user.name }));
+      openDashboardFor(r);
+    },
+    [openDashboardFor]
+  );
+
+  const signOut = useCallback(() => {
+    setToken(null);
+    setSession(null);
+    setSaved([]);
+    go("home");
+  }, [go]);
 
   const dashGo = useCallback(
     (view: DashboardView) => {
@@ -551,9 +643,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             q.includes(x.title.toLowerCase().split(" ")[0].toLowerCase())
           ) ||
           (pid ? getPlacement(pid) : null) ||
-          placements[1];
+          placements[1] ||
+          placements[0];
 
-        const targetP = found || placements[1];
+        const targetP = found;
+        if (!targetP)
+          return `The placement catalog has not loaded yet, so I cannot score eligibility. Open the Placements tab and ask again once the live list appears.`;
         const ok = isEligible(targetP);
         const courseOk = targetP.courses.includes(student.course);
         const targetOrg = getOrg(targetP.orgId);
@@ -777,13 +872,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
             toast(`Pack sent to ${orgName}`);
             return;
           }
-          applyApi(CURRENT_USER_ID, id, pack.statement)
+          if (!session) {
+            toast("Please sign in to apply.");
+            go("signin");
+            return;
+          }
+          applyApi(session.id, id, pack.statement)
             .then(() => toast(`Application sent to ${orgName}`))
             .catch(() => toast("Couldn't submit right now — please try again"));
         }
       );
     },
-    [getPlacement, getOrg, pack.statement, docs, openModal, toast]
+    [getPlacement, getOrg, pack.statement, docs, openModal, toast, session, go]
   );
 
   const reviewStudent = useCallback(
@@ -1001,50 +1101,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [subscription]);
 
-  const toggleSave = useCallback((id: string) => {
-    if (isApiEnabled) {
+  const toggleSave = useCallback(
+    (id: string) => {
+      if (!isApiEnabled) return;
+      if (!session) {
+        toast("Sign in to save placements.");
+        go("signin");
+        return;
+      }
       // Optimistic flip, then reconcile with the server's authoritative list.
       setSaved((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
       );
-      toggleSavedApi(CURRENT_USER_ID, id)
+      toggleSavedApi(session.id, id)
         .then(({ savedIds }) => setSaved(savedIds))
         .catch(() => {
           /* server unreachable — keep the optimistic local change */
         });
-      return;
-    }
-    setSaved((prev) => {
-      const next = prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id];
-      try {
-        window.localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore storage failures */
-      }
-      return next;
-    });
-  }, []);
+    },
+    [session, toast, go]
+  );
 
   const isSaved = useCallback((id: string) => saved.includes(id), [saved]);
 
+  // The shortlist is per-account and comes only from the API. It re-hydrates
+  // whenever the signed-in account changes (login, logout, switch).
   useEffect(() => {
-    if (isApiEnabled) {
-      fetchSaved(CURRENT_USER_ID)
-        .then(setSaved)
-        .catch(() => {
-          /* backend unreachable — start with an empty shortlist */
-        });
+    if (!isApiEnabled) return;
+    if (!session) {
+      setSaved([]);
       return;
     }
-    try {
-      const raw = window.localStorage.getItem(SAVED_KEY);
-      if (raw) setSaved(JSON.parse(raw) as string[]);
-    } catch {
-      /* ignore malformed storage */
-    }
-  }, []);
+    fetchSaved(session.id)
+      .then(setSaved)
+      .catch(() => setSaved([]));
+  }, [session]);
 
   const openNewPlacementForm = useCallback(() => {
     openModal(
@@ -1451,6 +1542,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         planSeg,
         role,
         dash,
+        session,
+        isAuthed: !!session,
+        authReady,
 
         orgs,
         placements,
@@ -1483,6 +1577,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         openPlacement,
         setType,
         signIn,
+        signUp,
+        signOut,
+        openDashboardFor,
         dashGo,
 
         openMenu,

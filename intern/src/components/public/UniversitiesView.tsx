@@ -4,7 +4,7 @@ import React from "react";
 import { useApp } from "../../context/AppContext";
 
 export function UniversitiesView() {
-  const { signIn, go } = useApp();
+  const { go } = useApp();
 
   return (
     <>
@@ -35,7 +35,7 @@ export function UniversitiesView() {
             <button
               type="button"
               className="btn btn-blue"
-              onClick={() => signIn("admin")}
+              onClick={() => go("signin")}
             >
               Open the admin dashboard
             </button>
@@ -137,7 +137,7 @@ export function UniversitiesView() {
                 type="button"
                 className="btn btn-sm"
                 style={{ marginTop: "16px" }}
-                onClick={() => signIn("admin")}
+                onClick={() => go("signin")}
               >
                 See the dashboard
               </button>

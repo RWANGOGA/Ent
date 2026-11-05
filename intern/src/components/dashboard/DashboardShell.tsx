@@ -33,6 +33,8 @@ export function DashboardShell() {
     dash,
     dashGo,
     go,
+    session,
+    signOut,
     isSideDrawerOpen,
     openSide,
     closeSide,
@@ -41,6 +43,18 @@ export function DashboardShell() {
 
   const meta = ROLE_META[role] || ROLE_META.student;
   const navItems = NAV[role] || NAV.student;
+
+  // Identity shown in the sidebar / "me" chip comes from the signed-in account,
+  // not the hardcoded ROLE_META name. Falls back only if somehow unauthed.
+  const initials = (n: string) => {
+    const parts = n.trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "··";
+    return parts.length === 1
+      ? parts[0].slice(0, 2).toUpperCase()
+      : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+  const displayName = session ? session.name : meta[1];
+  const displayMono = session ? initials(session.name) : meta[2];
 
   const titles: Record<string, string> = {
     overview: "Overview",
@@ -125,9 +139,9 @@ export function DashboardShell() {
         </span>
       </div>
       <div className="rolechip">
-        <span className="rc">{meta[2]}</span>
+        <span className="rc">{displayMono}</span>
         <div>
-          <b>{meta[1]}</b>
+          <b>{displayName}</b>
           <span>{meta[0]}</span>
         </div>
       </div>
@@ -144,8 +158,6 @@ export function DashboardShell() {
           >
             <span className="n">{n}</span>
             <span>{label}</span>
-            {id === "students" && <span className="cnt">7</span>}
-            {id === "applicants" && <span className="cnt">14</span>}
           </a>
         ))}
       </nav>
@@ -175,10 +187,11 @@ export function DashboardShell() {
           href="#signin"
           onClick={(e) => {
             e.preventDefault();
-            go("signin");
+            closeSide();
+            signOut();
           }}
         >
-          <Icon name="user" size={13} /> Switch role
+          <Icon name="user" size={13} /> Sign out
         </a>
       </div>
     </>
@@ -237,10 +250,10 @@ export function DashboardShell() {
             </button>
             <div className="me">
               <span className="av" id="meAv" style={{ background: avBg }}>
-                {meta[2]}
+                {displayMono}
               </span>
               <div>
-                <b id="meName">{meta[1]}</b>
+                <b id="meName">{displayName}</b>
                 <span id="meRole">{meta[0]}</span>
               </div>
             </div>

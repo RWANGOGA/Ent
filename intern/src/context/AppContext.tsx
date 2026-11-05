@@ -35,7 +35,13 @@ import {
   INITIAL_PACK,
 } from "../data";
 import { matchPlacement } from "../lib/skills";
-import { fetchCatalog, fetchSaved, isApiEnabled, toggleSavedApi } from "../lib/api";
+import {
+  applyApi,
+  fetchCatalog,
+  fetchSaved,
+  isApiEnabled,
+  toggleSavedApi,
+} from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
 // this many placements, then the fee applies. Mirrors the site's "first three
@@ -742,7 +748,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         </div>,
         "Send application",
         () => {
-          toast(`Pack sent to ${orgName}`);
+          if (!isApiEnabled) {
+            toast(`Pack sent to ${orgName}`);
+            return;
+          }
+          applyApi(CURRENT_USER_ID, id, pack.statement)
+            .then(() => toast(`Application sent to ${orgName}`))
+            .catch(() => toast("Couldn't submit right now — please try again"));
         }
       );
     },

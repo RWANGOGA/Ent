@@ -154,3 +154,28 @@ export async function toggleSavedApi(
   );
   return { saved: data.saved, savedIds: data.saved_ids };
 }
+
+// ---- Applications ----------------------------------------------------------
+
+export interface ApplicationDto {
+  id: string;
+  user_id: string;
+  placement_id: string;
+  status: string;
+  statement: string;
+  created_at: string;
+}
+
+// POST /applications -> submit (idempotent server-side: re-applying returns the
+// existing record). Throws on 404 (unknown placement) or 409 (closed).
+export async function applyApi(
+  userId: string,
+  placementId: string,
+  statement: string
+): Promise<ApplicationDto> {
+  return postJson<ApplicationDto>("/applications", {
+    user_id: userId,
+    placement_id: placementId,
+    statement,
+  });
+}

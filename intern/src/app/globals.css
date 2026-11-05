@@ -55,6 +55,10 @@ body{
   -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
 h1,h2,h3,h4,p,figure,blockquote,dl,dd{margin:0}
+/* Global heading pass: every heading, on every screen, is centered and bold.
+   !important wins over the per-component font-weight:400 serif treatments
+   (.hero h1, .sec-h h2, .phead h1, .dpane-h h2, .foot h5, .auth-l h1, …). */
+h1,h2,h3,h4,h5,h6{text-align:center;font-weight:700 !important}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 ul,ol{margin:0;padding:0;list-style:none}

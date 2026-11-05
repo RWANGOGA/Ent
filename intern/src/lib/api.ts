@@ -179,3 +179,39 @@ export async function applyApi(
     statement,
   });
 }
+
+// ---- Subscription (host-org placement-fee plan) ---------------------------
+
+export interface SubscriptionDto {
+  org_id: string;
+  plan: string;
+  billing: string;
+  seats: number;
+  since: string;
+  is_premium: boolean;
+}
+
+// GET /subscription -> the org's live plan (defaults to Free when none exists).
+export async function fetchSubscription(orgId: string): Promise<SubscriptionDto> {
+  return getJson<SubscriptionDto>(
+    `/subscription?org_id=${encodeURIComponent(orgId)}`
+  );
+}
+
+export async function activateSubscriptionApi(
+  orgId: string,
+  plan: string,
+  billing: string,
+  seats: number
+): Promise<SubscriptionDto> {
+  return postJson<SubscriptionDto>("/subscription/activate", {
+    org_id: orgId,
+    plan,
+    billing,
+    seats,
+  });
+}
+
+export async function cancelSubscriptionApi(orgId: string): Promise<SubscriptionDto> {
+  return postJson<SubscriptionDto>("/subscription/cancel", { org_id: orgId });
+}

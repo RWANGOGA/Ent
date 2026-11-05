@@ -36,11 +36,15 @@ import {
 } from "../data";
 import { matchPlacement } from "../lib/skills";
 import {
+  activateSubscriptionApi,
   applyApi,
+  cancelSubscriptionApi,
   fetchCatalog,
   fetchSaved,
+  fetchSubscription,
   isApiEnabled,
   toggleSavedApi,
+  type SubscriptionDto,
 } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
@@ -53,6 +57,16 @@ const SAVED_KEY = "intern:saved";
 // There is no auth yet, so the demo student has a stable id the API can key
 // saved/applications state against. A real login will replace this.
 const CURRENT_USER_ID = "u-amina";
+
+// Maps the backend subscription DTO onto the UI's Subscription shape.
+function toLocalSubscription(s: SubscriptionDto): Subscription {
+  return {
+    plan: s.plan,
+    billing: s.billing === "Invoice" ? "Invoice" : s.billing === "Card" ? "Card" : "",
+    seats: s.seats,
+    since: s.since,
+  };
+}
 
 interface AppContextType {
   route: string;
@@ -913,13 +927,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activatePlan = useCallback(
     (plan: string, billing: "Card" | "Invoice", seats: number) => {
-      setSubscription({
+      const optimistic: Subscription = {
         plan,
         billing,
         seats: Math.max(1, seats),
         since: new Date().toISOString().slice(0, 10),
-      });
+      };
+      setSubscription(optimistic);
       toast(`${plan} plan active · placement fee applied`);
+      if (!isApiEnabled) return;
+      activateSubscriptionApi(EMPLOYER_ORG_ID, plan, billing, Math.max(1, seats))
+        .then((s) => setSubscription(toLocalSubscription(s)))
+        .catch(() => {
+          /* server unreachable — keep the optimistic plan for this session */
+        });
     },
     [toast]
   );
@@ -927,10 +948,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const cancelPlan = useCallback(() => {
     setSubscription({ plan: "Free", billing: "", seats: 1, since: "" });
     toast("Moved to Free · posting capped at 3 placements");
+    if (!isApiEnabled) return;
+    cancelSubscriptionApi(EMPLOYER_ORG_ID)
+      .then((s) => setSubscription(toLocalSubscription(s)))
+      .catch(() => {
+        /* server unreachable — keep the optimistic Free plan */
+      });
   }, [toast]);
 
-  // Hydrate the persisted plan once, then keep localStorage in sync.
+  // Hydrate the live plan once: from the API when configured, otherwise from
+  // localStorage. When the API owns the record we don't mirror to storage.
   useEffect(() => {
+    if (isApiEnabled) {
+      fetchSubscription(EMPLOYER_ORG_ID)
+        .then((s) => setSubscription(toLocalSubscription(s)))
+        .catch(() => {
+          /* backend unreachable — fall back to any stored plan */
+          try {
+            const raw = window.localStorage.getItem(SUBSCRIPTION_KEY);
+            if (raw) setSubscription(JSON.parse(raw) as Subscription);
+          } catch {
+            /* ignore */
+          }
+        });
+      return;
+    }
     try {
       const raw = window.localStorage.getItem(SUBSCRIPTION_KEY);
       if (raw) setSubscription(JSON.parse(raw) as Subscription);
@@ -940,6 +982,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (isApiEnabled) return; // the database is the source of truth
     try {
       window.localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(subscription));
     } catch {

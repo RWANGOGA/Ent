@@ -15,11 +15,14 @@ export function PlacementDetailView() {
     go,
     applyTo,
     signIn,
+    toggleSave,
+    isSaved,
   } = useApp();
 
   const p = (pid ? getPlacement(pid) : null) || getPlacement("p1")!;
   const o = getOrg(p.orgId);
   const ok = isEligible(p);
+  const saved = isSaved(p.id);
 
   return (
     <>
@@ -62,14 +65,7 @@ export function PlacementDetailView() {
           <div className="dcard">
             <div className="dhead">
               <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                <div
-                  className="seal blue"
-                  style={{ width: "64px", height: "64px" }}
-                >
-                  {o?.seal}
-                  <br />
-                  {o?.type}
-                </div>
+                <div className="jlogo lg" aria-hidden="true">{o?.seal}</div>
                 <div>
                   <h1>{p.title}</h1>
                   <div
@@ -83,9 +79,20 @@ export function PlacementDetailView() {
                   </div>
                 </div>
               </div>
-              <span className={`tg ${ok ? "green" : "red"}`}>
-                {ok ? "You qualify" : "Not eligible"}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span className={`tg ${ok ? "green" : "red"}`}>
+                  {ok ? "You qualify" : "Not eligible"}
+                </span>
+                <button
+                  type="button"
+                  className={`jsave ${saved ? "on" : ""}`}
+                  aria-pressed={saved}
+                  aria-label={saved ? "Remove from saved" : "Save placement"}
+                  onClick={() => toggleSave(p.id)}
+                >
+                  <Icon name="save" size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="dbody">
@@ -100,8 +107,15 @@ export function PlacementDetailView() {
               </ul>
 
               <h3>Requirements</h3>
-              <div style={{ border: "1px solid var(--rule)" }}>
-                <div className="reqrow" style={{ padding: "11px 12px" }}>
+              <div
+                style={{
+                  border: "1px solid var(--rule)",
+                  borderRadius: "var(--r-md)",
+                  overflow: "hidden",
+                  background: "var(--white)",
+                }}
+              >
+                <div className="reqrow" style={{ padding: "11px 14px" }}>
                   <div className="k">Courses</div>
                   <div className="doclist">
                     {p.courses.map((c) => (
@@ -111,13 +125,13 @@ export function PlacementDetailView() {
                     ))}
                   </div>
                 </div>
-                <div className="reqrow" style={{ padding: "11px 12px" }}>
+                <div className="reqrow" style={{ padding: "11px 14px" }}>
                   <div className="k">Minimum grade</div>
                   <div>
                     <b>{p.grade}</b>
                   </div>
                 </div>
-                <div className="reqrow" style={{ padding: "11px 12px" }}>
+                <div className="reqrow" style={{ padding: "11px 14px" }}>
                   <div className="k">Documents</div>
                   <div className="doclist">
                     {p.docs.map((d) => (
@@ -129,7 +143,7 @@ export function PlacementDetailView() {
                 </div>
                 <div
                   className="reqrow"
-                  style={{ padding: "11px 12px", borderBottom: 0 }}
+                  style={{ padding: "11px 14px", borderBottom: 0 }}
                 >
                   <div className="k">Testimonial</div>
                   <div>
@@ -148,6 +162,7 @@ export function PlacementDetailView() {
                   alignItems: "flex-start",
                   padding: "14px",
                   border: "1px solid var(--rule)",
+                  borderRadius: "var(--r-md)",
                   background: "#FBFAF6",
                 }}
               >

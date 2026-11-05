@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { COURSES } from "../../data";
 import { Icon } from "../icons/Icons";
 import { PlacementCard } from "./PlacementCard";
 
@@ -13,16 +12,16 @@ export function HomeView() {
     setType,
     openPlacement,
     setTypeFilter,
-    setCourseFilter,
+    setSearchQuery,
   } = useApp();
 
   const [heroType, setHeroType] = useState("All");
-  const [heroCourse, setHeroCourse] = useState("All");
+  const [heroQuery, setHeroQuery] = useState("");
 
   const handleHeroSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setTypeFilter(heroType);
-    setCourseFilter(heroCourse);
+    setSearchQuery(heroQuery.trim());
     go("placements");
   };
 
@@ -47,6 +46,15 @@ export function HomeView() {
             <form className="searchcard" onSubmit={handleHeroSearch}>
               <div className="searchgrid">
                 <div className="sf">
+                  <label className="lbl">Search</label>
+                  <input
+                    id="hq"
+                    placeholder="Role, skill or organisation"
+                    value={heroQuery}
+                    onChange={(e) => setHeroQuery(e.target.value)}
+                  />
+                </div>
+                <div className="sf">
                   <label className="lbl">Placement type</label>
                   <select
                     id="hType"
@@ -58,21 +66,6 @@ export function HomeView() {
                     <option value="Government">Government agencies</option>
                     <option value="NGO">NGOs and foundations</option>
                     <option value="University">University departments</option>
-                  </select>
-                </div>
-                <div className="sf">
-                  <label className="lbl">Course</label>
-                  <select
-                    id="hCourse"
-                    value={heroCourse}
-                    onChange={(e) => setHeroCourse(e.target.value)}
-                  >
-                    <option value="All">Any course</option>
-                    {COURSES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
                   </select>
                 </div>
                 <div className="sf">

@@ -44,6 +44,25 @@ class PlacementListResponse(BaseModel):
     items: list[PlacementRead]
 
 
+class SkillRead(BaseModel):
+    name: str
+    category: str
+    keywords: list[str]
+
+
+class CatalogMetaRead(BaseModel):
+    """Everything the frontend used to hardcode: the course/type/location filter
+    values derived from the live catalog, plus the matching tables owned by the
+    domain (grade thresholds, skill taxonomy, per-placement requirements)."""
+
+    courses: list[str]
+    org_types: list[str]
+    locations: list[str]
+    grade_rules: dict[str, float]
+    required_skills: dict[str, list[str]]
+    skills: list[SkillRead]
+
+
 class MatchRead(BaseModel):
     score: int
     matched: list[str]

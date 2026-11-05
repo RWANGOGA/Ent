@@ -11,7 +11,11 @@ function scoreTone(score: number): { color: string; label: string } {
 }
 
 export function StudentPlacements() {
-  const { placements, getOrg, student, applyTo, openPlacement } = useApp();
+  const { placements, getOrg, student, applyTo, openPlacement, meta } = useApp();
+
+  // Scores read the matching tables the API supplies; touching meta keeps this
+  // list re-rendering once those tables land.
+  void meta;
 
   const ranked = placements
     .map((p) => ({

@@ -9,7 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.application.services import PlacementService
 from app.presentation.deps import get_placement_service
-from app.presentation.schemas import PlacementListResponse, PlacementRead
+from app.presentation.schemas import (
+    CatalogMetaRead,
+    PlacementListResponse,
+    PlacementRead,
+)
 
 router = APIRouter(prefix="/placements", tags=["placements"])
 
@@ -26,6 +30,14 @@ def list_placements(
     return PlacementListResponse(
         total=len(items), items=[PlacementRead.model_validate(p) for p in items]
     )
+
+
+@router.get("/meta", response_model=CatalogMetaRead)
+def catalog_meta(
+    service: PlacementService = Depends(get_placement_service),
+) -> CatalogMetaRead:
+    # Declared before /{placement_id} so the static path wins.
+    return CatalogMetaRead(**service.catalog_meta())
 
 
 @router.get("/{placement_id}", response_model=PlacementRead)

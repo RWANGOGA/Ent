@@ -183,6 +183,45 @@ export async function fetchCatalog(): Promise<Catalog> {
   return { placements, orgs: [...byId.values()] };
 }
 
+// ---- Catalogue metadata (the tables the frontend used to hardcode) --------
+
+export interface CatalogSkill {
+  name: string;
+  category: string;
+  keywords: string[];
+}
+
+export interface CatalogMeta {
+  courses: string[];
+  orgTypes: string[];
+  locations: string[];
+  gradeRules: Record<string, number>;
+  requiredSkills: Record<string, string[]>;
+  skills: CatalogSkill[];
+}
+
+// GET /placements/meta -> filter values derived from the live catalog, plus the
+// grade thresholds, skill taxonomy and per-placement requirements owned by the
+// backend matching domain.
+export async function fetchCatalogMeta(): Promise<CatalogMeta> {
+  const d = await getJson<{
+    courses: string[];
+    org_types: string[];
+    locations: string[];
+    grade_rules: Record<string, number>;
+    required_skills: Record<string, string[]>;
+    skills: CatalogSkill[];
+  }>("/placements/meta");
+  return {
+    courses: d.courses,
+    orgTypes: d.org_types,
+    locations: d.locations,
+    gradeRules: d.grade_rules,
+    requiredSkills: d.required_skills,
+    skills: d.skills,
+  };
+}
+
 // ---- Saved placements (bookmarks) -----------------------------------------
 
 // GET /saved -> the ids this user has bookmarked.

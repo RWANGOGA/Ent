@@ -4,11 +4,11 @@ import React, { useMemo, useState } from "react";
 import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 import {
-  SKILLS,
-  SKILL_NAMES,
   extractSkills,
   matchPlacement,
   requiredSkillsFor,
+  skillList,
+  skillNames,
 } from "../../../lib/skills";
 
 function scoreColor(score: number): string {
@@ -22,6 +22,7 @@ export function SkillProfile() {
     student,
     placements,
     getOrg,
+    meta,
     addSkill,
     removeSkill,
     setSkills,
@@ -52,7 +53,7 @@ export function SkillProfile() {
   const manualAdd = () => {
     const name = picked.trim();
     if (!name) return;
-    if (!SKILL_NAMES.includes(name)) {
+    if (!skillNames().includes(name)) {
       toast("Choose a skill from the list");
       return;
     }
@@ -70,7 +71,7 @@ export function SkillProfile() {
       }))
       .sort((a, b) => b.match.score - a.match.score)
       .slice(0, 6);
-  }, [placements, owned, student.course, student.cgpa]);
+  }, [placements, owned, student.course, student.cgpa, meta]);
 
   return (
     <>
@@ -212,7 +213,7 @@ export function SkillProfile() {
                   }}
                 />
                 <datalist id="skill-list">
-                  {SKILLS.filter((s) => !owned.includes(s.name)).map((s) => (
+                  {skillList().filter((s) => !owned.includes(s.name)).map((s) => (
                     <option key={s.name} value={s.name} />
                   ))}
                 </datalist>

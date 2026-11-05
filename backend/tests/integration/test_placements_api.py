@@ -50,3 +50,29 @@ def test_get_single(client):
 
 def test_get_missing_is_404(client):
     assert client.get("/placements/nope").status_code == 404
+
+
+def test_catalog_meta(client):
+    resp = client.get("/placements/meta")
+    assert resp.status_code == 200
+    body = resp.json()
+    # Filter values are derived from the placements actually in the database.
+    assert "Design" in body["courses"]
+    assert body["courses"] == sorted(body["courses"])
+    assert set(body["org_types"]) == {"Company", "Government", "NGO", "University"}
+    assert "Kampala" in body["locations"]
+    # Matching tables come from the domain — the frontend keeps no copies.
+    assert body["grade_rules"]["CGPA 3.6+"] == 3.6
+    assert body["grade_rules"]["Second Class Upper"] == 3.3
+    assert body["required_skills"]["p1"] == [
+        "Figma",
+        "UI Design",
+        "Prototyping",
+        "Design Systems",
+    ]
+    assert any(s["name"] == "React" for s in body["skills"])
+
+
+def test_meta_route_wins_over_id_capture(client):
+    # /placements/meta must not be treated as placement id "meta".
+    assert client.get("/placements/meta").status_code == 200

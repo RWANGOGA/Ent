@@ -17,9 +17,17 @@ export function PlacementDetailView() {
     applyTo,
     toggleSave,
     isSaved,
+    placements,
+    meta,
   } = useApp();
 
-  const p = (pid ? getPlacement(pid) : null) || getPlacement("p1")!;
+  // The catalog arrives from the API; render nothing until it has landed
+  // rather than crashing on an undefined placement. (meta is consumed so the
+  // view re-renders once the server's matching tables load.)
+  void meta;
+  if (!placements.length) return null;
+
+  const p = (pid ? getPlacement(pid) : null) || getPlacement(placements[0].id)!;
   const o = getOrg(p.orgId);
   const ok = isEligible(p);
   const saved = isSaved(p.id);

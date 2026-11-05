@@ -24,21 +24,20 @@ import {
   Subscription,
 } from "../types";
 import {
-  COURSES,
   INITIAL_STUDENT,
-  GRADE_RANK,
   INITIAL_DOCS,
   INITIAL_ADMIN_QUEUE,
   ACTIVITY,
   INITIAL_PACK,
 } from "../data";
-import { matchPlacement } from "../lib/skills";
+import { matchPlacement, setSkillTables } from "../lib/skills";
 import {
   activateSubscriptionApi,
   applyApi,
   askAdvisor,
   cancelSubscriptionApi,
   fetchCatalog,
+  fetchCatalogMeta,
   fetchMe,
   fetchSaved,
   fetchSubscription,
@@ -48,6 +47,7 @@ import {
   setToken,
   toggleSavedApi,
   type ApiUser,
+  type CatalogMeta,
   type SubscriptionDto,
 } from "../lib/api";
 
@@ -59,6 +59,17 @@ const FREE_ALLOWANCE = 3;
 // derives it from the token). A logged-in employer account stands in for it.
 const EMPLOYER_ORG_ID = "o4";
 const SUBSCRIPTION_KEY = "intern:subscription";
+
+// The empty catalogue-meta shape. The UI renders nothing derived from it until
+// GET /placements/meta fills it — there is no bundled fallback table.
+const EMPTY_META: CatalogMeta = {
+  courses: [],
+  orgTypes: [],
+  locations: [],
+  gradeRules: {},
+  requiredSkills: {},
+  skills: [],
+};
 
 // Maps the backend subscription DTO onto the UI's Subscription shape.
 function toLocalSubscription(s: SubscriptionDto): Subscription {
@@ -93,6 +104,8 @@ interface AppContextType {
   // Data
   orgs: Org[];
   placements: Placement[];
+  meta: CatalogMeta;
+  metaReady: boolean;
   student: Student;
   docs: DocItem[];
   adminQueue: AdminQueueItem[];
@@ -212,6 +225,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // starts empty and fills from GET /placements on mount.
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [placements, setPlacements] = useState<Placement[]>([]);
+  // Catalogue metadata (courses/types/locations for filters, grade thresholds,
+  // skill taxonomy, per-placement requirements) — served by GET
+  // /placements/meta. Starts empty for the same reason as the catalog.
+  const [meta, setMeta] = useState<CatalogMeta>(EMPTY_META);
+  const [metaReady, setMetaReady] = useState<boolean>(false);
   const [student, setStudent] = useState<Student>(INITIAL_STUDENT);
   const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
   const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
@@ -256,16 +274,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [placements]
   );
 
-  const gradeRank = useCallback((g: string) => GRADE_RANK[g] || 0, []);
+  const gradeRank = useCallback(
+    (g: string) => meta.gradeRules[g] || 0,
+    [meta]
+  );
 
   const isEligible = useCallback(
     (p: Placement) => {
       return (
         p.courses.includes(student.course) &&
-        student.cgpa >= (GRADE_RANK[p.grade] || 0)
+        student.cgpa >= (meta.gradeRules[p.grade] || 0)
       );
     },
-    [student]
+    [student, meta]
   );
 
   const toast = useCallback((msg: string) => {
@@ -385,6 +406,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         /* backend unreachable — the catalogue is simply empty */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Catalogue metadata read: GET /placements/meta. The filter values and the
+  // matching tables (grade thresholds, skill taxonomy, per-placement required
+  // skills) are the ones the backend domain owns; feeding them to setSkillTables
+  // keeps the local scorer at parity with the server without any bundled copy.
+  useEffect(() => {
+    if (!isApiEnabled) {
+      setMetaReady(true);
+      return;
+    }
+    let cancelled = false;
+    fetchCatalogMeta()
+      .then((m) => {
+        if (cancelled) return;
+        setMeta(m);
+        setSkillTables(m);
+      })
+      .catch(() => {
+        /* backend unreachable — filters and scoring degrade to empty tables */
+      })
+      .finally(() => {
+        if (!cancelled) setMetaReady(true);
       });
     return () => {
       cancelled = true;
@@ -967,7 +1015,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           <div className="field">
             <label>Eligible courses</label>
             <div className="checks">
-              {COURSES.map((c) => (
+              {meta.courses.map((c) => (
                 <label key={c}>
                   <input type="checkbox" defaultChecked={p.courses.includes(c)} />
                   {c}
@@ -979,7 +1027,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             <div className="field">
               <label>Minimum grade</label>
               <select defaultValue={p.grade}>
-                {Object.keys(GRADE_RANK).map((g) => (
+                {Object.keys(meta.gradeRules).map((g) => (
                   <option key={g} value={g}>
                     {g}
                   </option>
@@ -1189,7 +1237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <div className="field">
           <label>Eligible courses</label>
           <div className="checks" id="npCourses">
-            {COURSES.map((c) => (
+            {meta.courses.map((c) => (
               <label key={c}>
                 <input type="checkbox" />
                 {c}
@@ -1201,7 +1249,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           <div className="field">
             <label>Minimum grade</label>
             <select id="npGrade">
-              {Object.keys(GRADE_RANK).map((g) => (
+              {Object.keys(meta.gradeRules).map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
@@ -1548,6 +1596,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         orgs,
         placements,
+        meta,
+        metaReady,
         student,
         docs,
         adminQueue,

@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { COURSES } from "../../data";
 import { Icon } from "../icons/Icons";
 import { PlacementCard } from "./PlacementCard";
 
@@ -10,6 +9,7 @@ export function PlacementsView() {
   const {
     placements,
     getOrg,
+    meta,
     typeFilter,
     setTypeFilter,
     sectorFilter,
@@ -72,7 +72,7 @@ export function PlacementsView() {
           </div>
           <h1>Placements</h1>
           <p id="pcount">
-            {filtered.length} of 1,284 open placements. Government and NGO listings carry the same requirement fields as companies.
+            {filtered.length} of {placements.length} open placements. Government and NGO listings carry the same requirement fields as companies.
           </p>
         </div>
       </div>
@@ -86,10 +86,19 @@ export function PlacementsView() {
               onChange={(e) => setTypeFilter(e.target.value)}
             >
               <option value="All">All organisations</option>
-              <option value="Company">Companies</option>
-              <option value="Government">Government agencies</option>
-              <option value="NGO">NGOs</option>
-              <option value="University">Universities</option>
+              {meta.orgTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t === "Company"
+                    ? "Companies"
+                    : t === "Government"
+                    ? "Government agencies"
+                    : t === "NGO"
+                    ? "NGOs"
+                    : t === "University"
+                    ? "Universities"
+                    : t}
+                </option>
+              ))}
             </select>
           </div>
           <div className="fld">
@@ -112,7 +121,7 @@ export function PlacementsView() {
               onChange={(e) => setCourseFilter(e.target.value)}
             >
               <option value="All">Any course</option>
-              {COURSES.map((c) => (
+              {meta.courses.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

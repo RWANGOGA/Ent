@@ -1,4 +1,4 @@
-# INTERN — university placement system
+# BrighterWorks — internship and jobs platform
 
 A placement office in software. Universities publish internships from **companies, government agencies, NGOs and university departments**; students see the requirement before applying; the office verifies documents; employers receive only qualified candidates.
 
@@ -50,14 +50,14 @@ Deep links accept a view: `#dashboard-admin-requirements`, `#dashboard-student-d
 
 ## Assistant
 
-**"Ask INTERN"** — the button at the bottom right of every page opens a drawer that answers from the actual record:
+**"Ask BrighterWorks"** — the button at the bottom right of every page opens a drawer that answers from the actual record:
 
 - **Eligibility** — "Am I eligible for the Data Analyst Intern?" → matches the placement, compares course and CGPA against the stated grade, lists missing documents, quotes the closing date.
 - **Documents** — counts verified / missing files from the student record and explains the 48-hour review.
 - **Government listings** — counts live government placements and names the agencies.
 - **Verification** — explains the office's role and that employers only receive verified files.
 - **Deadlines** — sorts the next three closings.
-- **Cost, contact, what INTERN is** — direct answers.
+- **Cost, contact, what BrighterWorks is** — direct answers.
 
 It is context-aware: on a placement page it reasons about that placement; otherwise it falls back to the signed-in student record.
 

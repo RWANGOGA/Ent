@@ -90,7 +90,7 @@ export function PrivacyView() {
           What we hold about<br />a student, and who sees it.
         </>
       }
-      intro="INTERN sits between a student, a university office and a host organisation, so it holds academic records. This page says exactly what is collected, who is allowed to read it and under which law."
+      intro="BrighterWorks sits between a student, a university office and a host organisation, so it holds academic records. This page says exactly what is collected, who is allowed to read it and under which law."
       sections={[
         {
           n: "01",

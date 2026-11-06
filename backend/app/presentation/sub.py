@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
 
 def create_sub_app() -> FastAPI:
     sub = FastAPI(
-        title="Intern API — features", version="0.1.0", lifespan=lifespan
+        title="BrighterWorks API — features", version="0.1.0", lifespan=lifespan
     )
     sub.add_middleware(
         CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]

@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "INTERN — university placement system",
+  title: "BrighterWorks — internship and jobs platform",
   description:
-    "INTERN is the placement office in software. Universities list internships from companies, government agencies and NGOs, with stated requirements, document upload and verification.",
+    "BrighterWorks connects students, universities, employers, NGOs and government organisations through verified internships and jobs.",
 };
 
 export const viewport: Viewport = {

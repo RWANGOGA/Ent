@@ -137,7 +137,7 @@ export function HomeView() {
         <div className="wrap">
           <div className="sec-h">
             <div>
-              <span className="lbl">01 — Who lists with INTERN</span>
+              <span className="lbl">01 — Who lists with BrighterWorks</span>
               <h2>
                 Three kinds of host,<br />
                 one <em>stated</em> standard.
@@ -450,7 +450,7 @@ export function HomeView() {
             </div>
           </div>
           <blockquote>
-            “I applied to eleven places through email and heard from two. INTERN told me the grade requirement before I applied — so I only applied to four, and <em>three</em> replied.”
+            “I applied to eleven places through email and heard from two. BrighterWorks told me the grade requirement before I applied — so I only applied to four, and <em>three</em> replied.”
           </blockquote>
           <div className="who">
             <b>Amina Nakato</b>

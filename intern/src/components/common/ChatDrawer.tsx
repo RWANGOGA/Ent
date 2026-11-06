@@ -25,7 +25,7 @@ export function ChatDrawer() {
   return (
     <>
       <button type="button" className="chat-fab" onClick={openChat}>
-        <span className="dot"></span> Ask INTERN
+        <span className="dot"></span> Ask BrighterWorks
       </button>
 
       <div
@@ -37,7 +37,7 @@ export function ChatDrawer() {
       <aside className={`chat ${isChatOpen ? "on" : ""}`} id="chat">
         <div className="chat-h">
           <div>
-            <b>INTERN assistant</b>
+            <b>BrighterWorks assistant</b>
             <div className="st">
               <i></i> knows your skills, placements and your record
             </div>
@@ -53,7 +53,7 @@ export function ChatDrawer() {
               key={msg.id}
               className={`msg ${msg.who === "INTERN" ? "bot" : "me"}`}
             >
-              {msg.who === "INTERN" && <div className="who">INTERN</div>}
+              {msg.who === "INTERN" && <div className="who">BrighterWorks</div>}
               {msg.isTyping ? (
                 <span
                   style={{

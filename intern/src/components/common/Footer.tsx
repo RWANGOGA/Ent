@@ -76,7 +76,7 @@ export function Footer() {
             >
               <i></i>
               <span>
-                <b>INTERN</b>
+                <b>BrighterWorks</b>
                 <small>PLACEMENT SYSTEM</small>
               </span>
             </a>
@@ -107,7 +107,7 @@ export function Footer() {
 
         <div className="fbase">
           <span>
-            © {year} INTERN. Kampala · Nairobi · Berlin.
+            © {year} BrighterWorks. Kampala · Nairobi · Berlin.
           </span>
           <span>
             Requirements and eligibility are set by each university.

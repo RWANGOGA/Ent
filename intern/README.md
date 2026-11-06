@@ -60,7 +60,7 @@ Deep links accept a view: `#dashboard-admin-requirements`, `#dashboard-student-d
 
 ## Assistant
 
-**"Ask INTERN"** — the button at the bottom right of every page opens a drawer that answers from the actual record:
+**"Ask BrighterWorks"** — the button at the bottom right of every page opens a drawer that answers from the actual record:
 
 - **Eligibility** — "Am I eligible for the Data Analyst Intern?" → matches the placement, compares course and CGPA against the stated grade, lists missing documents, quotes the closing date.
 - **Documents** — counts verified / missing files from the student record and explains the 48-hour review.

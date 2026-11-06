@@ -322,7 +322,7 @@ export const PLANS: Record<string, PlanSegment> = {
   },
   careersites: {
     label: "Career sites",
-    intro: "Publishers and career platforms carrying INTERN placements.",
+    intro: "Publishers and career platforms carrying BrighterWorks placements.",
     tiers: [
       {
         name: "Free",
@@ -333,7 +333,7 @@ export const PLANS: Record<string, PlanSegment> = {
         features: [
           ["Hosted widget", 1],
           ["10 roles", 1],
-          ["INTERN branding", 1],
+          ["BrighterWorks branding", 1],
           ["Embed on one domain", 1],
           ["API access", 0],
           ["Custom domain", 0],
@@ -375,7 +375,7 @@ export const PLANS: Record<string, PlanSegment> = {
     ],
     table: [
       ["Roles shown", "10", "Unlimited", "Unlimited"],
-      ["Branding", "INTERN", "Yours", "Co-branded"],
+      ["Branding", "BrighterWorks", "Yours", "Co-branded"],
       ["API", "—", "Included", "Included"],
       ["Custom domain", "—", "Included", "Included"],
       ["Analytics", "—", "Included", "Included"],

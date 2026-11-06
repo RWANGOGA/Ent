@@ -846,7 +846,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("about") ||
         q.includes("how does it work")
       ) {
-        return `INTERN is a placement system, not a job board. Universities publish placements from companies, government agencies and NGOs; each carries its eligible courses, minimum grade, required documents and testimonial rule. Students see eligibility before applying, the office verifies documents, and employers receive only qualified files.`;
+        return `BrighterWorks is a career platform with separate internship and jobs portals. Universities publish placements from companies, government agencies and NGOs; each carries its eligible courses, minimum grade, required documents and testimonial rule. Students see eligibility before applying, the office verifies documents, and employers receive only qualified files.`;
       }
 
       return `I can rank placements against your skills and tell you which one fits best, name the single skill that would unlock the most roles for you, check your eligibility for a specific placement, list the documents you still need, or show the next deadlines. Ask about a role or say "what should I learn" and I will use your actual profile.`;
@@ -1599,7 +1599,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ))}
         </div>
         <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "10px" }}>
-          Sent from INTERN · placement reference appended automatically
+          Sent from BrighterWorks · placement reference appended automatically
         </div>
       </div>,
       null
@@ -1611,7 +1611,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       "Career page embed",
       <div>
         <p style={{ fontSize: "12.5px", color: "var(--ink-2)", lineHeight: 1.65, marginBottom: "12px" }}>
-          Paste this where your careers page should show live INTERN placements. It updates whenever you publish or close a placement.
+          Paste this where your careers page should show live BrighterWorks placements. It updates whenever you publish or close a placement.
         </p>
         <div className="embedpre">
           &lt;div id=&quot;intern-placements&quot;
@@ -1632,7 +1632,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           </button>
         </div>
         <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "10px" }}>
-          Included in Premium and Enterprise. The free widget carries INTERN branding and caps at 10 roles.
+          Included in Premium and Enterprise. The free widget carries BrighterWorks branding and caps at 10 roles.
         </div>
       </div>,
       "Done"

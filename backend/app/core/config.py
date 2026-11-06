@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         env_file=(".env", ".env.local"), env_file_encoding="utf-8", extra="ignore"
     )
 
-    app_name: str = "Intern API"
+    app_name: str = "BrighterWorks API"
     environment: str = "development"
     # Postgres in Docker for dev/prod; the test harness overrides this to an
     # in-memory SQLite URL through the DATABASE_URL environment variable.

@@ -69,7 +69,7 @@ export function SignInView() {
           <h1 style={{ marginTop: "12px" }}>
             {mode === "signin" ? "Welcome back" : "Join"}
             <br />
-            INTERN.
+            BrighterWorks.
           </h1>
           <p>
             Your access and dashboard come from a real account. Sign in — or

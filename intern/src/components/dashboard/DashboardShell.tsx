@@ -134,7 +134,7 @@ export function DashboardShell() {
       <div className="logo" style={{ padding: "0 18px 16px" }}>
         <i></i>
         <span>
-          <b>INTERN</b>
+          <b>BrighterWorks</b>
           <small>PLACEMENT SYSTEM</small>
         </span>
       </div>

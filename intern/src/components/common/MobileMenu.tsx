@@ -24,7 +24,7 @@ export function MobileMenu() {
         <div className="logo">
           <i></i>
           <span>
-            <b>INTERN</b>
+            <b>BrighterWorks</b>
             <small>PLACEMENT SYSTEM</small>
           </span>
         </div>

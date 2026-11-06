@@ -29,7 +29,7 @@ export function AboutView() {
             not a job board.
           </h1>
           <p>
-            INTERN exists because the first rung of a career is decided by information — who tells you the requirement, and whether anyone verifies that you meet it.
+            BrighterWorks exists because the first rung of a career is decided by information — who tells you the requirement, and whether anyone verifies that you meet it.
           </p>
         </div>
       </div>

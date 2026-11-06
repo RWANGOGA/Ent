@@ -1,8 +1,8 @@
-# INTERN Platform Implementation Plan
+# BrighterWorks Platform Implementation Plan
 
 ## 1. Purpose
 
-INTERN will become one platform with two distinct opportunity portals:
+BrighterWorks is one platform with two distinct opportunity portals:
 
 - **Internship Portal** for university and college students, recent graduates, universities, NGOs, government agencies, companies, and placement offices.
 - **Jobs Portal** for job seekers, employers, NGOs, government institutions, and companies.
@@ -58,7 +58,7 @@ Do not introduce:
 
 The global header should expose only platform-level destinations:
 
-- INTERN
+- BrighterWorks
 - Internships
 - Jobs
 - Employers
@@ -331,13 +331,13 @@ Environment requirements:
 
 Each feature is complete only when its backend, frontend, tests, documentation, commit, and push are complete.
 
-### Feature 0: Implementation contract
+### Feature 0: Implementation contract — complete
 
 - Add this implementation document.
 - Confirm portal boundaries, role dashboards, design rules, and delivery workflow.
 - Commit and push this document.
 
-### Feature 1: Portal foundation
+### Feature 1: Portal foundation — complete
 
 - Add portal-aware application state.
 - Add Internship and Jobs entry points.
@@ -346,30 +346,30 @@ Each feature is complete only when its backend, frontend, tests, documentation, 
 - Add portal-aware routes and active navigation.
 - Preserve existing screens and colors.
 - Add route and navigation tests where practical.
-- Commit and push.
+- Commit and push. Completed in `cd8c8fe`.
 
-### Feature 2: Live Internship Portal catalogue
+### Feature 2: Live Internship Portal catalogue — complete
 
 - Rename public-facing placement concepts to internships where appropriate.
 - Add explicit internship API compatibility.
 - Load internships and metadata from Neon through the backend.
 - Add robust loading, empty, and error states.
 - Remove the frontend catalogue fallback.
+- Commit and push. Completed in `01a36e5`.
+
+### Feature 3: Live internship candidate workflows — partially complete
+
+- Persist saved internships. Complete in `cd8c8fe`/`01a36e5`.
+- Persist internship applications. Complete in `cd8c8fe`/`01a36e5`.
+- Load application history from the backend. Complete in `c730087`.
+- Connect eligibility and matching to live backend metadata. Complete for the dashboard overview in `c730087`.
+- Remove related local-only state. Remaining dashboard views are still being migrated.
 - Commit and push.
 
-### Feature 3: Live internship candidate workflows
+### Feature 4: Internship student profile and documents — partially complete
 
-- Persist saved internships.
-- Persist internship applications.
-- Load application history from the backend.
-- Connect eligibility and matching to live backend metadata.
-- Remove related local-only state.
-- Commit and push.
-
-### Feature 4: Internship student profile and documents
-
-- Add persistent student/recent-graduate profile records.
-- Add skills persistence.
+- Add persistent student/recent-graduate profile records. Complete in `4d28284`.
+- Add skills persistence. Complete in `4d28284`.
 - Add document upload metadata and verification state.
 - Persist application pack data.
 - Connect dashboard views to live records.
@@ -470,9 +470,11 @@ Before a feature is marked complete:
 - Keep comments sparse and purposeful.
 - Keep the implementation clean, readable, and consistent with the current codebase.
 
-## 12. First implementation target
+## 12. Current implementation status
 
-The first code feature after this document is **Portal Foundation**.
+The first implementation target, **Portal Foundation**, is complete. The current
+delivery target is the student dashboard workflow: live documents/resume,
+application tracking, and application withdrawal.
 
 Its acceptance criteria are:
 
@@ -485,4 +487,4 @@ Its acceptance criteria are:
 - Existing dashboard styles and colors remain unchanged.
 - Portal navigation is ready for live backend data.
 - Tests/build pass.
-- The feature is committed and pushed before any second feature begins.
+- Each feature is committed and pushed before the next feature begins.

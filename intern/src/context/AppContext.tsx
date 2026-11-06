@@ -88,6 +88,7 @@ function mapApiRole(r: string): UserRole {
 interface AppContextType {
   route: string;
   portal: Portal;
+  catalogStatus: "loading" | "ready" | "error";
   pid: string | null;
   typeFilter: string;
   sectorFilter: string;
@@ -226,6 +227,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // starts empty and fills from GET /placements on mount.
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [placements, setPlacements] = useState<Placement[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<
+    "loading" | "ready" | "error"
+  >(isApiEnabled ? "loading" : "error");
   // Catalogue metadata (courses/types/locations for filters, grade thresholds,
   // skill taxonomy, per-placement requirements) — served by GET
   // /placements/meta. Starts empty for the same reason as the catalog.
@@ -405,16 +409,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // GET /placements. There is no seed fallback, so the catalogue is only ever
   // what the backend reports (empty when the API isn't configured/reachable).
   useEffect(() => {
-    if (!isApiEnabled) return;
+    if (!isApiEnabled) {
+      setCatalogStatus("error");
+      return;
+    }
     let cancelled = false;
     fetchCatalog()
       .then(({ placements: fromApi, orgs: apiOrgs }) => {
         if (cancelled) return;
         setPlacements(fromApi);
         setOrgs(apiOrgs);
+        setCatalogStatus("ready");
       })
       .catch(() => {
-        /* backend unreachable — the catalogue is simply empty */
+        if (!cancelled) setCatalogStatus("error");
       });
     return () => {
       cancelled = true;
@@ -1612,6 +1620,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         route,
         portal,
+        catalogStatus,
         pid,
         typeFilter,
         sectorFilter,

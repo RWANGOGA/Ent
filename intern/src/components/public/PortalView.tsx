@@ -5,8 +5,9 @@ import { Portal } from "../../types";
 import { useApp } from "../../context/AppContext";
 
 export function PortalView({ portal }: { portal: Portal }) {
-  const { go, enterPortal } = useApp();
+  const { go, enterPortal, catalogStatus, placements, orgs } = useApp();
   const internship = portal === "internships";
+  const liveCatalogue = internship && catalogStatus === "ready";
 
   return (
     <section className="hero portal-hero">
@@ -44,6 +45,20 @@ export function PortalView({ portal }: { portal: Portal }) {
             <li>{internship ? "Applications, documents and verification" : "Applications, profiles and job alerts"}</li>
             <li>{internship ? "Support for universities and host organisations" : "Tools for employers and hiring teams"}</li>
           </ul>
+          {internship && (
+            <div className="portal-live">
+              <span className="lbl">Live catalogue</span>
+              {catalogStatus === "loading" && <b>Loading internships…</b>}
+              {catalogStatus === "error" && (
+                <b>We could not load the internship catalogue.</b>
+              )}
+              {liveCatalogue && (
+                <b>
+                  {placements.length} internships · {orgs.length} organisations
+                </b>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="wrap portal-switch">

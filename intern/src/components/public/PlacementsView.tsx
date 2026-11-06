@@ -20,6 +20,7 @@ export function PlacementsView() {
     setSearchQuery,
     go,
     saved,
+    catalogStatus,
   } = useApp();
 
   const [savedOnly, setSavedOnly] = useState(false);
@@ -70,9 +71,13 @@ export function PlacementsView() {
             <span className="lbl">/</span>
             <span className="lbl ink">Placements</span>
           </div>
-          <h1>Placements</h1>
+          <h1>Find internships</h1>
           <p id="pcount">
-            {filtered.length} of {placements.length} open placements. Government and NGO listings carry the same requirement fields as companies.
+            {catalogStatus === "loading"
+              ? "Loading verified internships from the live catalogue."
+              : catalogStatus === "error"
+              ? "The live internship catalogue is unavailable. Please try again shortly."
+              : `${filtered.length} of ${placements.length} open internships. Government and NGO listings carry the same requirement fields as companies.`}
           </p>
         </div>
       </div>
@@ -158,7 +163,15 @@ export function PlacementsView() {
 
         <div className="dgrid" style={{ paddingTop: 0 }}>
           <div>
-            {filtered.length > 0 ? (
+            {catalogStatus === "loading" ? (
+              <div className="catalog-state" role="status">
+                Loading internships…
+              </div>
+            ) : catalogStatus === "error" ? (
+              <div className="catalog-state catalog-state-error" role="alert">
+                We could not load internships from the live catalogue.
+              </div>
+            ) : filtered.length > 0 ? (
               <div className="jcards" id="plistBody">
                 {filtered.map((p) => (
                   <PlacementCard key={p.id} placement={p} />
@@ -174,7 +187,7 @@ export function PlacementsView() {
                   borderRadius: "var(--r-lg)",
                 }}
               >
-                No placements match these filters.
+                No internships match these filters.
               </div>
             )}
           </div>

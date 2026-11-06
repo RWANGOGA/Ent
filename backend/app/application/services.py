@@ -7,10 +7,11 @@ from app.application.ports import (
     ApplicationRepository,
     PlacementRepository,
     SavedRepository,
+    StudentProfileRepository,
     SubscriptionRepository,
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
-from app.domain.entities import Application, Placement, Subscription
+from app.domain.entities import Application, Placement, StudentProfile, Subscription
 from app.domain.matching import (
     GRADE_RANK,
     REQUIRED_SKILLS,
@@ -187,4 +188,37 @@ class BillingService:
     def cancel(self, org_id: str) -> Subscription:
         return self._repo.save(
             Subscription(org_id=org_id, plan="Free", billing="", seats=1, since="")
+        )
+
+
+class StudentProfileService:
+    """Use cases for a student's persisted academic profile."""
+
+    def __init__(self, repo: StudentProfileRepository) -> None:
+        self._repo = repo
+
+    def get(self, user_id: str) -> StudentProfile:
+        return self._repo.get(user_id)
+
+    def save(
+        self,
+        *,
+        user_id: str,
+        course: str,
+        year: str,
+        cgpa: float,
+        university: str,
+        skills: list[str],
+    ) -> StudentProfile:
+        return self._repo.save(
+            StudentProfile(
+                user_id=user_id,
+                course=course.strip(),
+                year=year.strip(),
+                cgpa=max(0.0, cgpa),
+                university=university.strip(),
+                skills=list(
+                    dict.fromkeys(skill.strip() for skill in skills if skill.strip())
+                ),
+            )
         )

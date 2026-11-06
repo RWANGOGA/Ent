@@ -25,7 +25,6 @@ import {
   Portal,
 } from "../types";
 import {
-  INITIAL_STUDENT,
   INITIAL_DOCS,
   INITIAL_ADMIN_QUEUE,
   ACTIVITY,
@@ -40,6 +39,7 @@ import {
   fetchCatalog,
   fetchCatalogMeta,
   fetchApplications,
+  fetchStudentProfile,
   fetchRecommendedInternships,
   fetchMe,
   fetchSaved,
@@ -49,6 +49,7 @@ import {
   registerApi,
   setToken,
   toggleSavedApi,
+  updateStudentProfile,
   type ApiUser,
   type CatalogMeta,
   type SubscriptionDto,
@@ -247,7 +248,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // /placements/meta. Starts empty for the same reason as the catalog.
   const [meta, setMeta] = useState<CatalogMeta>(EMPTY_META);
   const [metaReady, setMetaReady] = useState<boolean>(false);
-  const [student, setStudent] = useState<Student>(INITIAL_STUDENT);
+  const [student, setStudent] = useState<Student>({
+    name: "",
+    course: "",
+    year: "",
+    cgpa: 0,
+    uni: "",
+    skills: [],
+  });
   const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
   const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
   const [activity, setActivity] = useState<ActivityItem[]>(ACTIVITY);
@@ -1196,11 +1204,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setDashboardDataStatus("loading");
-    Promise.all([
-      fetchApplications(),
-      fetchRecommendedInternships(student.skills, student.course, student.cgpa),
-    ])
-      .then(([apps, matches]) => {
+    Promise.all([fetchApplications(), fetchStudentProfile()])
+      .then(async ([apps, profile]) => {
+        const nextStudent: Student = {
+          name: session.name,
+          course: profile.course,
+          year: profile.year,
+          cgpa: profile.cgpa,
+          uni: profile.university,
+          skills: profile.skills,
+        };
+        if (cancelled) return;
+        setStudent(nextStudent);
+        const matches = await fetchRecommendedInternships(
+          nextStudent.skills,
+          nextStudent.course,
+          nextStudent.cgpa
+        );
         if (cancelled) return;
         setApplications(apps);
         setRecommendations(matches);
@@ -1212,7 +1232,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [session, role, student.skills, student.course, student.cgpa]);
+  }, [session, role]);
+
+  useEffect(() => {
+    if (
+      !isApiEnabled ||
+      !session ||
+      role !== "student" ||
+      dashboardDataStatus !== "ready"
+    ) {
+      return;
+    }
+    updateStudentProfile({
+      course: student.course,
+      year: student.year,
+      cgpa: student.cgpa,
+      university: student.uni,
+      skills: student.skills,
+    }).catch(() => {
+      setDashboardDataStatus("error");
+    });
+  }, [
+    dashboardDataStatus,
+    isApiEnabled,
+    role,
+    session,
+    student.course,
+    student.cgpa,
+    student.uni,
+    student.skills,
+    student.year,
+  ]);
 
   useEffect(() => {
     if (isApiEnabled) return; // the database is the source of truth

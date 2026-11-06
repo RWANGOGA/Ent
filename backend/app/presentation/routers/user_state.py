@@ -1,18 +1,31 @@
 """B4 user-state endpoints — saved, applications and subscription.
 
+R1d: identity is derived from the caller's Bearer token, not from a
+``user_id``/``org_id`` the client sends. This is the security fix the roadmap
+called for — a token is the single source of "who is acting", so a client can
+no longer read or mutate another account's shortlist, applications or billing.
+
 Grouped in one module because they share the same shape: a thin HTTP handler
-that reads a payload, calls an application service, and maps a domain error to
-an HTTP status. Keeping them together (rather than three near-identical
-routers) is a small, contained tradeoff that avoids file proliferation.
+that resolves the actor, calls an application service, and maps a domain error
+to an HTTP status.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
 
-from app.application.services import ApplicationService, BillingService, SavedService
+from app.application.services import (
+    ApplicationService,
+    BillingService,
+    SavedService,
+    StudentProfileService,
+)
 from app.core.errors import PlacementNotFound, PlacementNotOpen
+from app.domain.entities import User
 from app.presentation.deps import (
     get_application_service,
     get_billing_service,
+    get_current_user,
     get_saved_service,
+    get_student_profile_service,
 )
 from app.presentation.schemas import (
     ActivatePlanRequest,
@@ -22,6 +35,8 @@ from app.presentation.schemas import (
     CancelPlanRequest,
     SavedListResponse,
     SubscriptionRead,
+    StudentProfileRead,
+    StudentProfileUpdate,
     ToggleSavedRequest,
     ToggleSavedResponse,
 )
@@ -29,22 +44,55 @@ from app.presentation.schemas import (
 router = APIRouter(tags=["user-state"])
 
 
+def _org_for(user: User, explicit: Optional[str]) -> str:
+    """Resolve the organisation a subscription call acts on from the token.
+
+    An employer is bound to the org linked on their account. An admin (who has
+    no org of their own) may target one explicitly. Everyone else is refused —
+    placement-fee billing is an employer concern, never a student one.
+    """
+    if user.role == "employer":
+        if not user.org_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Employer account is not linked to an organisation",
+            )
+        return user.org_id
+    if user.role == "admin":
+        if explicit:
+            return explicit
+        raise HTTPException(status_code=400, detail="org_id is required for admin")
+    raise HTTPException(status_code=403, detail="Not permitted for this role")
+
+
+def _subscription_read(sub) -> SubscriptionRead:
+    return SubscriptionRead(
+        org_id=sub.org_id,
+        plan=sub.plan,
+        billing=sub.billing,
+        seats=sub.seats,
+        since=sub.since,
+        is_premium=sub.is_premium,
+    )
+
+
 # ---- Saved -----------------------------------------------------------------
 
 @router.get("/saved", response_model=SavedListResponse)
 def list_saved(
-    user_id: str = Query(...),
     service: SavedService = Depends(get_saved_service),
+    current_user: User = Depends(get_current_user),
 ) -> SavedListResponse:
-    return SavedListResponse(saved_ids=service.list(user_id))
+    return SavedListResponse(saved_ids=service.list(current_user.id))
 
 
 @router.post("/saved/toggle", response_model=ToggleSavedResponse)
 def toggle_saved(
     payload: ToggleSavedRequest,
     service: SavedService = Depends(get_saved_service),
+    current_user: User = Depends(get_current_user),
 ) -> ToggleSavedResponse:
-    now_saved, ids = service.toggle(payload.user_id, payload.placement_id)
+    now_saved, ids = service.toggle(current_user.id, payload.placement_id)
     return ToggleSavedResponse(saved=now_saved, saved_ids=ids)
 
 
@@ -54,10 +102,11 @@ def toggle_saved(
 def apply(
     payload: ApplyRequest,
     service: ApplicationService = Depends(get_application_service),
+    current_user: User = Depends(get_current_user),
 ) -> ApplicationRead:
     try:
         app = service.apply(
-            user_id=payload.user_id,
+            user_id=current_user.id,
             placement_id=payload.placement_id,
             statement=payload.statement,
         )
@@ -72,10 +121,10 @@ def apply(
 
 @router.get("/applications", response_model=ApplicationsResponse)
 def list_my_applications(
-    user_id: str = Query(...),
     service: ApplicationService = Depends(get_application_service),
+    current_user: User = Depends(get_current_user),
 ) -> ApplicationsResponse:
-    items = service.list_for_user(user_id)
+    items = service.list_for_user(current_user.id)
     return ApplicationsResponse(
         total=len(items), items=[ApplicationRead.model_validate(a) for a in items]
     )
@@ -87,58 +136,77 @@ def list_my_applications(
 def list_applicants(
     placement_id: str,
     service: ApplicationService = Depends(get_application_service),
+    current_user: User = Depends(get_current_user),
 ) -> ApplicationsResponse:
+    # Only the hiring side (employer/admin) may see who applied to a placement.
+    if current_user.role not in ("employer", "admin"):
+        raise HTTPException(status_code=403, detail="Not permitted for this role")
     items = service.list_for_placement(placement_id)
     return ApplicationsResponse(
         total=len(items), items=[ApplicationRead.model_validate(a) for a in items]
     )
 
 
+# ---- Student profile -------------------------------------------------------
+
+@router.get("/profile", response_model=StudentProfileRead)
+def get_profile(
+    service: StudentProfileService = Depends(get_student_profile_service),
+    current_user: User = Depends(get_current_user),
+) -> StudentProfileRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have profiles")
+    return StudentProfileRead.model_validate(
+        service.get(current_user.id), from_attributes=True
+    )
+
+
+@router.put("/profile", response_model=StudentProfileRead)
+def update_profile(
+    payload: StudentProfileUpdate,
+    service: StudentProfileService = Depends(get_student_profile_service),
+    current_user: User = Depends(get_current_user),
+) -> StudentProfileRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have profiles")
+    profile = service.save(
+        user_id=current_user.id,
+        course=payload.course,
+        year=payload.year,
+        cgpa=payload.cgpa,
+        university=payload.university,
+        skills=payload.skills,
+    )
+    return StudentProfileRead.model_validate(profile, from_attributes=True)
+
+
 # ---- Subscription ----------------------------------------------------------
 
 @router.get("/subscription", response_model=SubscriptionRead)
 def get_subscription(
-    org_id: str = Query(...),
+    org_id: Optional[str] = Query(default=None),
     service: BillingService = Depends(get_billing_service),
+    current_user: User = Depends(get_current_user),
 ) -> SubscriptionRead:
-    s = service.get(org_id)
-    return SubscriptionRead(
-        org_id=s.org_id,
-        plan=s.plan,
-        billing=s.billing,
-        seats=s.seats,
-        since=s.since,
-        is_premium=s.is_premium,
-    )
+    return _subscription_read(service.get(_org_for(current_user, org_id)))
 
 
 @router.post("/subscription/activate", response_model=SubscriptionRead)
 def activate_plan(
     payload: ActivatePlanRequest,
     service: BillingService = Depends(get_billing_service),
+    current_user: User = Depends(get_current_user),
 ) -> SubscriptionRead:
-    s = service.activate(payload.org_id, payload.plan, payload.billing, payload.seats)
-    return SubscriptionRead(
-        org_id=s.org_id,
-        plan=s.plan,
-        billing=s.billing,
-        seats=s.seats,
-        since=s.since,
-        is_premium=s.is_premium,
-    )
+    org = _org_for(current_user, payload.org_id)
+    s = service.activate(org, payload.plan, payload.billing, payload.seats)
+    return _subscription_read(s)
 
 
 @router.post("/subscription/cancel", response_model=SubscriptionRead)
 def cancel_plan(
     payload: CancelPlanRequest,
     service: BillingService = Depends(get_billing_service),
+    current_user: User = Depends(get_current_user),
 ) -> SubscriptionRead:
-    s = service.cancel(payload.org_id)
-    return SubscriptionRead(
-        org_id=s.org_id,
-        plan=s.plan,
-        billing=s.billing,
-        seats=s.seats,
-        since=s.since,
-        is_premium=s.is_premium,
-    )
+    org = _org_for(current_user, payload.org_id)
+    return _subscription_read(service.cancel(org))

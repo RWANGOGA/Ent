@@ -14,15 +14,24 @@ from app.application.ports import (
     ApplicationRepository,
     PlacementRepository,
     SavedRepository,
+    StudentProfileRepository,
     SubscriptionRepository,
     UserRepository,
 )
-from app.domain.entities import Application, Organisation, Placement, Subscription, User
+from app.domain.entities import (
+    Application,
+    Organisation,
+    Placement,
+    StudentProfile,
+    Subscription,
+    User,
+)
 from app.infrastructure.orm import (
     ApplicationORM,
     OrganisationORM,
     PlacementORM,
     SavedORM,
+    StudentProfileORM,
     SubscriptionORM,
     UserORM,
 )
@@ -226,6 +235,43 @@ class SqlAlchemySubscriptionRepository(SubscriptionRepository):
         row.since = subscription.since
         self._session.commit()
         return subscription
+
+
+class SqlAlchemyStudentProfileRepository(StudentProfileRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: StudentProfileORM) -> StudentProfile:
+        return StudentProfile(
+            user_id=row.user_id,
+            course=row.course or "",
+            year=row.year or "",
+            cgpa=float(row.cgpa or 0.0),
+            university=row.university or "",
+            skills=list(row.skills or []),
+        )
+
+    def get(self, user_id: str) -> StudentProfile:
+        row = self._session.query(StudentProfileORM).filter_by(user_id=user_id).first()
+        return self._to_domain(row) if row is not None else StudentProfile(user_id=user_id)
+
+    def save(self, profile: StudentProfile) -> StudentProfile:
+        row = (
+            self._session.query(StudentProfileORM)
+            .filter_by(user_id=profile.user_id)
+            .first()
+        )
+        if row is None:
+            row = StudentProfileORM(user_id=profile.user_id)
+            self._session.add(row)
+        row.course = profile.course
+        row.year = profile.year
+        row.cgpa = profile.cgpa
+        row.university = profile.university
+        row.skills = profile.skills
+        self._session.commit()
+        return profile
 
 
 class SqlAlchemyUserRepository(UserRepository):

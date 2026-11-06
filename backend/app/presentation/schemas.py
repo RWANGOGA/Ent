@@ -120,8 +120,10 @@ class SavedListResponse(BaseModel):
 
 
 class ToggleSavedRequest(BaseModel):
-    user_id: str
     placement_id: str
+    # R1d: identity comes from the Bearer token. Kept optional so an in-flight
+    # client that still sends it isn't rejected; the router ignores it.
+    user_id: Optional[str] = None
 
 
 class ToggleSavedResponse(BaseModel):
@@ -141,14 +143,32 @@ class ApplicationRead(BaseModel):
 
 
 class ApplyRequest(BaseModel):
-    user_id: str
     placement_id: str
     statement: str = ""
+    # R1d: ignored — the applicant is the authenticated user from the token.
+    user_id: Optional[str] = None
 
 
 class ApplicationsResponse(BaseModel):
     total: int
     items: list[ApplicationRead]
+
+
+class StudentProfileRead(BaseModel):
+    user_id: str
+    course: str
+    year: str
+    cgpa: float
+    university: str
+    skills: list[str]
+
+
+class StudentProfileUpdate(BaseModel):
+    course: str = ""
+    year: str = ""
+    cgpa: float = 0.0
+    university: str = ""
+    skills: list[str] = []
 
 
 class SubscriptionRead(BaseModel):
@@ -163,14 +183,16 @@ class SubscriptionRead(BaseModel):
 
 
 class ActivatePlanRequest(BaseModel):
-    org_id: str
     plan: str
     billing: str = "Card"
     seats: int = 1
+    # R1d: org is derived from the token for employers. An admin may target an
+    # org explicitly; ignored otherwise.
+    org_id: Optional[str] = None
 
 
 class CancelPlanRequest(BaseModel):
-    org_id: str
+    org_id: Optional[str] = None
 
 
 # ---------------- Auth ------------------------------------------------------
@@ -195,10 +217,10 @@ class UserRead(BaseModel):
     email: str
     name: str
     role: str
+    org_id: Optional[str] = None
 
 
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserRead
-

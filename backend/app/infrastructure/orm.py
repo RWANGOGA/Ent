@@ -63,6 +63,19 @@ class ApplicationORM(Base):
     created_at: Mapped[str] = mapped_column(String, default="")
 
 
+class StudentProfileORM(Base):
+    __tablename__ = "student_profiles"
+
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
+    )
+    course: Mapped[str] = mapped_column(String, default="")
+    year: Mapped[str] = mapped_column(String, default="")
+    cgpa: Mapped[float] = mapped_column(default=0.0)
+    university: Mapped[str] = mapped_column(String, default="")
+    skills: Mapped[list] = mapped_column(JSON, default=list)
+
+
 class SubscriptionORM(Base):
     __tablename__ = "subscriptions"
 

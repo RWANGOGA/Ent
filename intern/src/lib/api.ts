@@ -254,6 +254,36 @@ export interface ApplicationDto {
   created_at: string;
 }
 
+export interface StudentProfileDto {
+  user_id: string;
+  course: string;
+  year: string;
+  cgpa: number;
+  university: string;
+  skills: string[];
+}
+
+export async function fetchStudentProfile(): Promise<StudentProfileDto> {
+  return getJson<StudentProfileDto>("/profile");
+}
+
+export async function updateStudentProfile(
+  profile: Omit<StudentProfileDto, "user_id">
+): Promise<StudentProfileDto> {
+  return fetch(`${API_BASE}/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeader(),
+    },
+    body: JSON.stringify(profile),
+  }).then(async (res) => {
+    if (!res.ok) await readError(res, "/profile");
+    return (await res.json()) as StudentProfileDto;
+  });
+}
+
 export interface RankedPlacementDto {
   placement: ApiPlacement;
   match: {

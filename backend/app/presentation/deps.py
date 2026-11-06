@@ -17,6 +17,7 @@ from app.application.services import (
     MatchingService,
     PlacementService,
     SavedService,
+    StudentProfileService,
 )
 from app.core.errors import AuthenticationError, UserNotFound
 from app.core.security import decode_access_token
@@ -27,6 +28,7 @@ from app.infrastructure.repositories import (
     SqlAlchemyApplicationRepository,
     SqlAlchemyPlacementRepository,
     SqlAlchemySavedRepository,
+    SqlAlchemyStudentProfileRepository,
     SqlAlchemySubscriptionRepository,
     SqlAlchemyUserRepository,
 )
@@ -66,6 +68,12 @@ def get_application_service(
 
 def get_billing_service(session: Session = Depends(get_session)) -> BillingService:
     return BillingService(SqlAlchemySubscriptionRepository(session))
+
+
+def get_student_profile_service(
+    session: Session = Depends(get_session),
+) -> StudentProfileService:
+    return StudentProfileService(SqlAlchemyStudentProfileRepository(session))
 
 
 # ---- Auth ------------------------------------------------------------------

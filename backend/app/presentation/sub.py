@@ -14,7 +14,12 @@ from fastapi.responses import JSONResponse
 
 from app.core.errors import AuthenticationError
 from app.infrastructure.db import Base, SessionLocal, engine
-from app.infrastructure.orm import OrganisationORM, PlacementORM, UserORM  # noqa: F401 (register tables)
+from app.infrastructure.orm import (  # noqa: F401 (register tables)
+    OrganisationORM,
+    PlacementORM,
+    StudentProfileORM,
+    UserORM,
+)
 from app.infrastructure.seed import seed_if_empty
 from app.presentation.routers import (
     advisor,

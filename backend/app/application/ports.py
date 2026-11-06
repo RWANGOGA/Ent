@@ -7,7 +7,7 @@ is what keeps the domain swappable and the tests offline (SOLID: DIP + ISP).
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.domain.entities import Application, Placement, Subscription, User
+from app.domain.entities import Application, Placement, StudentProfile, Subscription, User
 
 
 class PlacementRepository(ABC):
@@ -74,6 +74,16 @@ class ApplicationRepository(ABC):
     def list_for_placement(self, placement_id: str) -> list[Application]: ...
 
 
+class StudentProfileRepository(ABC):
+    """Persisted academic profiles for student accounts."""
+
+    @abstractmethod
+    def get(self, user_id: str) -> StudentProfile: ...
+
+    @abstractmethod
+    def save(self, profile: StudentProfile) -> StudentProfile: ...
+
+
 class SubscriptionRepository(ABC):
     """Host organisations' billing state."""
 
@@ -96,5 +106,4 @@ class UserRepository(ABC):
 
     @abstractmethod
     def get_by_id(self, user_id: str) -> Optional[User]: ...
-
 

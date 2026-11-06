@@ -46,6 +46,18 @@ APPLICATION_STATUSES = ("Submitted", "In Review", "Accepted", "Rejected")
 
 
 @dataclass(frozen=True)
+class StudentProfile:
+    """Persisted academic profile used by internship matching."""
+
+    user_id: str
+    course: str = ""
+    year: str = ""
+    cgpa: float = 0.0
+    university: str = ""
+    skills: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class Application:
     """A student's submission to a placement. One row per (user, placement)."""
 

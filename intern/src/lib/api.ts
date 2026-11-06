@@ -341,6 +341,15 @@ export async function fetchApplications(): Promise<ApplicationDto[]> {
   return data.items;
 }
 
+export async function withdrawApplicationApi(
+  applicationId: string
+): Promise<ApplicationDto> {
+  return postJson<ApplicationDto>(
+    `/applications/${applicationId}/withdraw`,
+    {}
+  );
+}
+
 export async function fetchRecommendedInternships(
   skills: string[],
   course: string,

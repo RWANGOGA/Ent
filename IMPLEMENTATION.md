@@ -357,11 +357,12 @@ Each feature is complete only when its backend, frontend, tests, documentation, 
 - Remove the frontend catalogue fallback.
 - Commit and push. Completed in `01a36e5`.
 
-### Feature 3: Live internship candidate workflows — partially complete
+### Feature 3: Live internship candidate workflows — in progress
 
 - Persist saved internships. Complete in `cd8c8fe`/`01a36e5`.
 - Persist internship applications. Complete in `cd8c8fe`/`01a36e5`.
 - Load application history from the backend. Complete in `c730087`.
+- Track applications and withdraw eligible submissions. Complete in the current student dashboard workflow.
 - Connect eligibility and matching to live backend metadata. Complete for the dashboard overview in `c730087`.
 - Remove related local-only state. Remaining dashboard views are still being migrated.
 - Commit and push.

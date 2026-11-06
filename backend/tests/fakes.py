@@ -54,6 +54,24 @@ class InMemoryApplicationRepository(ApplicationRepository):
             None,
         )
 
+    def find_by_id(self, application_id: str) -> Optional[Application]:
+        return next((a for a in self._items if a.id == application_id), None)
+
+    def withdraw(self, user_id: str, application_id: str) -> Optional[Application]:
+        application = self.find_by_id(application_id)
+        if application is None or application.user_id != user_id:
+            return None
+        updated = Application(
+            id=application.id,
+            user_id=application.user_id,
+            placement_id=application.placement_id,
+            status="Withdrawn",
+            statement=application.statement,
+            created_at=application.created_at,
+        )
+        self._items[self._items.index(application)] = updated
+        return updated
+
     def list_for_user(self, user_id: str) -> list[Application]:
         return [a for a in self._items if a.user_id == user_id]
 

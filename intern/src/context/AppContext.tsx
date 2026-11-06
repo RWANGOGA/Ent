@@ -51,6 +51,7 @@ import {
   setToken,
   toggleSavedApi,
   uploadResume,
+  withdrawApplicationApi,
   updateStudentProfile,
   type ApiUser,
   type CatalogMeta,
@@ -187,6 +188,7 @@ interface AppContextType {
   newPlacement: () => void;
   uploadDoc: (name: string) => void;
   uploadResumeFile: (file: File) => Promise<void>;
+  withdrawApplication: (applicationId: string) => Promise<void>;
   editPack: () => void;
   previewPack: () => void;
   showEmbed: () => void;
@@ -343,6 +345,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     },
     [role, session, toast]
+  );
+
+  const withdrawApplication = useCallback(
+    async (applicationId: string) => {
+      try {
+        const updated = await withdrawApplicationApi(applicationId);
+        setApplications((current) =>
+          current.map((application) =>
+            application.id === updated.id ? updated : application
+          )
+        );
+        toast("Application withdrawn.");
+      } catch (error) {
+        toast(
+          error instanceof Error ? error.message : "Application withdrawal failed."
+        );
+        throw error;
+      }
+    },
+    [toast]
   );
 
   const openMenu = useCallback(() => {
@@ -1810,6 +1832,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         newPlacement,
         uploadDoc,
         uploadResumeFile,
+        withdrawApplication,
         editPack,
         previewPack,
         showEmbed,

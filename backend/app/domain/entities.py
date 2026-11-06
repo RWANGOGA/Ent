@@ -105,7 +105,9 @@ USER_ROLES = ("student", "jobseeker", "employer", "admin")
 @dataclass(frozen=True)
 class User:
     """An authenticated account. ``password_hash`` never leaves the domain —
-    the presentation layer exposes a safe view without it."""
+    the presentation layer exposes a safe view without it. ``org_id`` links
+    employer accounts to the organisation they act on (R1d: user-state
+    endpoints derive the org from the token instead of a request parameter)."""
 
     id: str
     email: str

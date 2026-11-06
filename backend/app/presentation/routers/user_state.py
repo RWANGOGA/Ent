@@ -134,6 +134,24 @@ def list_my_applications(
     )
 
 
+@router.post("/applications/{application_id}/withdraw", response_model=ApplicationRead)
+def withdraw_application(
+    application_id: str,
+    service: ApplicationService = Depends(get_application_service),
+    current_user: User = Depends(get_current_user),
+) -> ApplicationRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students can withdraw applications")
+    application = service.withdraw(
+        user_id=current_user.id, application_id=application_id
+    )
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if application.status in ("Accepted", "Rejected"):
+        raise HTTPException(status_code=409, detail="This application can no longer be withdrawn")
+    return ApplicationRead.model_validate(application)
+
+
 @router.get(
     "/placements/{placement_id}/applicants", response_model=ApplicationsResponse
 )

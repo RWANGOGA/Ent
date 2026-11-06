@@ -109,6 +109,34 @@ def test_apply_unknown_placement_is_404(client):
     assert resp.status_code == 404
 
 
+def test_student_can_track_and_withdraw_own_application(client):
+    h = _login(client, STUDENT)
+    created = client.post(
+        "/applications", json={"placement_id": "p2"}, headers=h
+    ).json()
+    tracked = client.get("/applications", headers=h).json()
+    assert tracked["total"] == 1
+    assert tracked["items"][0]["id"] == created["id"]
+
+    withdrawn = client.post(
+        f"/applications/{created['id']}/withdraw", headers=h
+    )
+    assert withdrawn.status_code == 200
+    assert withdrawn.json()["status"] == "Withdrawn"
+
+
+def test_student_cannot_withdraw_another_account_application(client):
+    owner = _login(client, STUDENT)
+    created = client.post(
+        "/applications", json={"placement_id": "p3"}, headers=owner
+    ).json()
+    other = _login(client, JOBSEEKER)
+    response = client.post(
+        f"/applications/{created['id']}/withdraw", headers=other
+    )
+    assert response.status_code == 403
+
+
 # ---- Student profile -------------------------------------------------------
 
 

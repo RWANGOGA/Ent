@@ -452,11 +452,12 @@ export const INITIAL_PACK: ApplicationPack = {
 export const NAV: Record<UserRole, [string, string, string][]> = {
   student: [
     ["overview", "Overview", "01"],
-    ["skills", "Skills profile", "02"],
-    ["placements", "Placements", "03"],
-    ["documents", "Documents", "04"],
-    ["pack", "Application pack", "05"],
-    ["testimonial", "Testimonial", "06"],
+    ["placements", "Placements", "02"],
+    ["applications", "Applications", "03"],
+    ["skills", "Skills profile", "04"],
+    ["documents", "Documents", "05"],
+    ["pack", "Application pack", "06"],
+    ["testimonial", "Testimonial", "07"],
   ],
   jobseeker: [
     ["overview", "Overview", "01"],

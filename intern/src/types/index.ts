@@ -115,6 +115,7 @@ export type DashboardView =
   | "overview"
   | "skills"
   | "placements"
+  | "applications"
   | "requirements"
   | "students"
   | "documents"

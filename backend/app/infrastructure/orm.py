@@ -6,6 +6,7 @@ across Postgres and SQLite without association tables — keeping the project
 minimal for now.
 """
 from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.db import Base

@@ -163,6 +163,14 @@ class ApplicationService:
     def list_for_placement(self, placement_id: str) -> list[Application]:
         return self._apps.list_for_placement(placement_id)
 
+    def withdraw(self, *, user_id: str, application_id: str) -> Optional[Application]:
+        application = self._apps.find_by_id(application_id)
+        if application is None or application.user_id != user_id:
+            return None
+        if application.status in ("Accepted", "Rejected", "Withdrawn"):
+            return application
+        return self._apps.withdraw(user_id, application_id)
+
 
 class BillingService:
     """Use cases for the host organisation's placement-fee plan."""

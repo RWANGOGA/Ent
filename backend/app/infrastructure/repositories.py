@@ -23,6 +23,7 @@ from app.domain.entities import (
     Application,
     Organisation,
     Placement,
+    Resume,
     StudentProfile,
     Subscription,
     User,
@@ -33,6 +34,7 @@ from app.infrastructure.orm import (
     PlacementORM,
     SavedORM,
     StudentProfileORM,
+    ResumeORM,
     SubscriptionORM,
     UserORM,
 )
@@ -188,6 +190,22 @@ class SqlAlchemyApplicationRepository(ApplicationRepository):
         )
         return self._to_domain(row) if row is not None else None
 
+    def find_by_id(self, application_id: str) -> Optional[Application]:
+        row = self._session.query(ApplicationORM).filter_by(id=application_id).first()
+        return self._to_domain(row) if row is not None else None
+
+    def withdraw(self, user_id: str, application_id: str) -> Optional[Application]:
+        row = (
+            self._session.query(ApplicationORM)
+            .filter_by(id=application_id, user_id=user_id)
+            .first()
+        )
+        if row is None:
+            return None
+        row.status = "Withdrawn"
+        self._session.commit()
+        return self._to_domain(row)
+
     def list_for_user(self, user_id: str) -> list[Application]:
         rows = (
             self._session.query(ApplicationORM)
@@ -321,6 +339,7 @@ class SqlAlchemyUserRepository(UserRepository):
             role=row.role,
             password_hash=row.password_hash,
             created_at=row.created_at or "",
+            org_id=row.org_id or None,
         )
 
     def add(self, user: User) -> User:
@@ -332,6 +351,7 @@ class SqlAlchemyUserRepository(UserRepository):
                 role=user.role,
                 password_hash=user.password_hash,
                 created_at=user.created_at,
+                org_id=user.org_id,
             )
         )
         self._session.commit()

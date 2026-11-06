@@ -68,10 +68,16 @@ class ApplicationRepository(ABC):
     def find(self, user_id: str, placement_id: str) -> Optional[Application]: ...
 
     @abstractmethod
+    def find_by_id(self, application_id: str) -> Optional[Application]: ...
+
+    @abstractmethod
     def list_for_user(self, user_id: str) -> list[Application]: ...
 
     @abstractmethod
     def list_for_placement(self, placement_id: str) -> list[Application]: ...
+
+    @abstractmethod
+    def withdraw(self, user_id: str, application_id: str) -> Optional[Application]: ...
 
 
 class StudentProfileRepository(ABC):

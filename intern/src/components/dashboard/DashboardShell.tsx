@@ -13,6 +13,7 @@ import { AdminRequirements } from "./admin/AdminRequirements";
 import { AdminStudents } from "./admin/AdminStudents";
 
 import { StudentOverview } from "./student/StudentOverview";
+import { StudentApplications } from "./student/StudentApplications";
 import { SkillProfile } from "./student/SkillProfile";
 import { StudentPlacements } from "./student/StudentPlacements";
 import { StudentDocs } from "./student/StudentDocs";
@@ -60,6 +61,7 @@ export function DashboardShell() {
     overview: "Overview",
     skills: "Skills profile",
     placements: "Placements",
+    applications: "Applications",
     requirements: "Requirements",
     students: "Students",
     documents: "Documents",
@@ -95,6 +97,8 @@ export function DashboardShell() {
           return <SkillProfile />;
         case "placements":
           return <StudentPlacements />;
+        case "applications":
+          return <StudentApplications />;
         case "documents":
           return <StudentDocs />;
         case "pack":

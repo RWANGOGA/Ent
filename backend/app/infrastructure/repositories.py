@@ -15,6 +15,7 @@ from app.application.ports import (
     PlacementRepository,
     SavedRepository,
     StudentProfileRepository,
+    ResumeRepository,
     SubscriptionRepository,
     UserRepository,
 )
@@ -272,6 +273,39 @@ class SqlAlchemyStudentProfileRepository(StudentProfileRepository):
         row.skills = profile.skills
         self._session.commit()
         return profile
+
+
+class SqlAlchemyResumeRepository(ResumeRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: ResumeORM) -> Resume:
+        return Resume(
+            user_id=row.user_id,
+            filename=row.filename,
+            content_type=row.content_type,
+            size_bytes=row.size_bytes,
+            content=row.content,
+            uploaded_at=row.uploaded_at or "",
+        )
+
+    def get(self, user_id: str) -> Optional[Resume]:
+        row = self._session.query(ResumeORM).filter_by(user_id=user_id).first()
+        return self._to_domain(row) if row is not None else None
+
+    def save(self, resume: Resume) -> Resume:
+        row = self._session.query(ResumeORM).filter_by(user_id=resume.user_id).first()
+        if row is None:
+            row = ResumeORM(user_id=resume.user_id)
+            self._session.add(row)
+        row.filename = resume.filename
+        row.content_type = resume.content_type
+        row.size_bytes = resume.size_bytes
+        row.content = resume.content
+        row.uploaded_at = resume.uploaded_at
+        self._session.commit()
+        return resume
 
 
 class SqlAlchemyUserRepository(UserRepository):

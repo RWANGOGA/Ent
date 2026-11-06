@@ -40,6 +40,7 @@ import {
   fetchCatalogMeta,
   fetchApplications,
   fetchStudentProfile,
+  fetchResume,
   fetchRecommendedInternships,
   fetchMe,
   fetchSaved,
@@ -49,12 +50,14 @@ import {
   registerApi,
   setToken,
   toggleSavedApi,
+  uploadResume,
   updateStudentProfile,
   type ApiUser,
   type CatalogMeta,
   type SubscriptionDto,
   type ApplicationDto,
   type MatchDto,
+  type ResumeDto,
 } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
@@ -95,6 +98,7 @@ interface AppContextType {
   portal: Portal;
   catalogStatus: "loading" | "ready" | "error";
   applications: ApplicationDto[];
+  resume: ResumeDto | null;
   recommendations: MatchDto | null;
   dashboardDataStatus: "idle" | "loading" | "ready" | "error";
   pid: string | null;
@@ -182,6 +186,7 @@ interface AppContextType {
   editRequirements: (id: string) => void;
   newPlacement: () => void;
   uploadDoc: (name: string) => void;
+  uploadResumeFile: (file: File) => Promise<void>;
   editPack: () => void;
   previewPack: () => void;
   showEmbed: () => void;
@@ -239,6 +244,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     "loading" | "ready" | "error"
   >(isApiEnabled ? "loading" : "error");
   const [applications, setApplications] = useState<ApplicationDto[]>([]);
+  const [resume, setResume] = useState<ResumeDto | null>(null);
   const [recommendations, setRecommendations] = useState<MatchDto | null>(null);
   const [dashboardDataStatus, setDashboardDataStatus] = useState<
     "idle" | "loading" | "ready" | "error"
@@ -320,6 +326,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setToastMessage((cur) => (cur === msg ? null : cur));
     }, 2800);
   }, []);
+
+  const uploadResumeFile = useCallback(
+    async (file: File) => {
+      if (!isApiEnabled || !session || role !== "student") {
+        toast("Sign in as a student to upload a resume.");
+        return;
+      }
+      try {
+        const saved = await uploadResume(file);
+        setResume(saved);
+        toast("Resume uploaded and saved.");
+      } catch (error) {
+        toast(error instanceof Error ? error.message : "Resume upload failed.");
+        throw error;
+      }
+    },
+    [role, session, toast]
+  );
 
   const openMenu = useCallback(() => {
     setIsMenuOpen(true);
@@ -1204,8 +1228,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setDashboardDataStatus("loading");
-    Promise.all([fetchApplications(), fetchStudentProfile()])
-      .then(async ([apps, profile]) => {
+    Promise.all([fetchApplications(), fetchStudentProfile(), fetchResume()])
+      .then(async ([apps, profile, currentResume]) => {
         const nextStudent: Student = {
           name: session.name,
           course: profile.course,
@@ -1216,6 +1240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         if (cancelled) return;
         setStudent(nextStudent);
+        setResume(currentResume);
         const matches = await fetchRecommendedInternships(
           nextStudent.skills,
           nextStudent.course,
@@ -1604,7 +1629,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </div>,
       null
     );
-  }, [docs, pack.statement, openModal]);
+  },   [docs, pack.statement, openModal, resume]);
 
   const showEmbed = useCallback(() => {
     openModal(
@@ -1731,6 +1756,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         metaReady,
         student,
         docs,
+        resume,
         adminQueue,
         activity,
         pack,
@@ -1783,6 +1809,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         editRequirements,
         newPlacement,
         uploadDoc,
+        uploadResumeFile,
         editPack,
         previewPack,
         showEmbed,

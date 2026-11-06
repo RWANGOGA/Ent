@@ -1,5 +1,5 @@
 """Application services — thin use-case orchestrators over the ports."""
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -8,10 +8,11 @@ from app.application.ports import (
     PlacementRepository,
     SavedRepository,
     StudentProfileRepository,
+    ResumeRepository,
     SubscriptionRepository,
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
-from app.domain.entities import Application, Placement, StudentProfile, Subscription
+from app.domain.entities import Application, Placement, Resume, StudentProfile, Subscription
 from app.domain.matching import (
     GRADE_RANK,
     REQUIRED_SKILLS,
@@ -220,5 +221,32 @@ class StudentProfileService:
                 skills=list(
                     dict.fromkeys(skill.strip() for skill in skills if skill.strip())
                 ),
+            )
+        )
+
+
+class ResumeService:
+    def __init__(self, repo: ResumeRepository) -> None:
+        self._repo = repo
+
+    def get(self, user_id: str) -> Optional[Resume]:
+        return self._repo.get(user_id)
+
+    def save(
+        self,
+        *,
+        user_id: str,
+        filename: str,
+        content_type: str,
+        content: bytes,
+    ) -> Resume:
+        return self._repo.save(
+            Resume(
+                user_id=user_id,
+                filename=filename,
+                content_type=content_type,
+                size_bytes=len(content),
+                content=content,
+                uploaded_at=datetime.now(timezone.utc).isoformat(),
             )
         )

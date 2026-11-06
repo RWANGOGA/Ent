@@ -76,6 +76,17 @@ class StudentProfileORM(Base):
     skills: Mapped[list] = mapped_column(JSON, default=list)
 
 
+class ResumeORM(Base):
+    __tablename__ = "resumes"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    content_type: Mapped[str] = mapped_column(String, default="application/octet-stream")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    uploaded_at: Mapped[str] = mapped_column(String, default="")
+
+
 class SubscriptionORM(Base):
     __tablename__ = "subscriptions"
 

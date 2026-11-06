@@ -171,6 +171,13 @@ class StudentProfileUpdate(BaseModel):
     skills: list[str] = []
 
 
+class ResumeRead(BaseModel):
+    filename: str
+    content_type: str
+    size_bytes: int
+    uploaded_at: str
+
+
 class SubscriptionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -9,7 +9,8 @@ Grouped in one module because they share the same shape: a thin HTTP handler
 that resolves the actor, calls an application service, and maps a domain error
 to an HTTP status.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 from typing import Optional
 
 from app.application.services import (
@@ -17,6 +18,7 @@ from app.application.services import (
     BillingService,
     SavedService,
     StudentProfileService,
+    ResumeService,
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
 from app.domain.entities import User
@@ -26,6 +28,7 @@ from app.presentation.deps import (
     get_current_user,
     get_saved_service,
     get_student_profile_service,
+    get_resume_service,
 )
 from app.presentation.schemas import (
     ActivatePlanRequest,
@@ -37,6 +40,7 @@ from app.presentation.schemas import (
     SubscriptionRead,
     StudentProfileRead,
     StudentProfileUpdate,
+    ResumeRead,
     ToggleSavedRequest,
     ToggleSavedResponse,
 )
@@ -178,6 +182,65 @@ def update_profile(
         skills=payload.skills,
     )
     return StudentProfileRead.model_validate(profile, from_attributes=True)
+
+
+# ---- Resume ----------------------------------------------------------------
+
+@router.get("/resume", response_model=Optional[ResumeRead])
+def get_resume(
+    service: ResumeService = Depends(get_resume_service),
+    current_user: User = Depends(get_current_user),
+) -> Optional[ResumeRead]:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have resumes")
+    resume = service.get(current_user.id)
+    return (
+        ResumeRead.model_validate(resume, from_attributes=True)
+        if resume is not None
+        else None
+    )
+
+
+@router.put("/resume", response_model=ResumeRead)
+async def upload_resume(
+    file: UploadFile = File(...),
+    service: ResumeService = Depends(get_resume_service),
+    current_user: User = Depends(get_current_user),
+) -> ResumeRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have resumes")
+    if file.content_type not in ("application/pdf", "application/msword",
+                                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"):
+        raise HTTPException(status_code=415, detail="Resume must be a PDF or Word document")
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Resume file is empty")
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Resume must be 10 MB or smaller")
+    resume = service.save(
+        user_id=current_user.id,
+        filename=file.filename or "resume",
+        content_type=file.content_type,
+        content=content,
+    )
+    return ResumeRead.model_validate(resume, from_attributes=True)
+
+
+@router.get("/resume/download")
+def download_resume(
+    service: ResumeService = Depends(get_resume_service),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have resumes")
+    resume = service.get(current_user.id)
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return Response(
+        content=resume.content,
+        media_type=resume.content_type,
+        headers={"Content-Disposition": f'attachment; filename="{resume.filename}"'},
+    )
 
 
 # ---- Subscription ----------------------------------------------------------

@@ -263,6 +263,29 @@ export interface StudentProfileDto {
   skills: string[];
 }
 
+export interface ResumeDto {
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  uploaded_at: string;
+}
+
+export async function fetchResume(): Promise<ResumeDto | null> {
+  return getJson<ResumeDto | null>("/resume");
+}
+
+export async function uploadResume(file: File): Promise<ResumeDto> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(`${API_BASE}/resume`, {
+    method: "PUT",
+    headers: authHeader(),
+    body,
+  });
+  if (!res.ok) await readError(res, "/resume");
+  return (await res.json()) as ResumeDto;
+}
+
 export async function fetchStudentProfile(): Promise<StudentProfileDto> {
   return getJson<StudentProfileDto>("/profile");
 }

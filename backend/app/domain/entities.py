@@ -58,6 +58,16 @@ class StudentProfile:
 
 
 @dataclass(frozen=True)
+class Resume:
+    user_id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    content: bytes
+    uploaded_at: str
+
+
+@dataclass(frozen=True)
 class Application:
     """A student's submission to a placement. One row per (user, placement)."""
 

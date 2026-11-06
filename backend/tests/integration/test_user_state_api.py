@@ -142,6 +142,51 @@ def test_non_student_cannot_access_student_profile(client):
     assert client.put("/profile", json={}, headers=h).status_code == 403
 
 
+# ---- Resume -----------------------------------------------------------------
+
+
+def test_student_can_upload_replace_and_download_resume(client):
+    h = _login(client, STUDENT)
+    first = client.put(
+        "/resume",
+        files={"file": ("resume.pdf", b"first resume", "application/pdf")},
+        headers=h,
+    )
+    assert first.status_code == 200
+    assert first.json()["filename"] == "resume.pdf"
+    assert first.json()["size_bytes"] == len(b"first resume")
+
+    replacement = client.put(
+        "/resume",
+        files={
+            "file": (
+                "resume.docx",
+                b"replacement resume",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        },
+        headers=h,
+    )
+    assert replacement.status_code == 200
+    assert replacement.json()["filename"] == "resume.docx"
+    downloaded = client.get("/resume/download", headers=h)
+    assert downloaded.status_code == 200
+    assert downloaded.content == b"replacement resume"
+    assert client.get("/resume", headers=h).json()["filename"] == "resume.docx"
+
+
+def test_resume_rejects_unsupported_files_and_non_students(client):
+    student = _login(client, STUDENT)
+    bad = client.put(
+        "/resume",
+        files={"file": ("resume.txt", b"not a resume", "text/plain")},
+        headers=student,
+    )
+    assert bad.status_code == 415
+    jobseeker = _login(client, JOBSEEKER)
+    assert client.get("/resume", headers=jobseeker).status_code == 403
+
+
 # ---- Subscription ----------------------------------------------------------
 
 

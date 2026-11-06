@@ -5,7 +5,8 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentDocs() {
-  const { docs, uploadDoc } = useApp();
+  const { docs, uploadDoc, resume, uploadResumeFile } = useApp();
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const uploadedCount = docs.filter((d) => d.status !== "missing").length;
 
   return (
@@ -18,20 +19,41 @@ export function StudentDocs() {
         <button
           type="button"
           className="btn btn-sm btn-blue"
-          onClick={() => uploadDoc("Recommendation letter")}
+          onClick={() => inputRef.current?.click()}
         >
           <Icon name="upload" size={12} /> Upload
         </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf,.doc,.docx"
+          hidden
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (file) await uploadResumeFile(file);
+            event.target.value = "";
+          }}
+        />
       </div>
 
       <div className="dsplit">
         <div className="panel">
           <div className="ph">
             <span className="lbl">My files</span>
-            <span className="lbl">{uploadedCount} uploaded</span>
+            <span className="lbl">{uploadedCount + (resume ? 1 : 0)} uploaded</span>
           </div>
           <div className="pb">
             <div className="files">
+              {resume && (
+                <div className="file">
+                  <span className="fi">CV</span>
+                  <div>
+                    <b>Resume</b>
+                    <span>{resume.filename} · {(resume.size_bytes / 1024).toFixed(0)} KB</span>
+                  </div>
+                  <span className="tg green">uploaded</span>
+                </div>
+              )}
               {docs.map((d) => (
                 <div key={d.name} className="file">
                   <span className="fi">{d.name.slice(0, 2).toUpperCase()}</span>
@@ -65,13 +87,13 @@ export function StudentDocs() {
           <div className="pb">
             <div
               className="upload"
-              onClick={() => uploadDoc("Recommendation letter")}
+              onClick={() => inputRef.current?.click()}
             >
               <div className="ic">
                 <Icon name="upload" size={24} />
               </div>
               <b>Drop a file or click to upload</b>
-              <span>PDF or JPG · up to 10 MB</span>
+              <span>PDF or Word · up to 10 MB</span>
             </div>
             <div
               style={{

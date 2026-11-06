@@ -370,7 +370,8 @@ Each feature is complete only when its backend, frontend, tests, documentation, 
 
 - Add persistent student/recent-graduate profile records. Complete in `4d28284`.
 - Add skills persistence. Complete in `4d28284`.
-- Add document upload metadata and verification state.
+- Add resume upload metadata and content storage. Complete in the current student dashboard workflow.
+- Add document upload metadata and verification state for transcripts, IDs, and recommendations.
 - Persist application pack data.
 - Connect dashboard views to live records.
 - Commit and push.

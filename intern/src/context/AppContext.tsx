@@ -39,6 +39,8 @@ import {
   cancelSubscriptionApi,
   fetchCatalog,
   fetchCatalogMeta,
+  fetchApplications,
+  fetchRecommendedInternships,
   fetchMe,
   fetchSaved,
   fetchSubscription,
@@ -50,6 +52,8 @@ import {
   type ApiUser,
   type CatalogMeta,
   type SubscriptionDto,
+  type ApplicationDto,
+  type MatchDto,
 } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
@@ -89,6 +93,9 @@ interface AppContextType {
   route: string;
   portal: Portal;
   catalogStatus: "loading" | "ready" | "error";
+  applications: ApplicationDto[];
+  recommendations: MatchDto | null;
+  dashboardDataStatus: "idle" | "loading" | "ready" | "error";
   pid: string | null;
   typeFilter: string;
   sectorFilter: string;
@@ -230,6 +237,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [catalogStatus, setCatalogStatus] = useState<
     "loading" | "ready" | "error"
   >(isApiEnabled ? "loading" : "error");
+  const [applications, setApplications] = useState<ApplicationDto[]>([]);
+  const [recommendations, setRecommendations] = useState<MatchDto | null>(null);
+  const [dashboardDataStatus, setDashboardDataStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
   // Catalogue metadata (courses/types/locations for filters, grade thresholds,
   // skill taxonomy, per-placement requirements) — served by GET
   // /placements/meta. Starts empty for the same reason as the catalog.
@@ -1176,6 +1188,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [session]);
 
   useEffect(() => {
+    if (!isApiEnabled || !session || role !== "student") {
+      setApplications([]);
+      setRecommendations(null);
+      setDashboardDataStatus("idle");
+      return;
+    }
+    let cancelled = false;
+    setDashboardDataStatus("loading");
+    Promise.all([
+      fetchApplications(),
+      fetchRecommendedInternships(student.skills, student.course, student.cgpa),
+    ])
+      .then(([apps, matches]) => {
+        if (cancelled) return;
+        setApplications(apps);
+        setRecommendations(matches);
+        setDashboardDataStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setDashboardDataStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, role, student.skills, student.course, student.cgpa]);
+
+  useEffect(() => {
     if (isApiEnabled) return; // the database is the source of truth
     try {
       window.localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(subscription));
@@ -1621,6 +1660,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         route,
         portal,
         catalogStatus,
+        applications,
+        recommendations,
+        dashboardDataStatus,
         pid,
         typeFilter,
         sectorFilter,

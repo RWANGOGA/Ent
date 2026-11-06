@@ -239,6 +239,11 @@ nav[aria-label="Primary"]{display:flex}
 .portal-live b{font-size:12px;color:#F4F4F5;font-weight:600}
 .catalog-state{padding:42px 30px;text-align:center;color:var(--muted);border:1px solid var(--rule);border-radius:var(--r-lg);background:var(--white)}
 .catalog-state-error{color:var(--red)}
+.dashboard-recommendation{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule);text-align:left}
+.dashboard-recommendation b,.dashboard-recommendation small{display:block}
+.dashboard-recommendation b{font-size:12px}
+.dashboard-recommendation small{font-size:10.5px;color:var(--muted);margin-top:3px}
+.dashboard-recommendation strong{font-family:var(--mono);font-size:11px;color:var(--blue)}
 .hp-rows{margin-top:22px;border-top:1px solid #3F3F46}
 .hp-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:11px 0;border-bottom:1px solid #3F3F46;font-size:12px}
 .hp-row span{color:#D4D4D8}

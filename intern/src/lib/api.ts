@@ -224,23 +224,21 @@ export async function fetchCatalogMeta(): Promise<CatalogMeta> {
 
 // ---- Saved placements (bookmarks) -----------------------------------------
 
-// GET /saved -> the ids this user has bookmarked.
-export async function fetchSaved(userId: string): Promise<string[]> {
-  const data = await getJson<{ saved_ids: string[] }>(
-    `/saved?user_id=${encodeURIComponent(userId)}`
-  );
+// GET /saved -> the ids the authenticated user has bookmarked. Identity is the
+// Bearer token (authHeader), so no user_id is sent.
+export async function fetchSaved(): Promise<string[]> {
+  const data = await getJson<{ saved_ids: string[] }>("/saved");
   return data.saved_ids;
 }
 
 // POST /saved/toggle -> flips the bookmark and returns the new flag plus the
 // full updated shortlist, so the client can reconcile without a second GET.
 export async function toggleSavedApi(
-  userId: string,
   placementId: string
 ): Promise<{ saved: boolean; savedIds: string[] }> {
   const data = await postJson<{ saved: boolean; saved_ids: string[] }>(
     "/saved/toggle",
-    { user_id: userId, placement_id: placementId }
+    { placement_id: placementId }
   );
   return { saved: data.saved, savedIds: data.saved_ids };
 }
@@ -256,17 +254,51 @@ export interface ApplicationDto {
   created_at: string;
 }
 
-// POST /applications -> submit (idempotent server-side: re-applying returns the
-// existing record). Throws on 404 (unknown placement) or 409 (closed).
+export interface RankedPlacementDto {
+  placement: ApiPlacement;
+  match: {
+    score: number;
+    matched: string[];
+    missing: string[];
+    course_fit: boolean;
+    grade_fit: boolean;
+  };
+}
+
+export interface MatchDto {
+  total: number;
+  items: RankedPlacementDto[];
+}
+
+// POST /applications -> submit as the authenticated user (idempotent
+// server-side: re-applying returns the existing record). Throws on 404 (unknown
+// placement) or 409 (closed).
 export async function applyApi(
-  userId: string,
   placementId: string,
   statement: string
 ): Promise<ApplicationDto> {
   return postJson<ApplicationDto>("/applications", {
-    user_id: userId,
     placement_id: placementId,
     statement,
+  });
+}
+
+export async function fetchApplications(): Promise<ApplicationDto[]> {
+  const data = await getJson<ApiListResponse<ApplicationDto>>("/applications");
+  return data.items;
+}
+
+export async function fetchRecommendedInternships(
+  skills: string[],
+  course: string,
+  cgpa: number,
+  limit = 6
+): Promise<MatchDto> {
+  return postJson<MatchDto>("/match", {
+    skills,
+    course,
+    cgpa,
+    limit,
   });
 }
 
@@ -281,29 +313,26 @@ export interface SubscriptionDto {
   is_premium: boolean;
 }
 
-// GET /subscription -> the org's live plan (defaults to Free when none exists).
-export async function fetchSubscription(orgId: string): Promise<SubscriptionDto> {
-  return getJson<SubscriptionDto>(
-    `/subscription?org_id=${encodeURIComponent(orgId)}`
-  );
+// GET /subscription -> the authenticated org's live plan (defaults to Free).
+// The org is derived from the token, so no org_id is sent.
+export async function fetchSubscription(): Promise<SubscriptionDto> {
+  return getJson<SubscriptionDto>("/subscription");
 }
 
 export async function activateSubscriptionApi(
-  orgId: string,
   plan: string,
   billing: string,
   seats: number
 ): Promise<SubscriptionDto> {
   return postJson<SubscriptionDto>("/subscription/activate", {
-    org_id: orgId,
     plan,
     billing,
     seats,
   });
 }
 
-export async function cancelSubscriptionApi(orgId: string): Promise<SubscriptionDto> {
-  return postJson<SubscriptionDto>("/subscription/cancel", { org_id: orgId });
+export async function cancelSubscriptionApi(): Promise<SubscriptionDto> {
+  return postJson<SubscriptionDto>("/subscription/cancel", {});
 }
 
 // ---- AI advisor ------------------------------------------------------------
@@ -333,6 +362,7 @@ export interface ApiUser {
   email: string;
   name: string;
   role: string;
+  org_id?: string | null;
 }
 
 interface ApiAuthResponse {

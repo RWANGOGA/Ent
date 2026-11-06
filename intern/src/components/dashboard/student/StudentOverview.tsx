@@ -5,39 +5,52 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentOverview() {
-  const { placements, getOrg, student, dashGo, session } = useApp();
-  // The catalog now arrives from the API, so it can legitimately be empty on
-  // first paint. Guard before indexing; full per-student application data is
-  // served by the backend in a later increment.
-  if (!placements.length) {
+  const {
+    dashGo,
+    session,
+    applications,
+    recommendations,
+    dashboardDataStatus,
+    getPlacement,
+    getOrg,
+  } = useApp();
+  if (dashboardDataStatus === "loading" || dashboardDataStatus === "idle") {
     return (
       <div className="dpane-h">
         <div>
           <h2>Loading your dashboard</h2>
-          <p>Fetching live placements from the server…</p>
+          <p>Fetching your applications and internship recommendations…</p>
         </div>
       </div>
     );
   }
-  const p = placements[1] || placements[0];
-  const o = getOrg(p.orgId);
+  if (dashboardDataStatus === "error") {
+    return (
+      <div className="dpane-h">
+        <div>
+          <h2>Dashboard unavailable</h2>
+          <p>We could not load your live internship dashboard. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
   const firstName = (session?.name || "").trim().split(/\s+/)[0];
-
-  const checklist: [string, boolean, string][] = [
-    ["Course matches", true, "Design is an eligible course"],
-    ["Grade threshold", true, "3.7 meets Second Class Upper"],
-    ["Transcript", true, "Verified 12 Feb"],
-    ["National ID", true, "Verified 12 Feb"],
-    ["Recommendation letter", false, "Upload before 28 Feb"],
-    ["Supervisor testimonial", false, "Request from your tutor"],
-  ];
+  const currentApplication = applications[0];
+  const currentPlacement = currentApplication
+    ? getPlacement(currentApplication.placement_id)
+    : undefined;
+  const currentOrg = currentPlacement ? getOrg(currentPlacement.orgId) : undefined;
+  const matches = recommendations?.items || [];
 
   return (
     <>
       <div className="dpane-h">
         <div>
           <h2>{firstName ? `Good morning, ${firstName}` : "Good morning"}</h2>
-          <p>One application in review · two requirements outstanding</p>
+          <p>
+            {applications.length} live application{applications.length === 1 ? "" : "s"} ·{" "}
+            {matches.length} recommended internship{matches.length === 1 ? "" : "s"}
+          </p>
         </div>
         <button
           type="button"
@@ -69,7 +82,7 @@ export function StudentOverview() {
                     marginTop: "6px",
                   }}
                 >
-                  {p.title}
+                  {currentPlacement?.title || "No application submitted yet"}
                 </h3>
                 <div
                   style={{
@@ -78,12 +91,17 @@ export function StudentOverview() {
                     marginTop: "3px",
                   }}
                 >
-                  {o?.name} · {p.loc} · closes {p.deadline}
+                  {currentPlacement
+                    ? `${currentOrg?.name || "Organisation"} · ${currentPlacement.loc} · closes ${currentPlacement.deadline}`
+                    : "Choose a live internship to start your application"}
                 </div>
               </div>
-              <span className="tg gold">Under review</span>
+              {currentApplication && (
+                <span className="tg gold">{currentApplication.status}</span>
+              )}
             </div>
-            <div
+            {currentApplication && (
+              <div
               style={{
                 display: "flex",
                 gap: 0,
@@ -91,9 +109,9 @@ export function StudentOverview() {
                 borderTop: "1px dashed var(--rule-2)",
                 paddingTop: "14px",
               }}
-            >
-              {["Submitted", "Documents", "Review", "Decision"].map(
-                (s, i) => (
+              >
+                {["Submitted", "Documents", "Review", "Decision"].map(
+                  (s, i) => (
                   <div
                     key={s}
                     style={{
@@ -120,38 +138,39 @@ export function StudentOverview() {
                       {s}
                     </div>
                   </div>
-                )
-              )}
-            </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
 
           <div className="panel">
             <div className="ph">
-              <span className="lbl">Requirements for this placement</span>
-              <span className="lbl">4 of 6</span>
+              <span className="lbl">Recommended internships</span>
+              <span className="lbl">{matches.length} live matches</span>
             </div>
-            <div className="pb">
-              <div className="check">
-                {checklist.map(([t, ok, note]) => (
-                  <div key={t} className={`ci ${ok ? "done" : "todo"}`}>
-                    <span className="box">
-                      {ok && <Icon name="check" size={9} />}
-                    </span>
-                    <div className="t">
-                      <b>{t}</b>
-                      <span>{note}</span>
-                    </div>
-                    <span className="st">{ok ? "Met" : "Action"}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="pb" style={{ display: "grid", gap: "10px" }}>
+              {matches.slice(0, 3).map(({ placement, match }) => (
+                <button
+                  key={placement.id}
+                  type="button"
+                  className="dashboard-recommendation"
+                  onClick={() => dashGo("placements")}
+                >
+                  <span>
+                    <b>{placement.title}</b>
+                    <small>{placement.org?.name || "Organisation"} · {placement.loc}</small>
+                  </span>
+                  <strong>{match.score}%</strong>
+                </button>
+              ))}
+              {!matches.length && <span className="muted">No recommendations are available.</span>}
               <button
                 type="button"
                 className="btn btn-sm btn-blue"
-                style={{ marginTop: "12px" }}
-                onClick={() => dashGo("documents")}
+                onClick={() => dashGo("placements")}
               >
-                Upload missing documents
+                View all recommendations
               </button>
             </div>
           </div>
@@ -160,64 +179,27 @@ export function StudentOverview() {
         <div style={{ display: "grid", gap: "14px" }}>
           <div className="panel">
             <div className="ph">
-              <span className="lbl">Deadlines</span>
-            </div>
-            <div className="pb" style={{ display: "grid", gap: "10px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "11.5px",
-                }}
-              >
-                <span>Recommendation letter</span>
-                <b style={{ color: "var(--red)" }}>28 Feb</b>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "11.5px",
-                }}
-              >
-                <span>Testimonial</span>
-                <b style={{ color: "var(--red)" }}>28 Feb</b>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "11.5px",
-                }}
-              >
-                <span>Ministry application</span>
-                <b>12 Mar</b>
-              </div>
-            </div>
-          </div>
-          <div className="panel">
-            <div className="ph">
-              <span className="lbl">My record</span>
+              <span className="lbl">Live match summary</span>
             </div>
             <div
               className="pb"
               style={{ display: "grid", gap: "7px", fontSize: "11.5px" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--muted)" }}>Course</span>
-                <b>{student.course}</b>
+                <span style={{ color: "var(--muted)" }}>Recommendations</span>
+                <b>{matches.length}</b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--muted)" }}>Year</span>
-                <b>{student.year}</b>
+                <span style={{ color: "var(--muted)" }}>Strong matches</span>
+                <b>{matches.filter(({ match }) => match.score >= 70).length}</b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--muted)" }}>CGPA</span>
-                <b>{student.cgpa}</b>
+                <span style={{ color: "var(--muted)" }}>Best match</span>
+                <b>{matches[0]?.match.score ?? 0}%</b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--muted)" }}>University</span>
-                <b>{student.uni}</b>
+                <span style={{ color: "var(--muted)" }}>Applications</span>
+                <b>{applications.length}</b>
               </div>
             </div>
           </div>

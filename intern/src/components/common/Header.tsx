@@ -19,7 +19,6 @@ import { UserRole } from "../../types";
 */
 type Entry =
   | { label: string; route: string }
-  | { label: string; filter: string }
   | { label: string; role: UserRole };
 
 type Group = {
@@ -31,33 +30,34 @@ type Group = {
 
 const GROUPS: Group[] = [
   {
-    key: "placements",
-    label: "Placements",
-    heading: "Browse the index",
+    key: "internships",
+    label: "Internships",
+    heading: "University and college opportunities",
     entries: [
-      { label: "All placements", route: "placements" },
-      { label: "Companies", filter: "Company" },
-      { label: "Government agencies", filter: "Government" },
-      { label: "NGOs and foundations", filter: "NGO" },
-      { label: "University departments", filter: "University" },
+      { label: "Internship portal", route: "internships" },
+      { label: "Find internships", route: "placements" },
+      { label: "For universities", route: "universities" },
+      { label: "For host organisations", route: "employers" },
     ],
   },
   {
-    key: "universities",
-    label: "Universities",
-    heading: "For the placement office",
+    key: "jobs",
+    label: "Jobs",
+    heading: "Opportunities and career growth",
     entries: [
-      { label: "Why INTERN", route: "universities" },
-      { label: "How verification works", route: "about" },
-      { label: "Plans for institutions", route: "plans" },
+      { label: "Jobs portal", route: "jobs" },
+      { label: "Find jobs", route: "jobs" },
+      { label: "Companies", route: "employers" },
+      { label: "Career support", route: "about" },
     ],
   },
   {
-    key: "employers",
-    label: "Employers",
-    heading: "For host organisations",
+    key: "organisations",
+    label: "Organisations",
+    heading: "Publish and find talent",
     entries: [
-      { label: "How host organisations use it", route: "employers" },
+      { label: "For employers", route: "employers" },
+      { label: "For universities", route: "universities" },
       { label: "Employer sign in", role: "employer" },
       { label: "Talk to the office", route: "contact" },
     ],
@@ -71,10 +71,10 @@ const PLAIN = [
 ];
 
 const entryHref = (entry: Entry) =>
-  "filter" in entry ? "#placements" : "role" in entry ? "#signin" : `#${entry.route}`;
+  "role" in entry ? "#signin" : `#${entry.route}`;
 
 export function Header() {
-  const { go, setType, openMenu, route, isMenuOpen, session, role, openDashboardFor } =
+  const { go, openMenu, route, isMenuOpen, session, role, openDashboardFor, portal } =
     useApp();
 
   /*
@@ -125,8 +125,7 @@ export function Header() {
 
   const run = (entry: Entry) => {
     close();
-    if ("filter" in entry) setType(entry.filter);
-    else if ("role" in entry) go("signin");
+    if ("role" in entry) go("signin");
     else go(entry.route);
   };
 
@@ -162,9 +161,10 @@ export function Header() {
             <ul className="nav">
               {GROUPS.map((group) => {
                 const isOpen = openKey === group.key;
-                const active = group.entries.some(
-                  (entry) => "route" in entry && entry.route === route
-                );
+                const active =
+                (group.key === "internships" && portal === "internships") ||
+                (group.key === "jobs" && portal === "jobs") ||
+                group.entries.some((entry) => "route" in entry && entry.route === route);
                 return (
                   <li key={group.key}>
                     <button

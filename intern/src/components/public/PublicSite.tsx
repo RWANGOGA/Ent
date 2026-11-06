@@ -15,6 +15,7 @@ import { ContactView } from "./ContactView";
 import { PlansView } from "./PlansView";
 import { SignInView } from "./SignInView";
 import { PrivacyView, AccessibilityView } from "./LegalView";
+import { PortalView } from "./PortalView";
 
 export function PublicSite() {
   const { route } = useApp();
@@ -23,6 +24,10 @@ export function PublicSite() {
     switch (route) {
       case "home":
         return <HomeView />;
+      case "internships":
+        return <PortalView portal="internships" />;
+      case "jobs":
+        return <PortalView portal="jobs" />;
       case "placements":
         return <PlacementsView />;
       case "placement":

@@ -96,6 +96,7 @@ export interface ApplicationPack {
 }
 
 export type UserRole = "student" | "jobseeker" | "employer" | "admin";
+export type Portal = "internships" | "jobs";
 
 // A host organisation's live billing state. Free accounts publish up to
 // FREE_PLACEMENT_ALLOWANCE placements, then a placement fee is required. The

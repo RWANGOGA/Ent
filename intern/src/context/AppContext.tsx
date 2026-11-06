@@ -22,6 +22,7 @@ import {
   ChatMessage,
   ModalConfig,
   Subscription,
+  Portal,
 } from "../types";
 import {
   INITIAL_STUDENT,
@@ -55,9 +56,6 @@ import {
 // this many placements, then the fee applies. Mirrors the site's "first three
 // placements free" promise and turns it into enforced behaviour.
 const FREE_ALLOWANCE = 3;
-// Transitional: the employer->org linkage isn't on the User model yet (R1d
-// derives it from the token). A logged-in employer account stands in for it.
-const EMPLOYER_ORG_ID = "o4";
 const SUBSCRIPTION_KEY = "intern:subscription";
 
 // The empty catalogue-meta shape. The UI renders nothing derived from it until
@@ -89,6 +87,7 @@ function mapApiRole(r: string): UserRole {
 
 interface AppContextType {
   route: string;
+  portal: Portal;
   pid: string | null;
   typeFilter: string;
   sectorFilter: string;
@@ -135,6 +134,7 @@ interface AppContextType {
   setSkills: (skills: string[]) => void;
 
   go: (route: string) => void;
+  enterPortal: (portal: Portal) => void;
   openPlacement: (id: string) => void;
   setType: (t: string) => void;
   signIn: (email: string, password: string) => Promise<void>;
@@ -206,6 +206,7 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [route, setRoute] = useState<string>("home");
+  const [portal, setPortal] = useState<Portal>("internships");
   const [pid, setPid] = useState<string | null>("p1");
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [sectorFilter, setSectorFilter] = useState<string>("All");
@@ -358,12 +359,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const id = raw.split("-")[1];
       setPid(id);
       setRoute("placement");
+      setPortal("internships");
+    } else if (raw === "internships" || raw.startsWith("internships-")) {
+      setPortal("internships");
+      setRoute(raw === "internships" ? "internships" : raw.slice("internships-".length));
+    } else if (raw === "jobs" || raw.startsWith("jobs-")) {
+      setPortal("jobs");
+      setRoute(raw === "jobs" ? "jobs" : raw.slice("jobs-".length));
     } else if (raw.startsWith("dashboard")) {
       const parts = raw.split("-");
       const r = (parts[1] as UserRole) || "student";
       const d = (parts[2] as DashboardView) || "overview";
       setRole(r);
       setDash(d);
+      setPortal(r === "jobseeker" ? "jobs" : "internships");
       setRoute("dashboard");
     } else if (raw === "ask") {
       setRoute("home");
@@ -477,6 +486,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (newRoute: string) => {
       closeMenu();
       setRoute(newRoute);
+      if (newRoute === "internships" || newRoute === "placements" || newRoute === "placement") {
+        setPortal("internships");
+      } else if (newRoute === "jobs") {
+        setPortal("jobs");
+      }
       if (typeof window !== "undefined") {
         if (newRoute === "dashboard") {
           window.location.hash = `#dashboard-${role}-${dash}`;
@@ -490,6 +504,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [closeMenu, role, dash, pid]
   );
+
+  const enterPortal = useCallback((nextPortal: Portal) => {
+    setPortal(nextPortal);
+    setRoute(nextPortal);
+    if (typeof window !== "undefined") {
+      window.location.hash = `#${nextPortal}`;
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, []);
 
   const openPlacement = useCallback(
     (id: string) => {
@@ -518,6 +541,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openDashboardFor = useCallback((r: UserRole) => {
     setDash("overview");
     setRoute("dashboard");
+    setPortal(r === "jobseeker" ? "jobs" : "internships");
     if (typeof window !== "undefined") {
       window.location.hash = `#dashboard-${r}-overview`;
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -925,7 +949,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             go("signin");
             return;
           }
-          applyApi(session.id, id, pack.statement)
+          applyApi(id, pack.statement)
             .then(() => toast(`Application sent to ${orgName}`))
             .catch(() => toast("Couldn't submit right now — please try again"));
         }
@@ -1081,7 +1105,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // newPlacement's placement-fee gate can read them.
   const isPremium = subscription.plan !== "Free";
   const employerLiveCount = placements.filter(
-    (p) => p.orgId === EMPLOYER_ORG_ID
+    (p) => p.orgId === session?.org_id
   ).length;
 
   const activatePlan = useCallback(
@@ -1095,7 +1119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubscription(optimistic);
       toast(`${plan} plan active · placement fee applied`);
       if (!isApiEnabled) return;
-      activateSubscriptionApi(EMPLOYER_ORG_ID, plan, billing, Math.max(1, seats))
+      activateSubscriptionApi(plan, billing, Math.max(1, seats))
         .then((s) => setSubscription(toLocalSubscription(s)))
         .catch(() => {
           /* server unreachable — keep the optimistic plan for this session */
@@ -1108,7 +1132,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSubscription({ plan: "Free", billing: "", seats: 1, since: "" });
     toast("Moved to Free · posting capped at 3 placements");
     if (!isApiEnabled) return;
-    cancelSubscriptionApi(EMPLOYER_ORG_ID)
+    cancelSubscriptionApi()
       .then((s) => setSubscription(toLocalSubscription(s)))
       .catch(() => {
         /* server unreachable — keep the optimistic Free plan */
@@ -1119,7 +1143,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // localStorage. When the API owns the record we don't mirror to storage.
   useEffect(() => {
     if (isApiEnabled) {
-      fetchSubscription(EMPLOYER_ORG_ID)
+      // The org is derived from the Bearer token, so hydrate the plan only for a
+      // signed-in employer. Other roles have no subscription record to load.
+      if (!session || session.role !== "employer" || !session.org_id) return;
+      fetchSubscription()
         .then((s) => setSubscription(toLocalSubscription(s)))
         .catch(() => {
           /* backend unreachable — fall back to any stored plan */
@@ -1138,7 +1165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore malformed storage */
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (isApiEnabled) return; // the database is the source of truth
@@ -1161,7 +1188,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSaved((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
       );
-      toggleSavedApi(session.id, id)
+      toggleSavedApi(id)
         .then(({ savedIds }) => setSaved(savedIds))
         .catch(() => {
           /* server unreachable — keep the optimistic local change */
@@ -1180,7 +1207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSaved([]);
       return;
     }
-    fetchSaved(session.id)
+    fetchSaved()
       .then(setSaved)
       .catch(() => setSaved([]));
   }, [session]);
@@ -1201,7 +1228,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           </div>
           <div className="field">
             <label>Organisation</label>
-            <select id="npOrg" defaultValue={EMPLOYER_ORG_ID}>
+            <select id="npOrg" defaultValue={session?.org_id || orgs[0]?.id || ""}>
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name} — {o.type}
@@ -1301,7 +1328,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const title = val("npTitle") || "Untitled placement";
         const orgId =
           (document.getElementById("npOrg") as HTMLSelectElement | null)?.value ||
-          EMPLOYER_ORG_ID;
+          session?.org_id ||
+          orgs[0]?.id ||
+          "";
         const grade =
           (document.getElementById("npGrade") as HTMLSelectElement | null)
             ?.value || "B";
@@ -1330,7 +1359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toast(`${title} published · visible to eligible students`);
       }
     );
-  }, [openModal, orgs, toast]);
+  }, [openModal, orgs, session, toast]);
 
   const newPlacement = useCallback(() => {
     // Placement fee gate: free hosts publish up to FREE_ALLOWANCE, then pay.
@@ -1582,6 +1611,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         route,
+        portal,
         pid,
         typeFilter,
         sectorFilter,
@@ -1624,6 +1654,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSkills,
 
         go,
+        enterPortal,
         openPlacement,
         setType,
         signIn,

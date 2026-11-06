@@ -5,7 +5,7 @@ import { useApp } from "../../context/AppContext";
 import { Icon } from "../icons/Icons";
 
 export function MobileMenu() {
-  const { isMenuOpen, closeMenu, go, setType, session, openDashboardFor, role, signOut } =
+  const { isMenuOpen, closeMenu, go, enterPortal, session, openDashboardFor, role, signOut } =
     useApp();
 
   // The desktop bar's panels close on Escape; this sheet does the same.
@@ -34,7 +34,17 @@ export function MobileMenu() {
       </div>
 
       <details open>
-        <summary>Placements</summary>
+        <summary>Internships</summary>
+        <a
+          href="#internships"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            enterPortal("internships");
+          }}
+        >
+          Internship portal
+        </a>
         <a
           href="#placements"
           onClick={(e) => {
@@ -43,52 +53,8 @@ export function MobileMenu() {
             go("placements");
           }}
         >
-          All placements
+          Find internships
         </a>
-        <a
-          href="#placements"
-          onClick={(e) => {
-            e.preventDefault();
-            closeMenu();
-            setType("Company");
-          }}
-        >
-          Companies
-        </a>
-        <a
-          href="#placements"
-          onClick={(e) => {
-            e.preventDefault();
-            closeMenu();
-            setType("Government");
-          }}
-        >
-          Government agencies
-        </a>
-        <a
-          href="#placements"
-          onClick={(e) => {
-            e.preventDefault();
-            closeMenu();
-            setType("NGO");
-          }}
-        >
-          NGOs and foundations
-        </a>
-        <a
-          href="#placements"
-          onClick={(e) => {
-            e.preventDefault();
-            closeMenu();
-            setType("University");
-          }}
-        >
-          University departments
-        </a>
-      </details>
-
-      <details>
-        <summary>Universities</summary>
         <a
           href="#universities"
           onClick={(e) => {
@@ -97,32 +63,56 @@ export function MobileMenu() {
             go("universities");
           }}
         >
-          Why INTERN
+          For universities
         </a>
         <a
-          href="#about"
+          href="#employers"
           onClick={(e) => {
             e.preventDefault();
             closeMenu();
-            go("about");
+            go("employers");
           }}
         >
-          How verification works
-        </a>
-        <a
-          href="#plans"
-          onClick={(e) => {
-            e.preventDefault();
-            closeMenu();
-            go("plans");
-          }}
-        >
-          Plans for institutions
+          For host organisations
         </a>
       </details>
 
       <details>
-        <summary>Employers</summary>
+        <summary>Jobs</summary>
+        <a
+          href="#jobs"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            enterPortal("jobs");
+          }}
+        >
+          Jobs portal
+        </a>
+        <a
+          href="#jobs"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            enterPortal("jobs");
+          }}
+        >
+          Find jobs
+        </a>
+        <a
+          href="#employers"
+          onClick={(e) => {
+            e.preventDefault();
+            closeMenu();
+            go("employers");
+          }}
+        >
+          For employers
+        </a>
+      </details>
+
+      <details>
+        <summary>Organisations</summary>
         <a
           href="#employers"
           onClick={(e) => {

@@ -92,7 +92,7 @@ export function HomeView() {
           <div>
             <div className="arch-photo hero-photo">
               <img
-                src="/img/hero.jpg"
+                src="./img/hero.jpg"
                 alt="Students working together on a laptop in a university library"
                 loading="eager"
               />
@@ -200,7 +200,7 @@ export function HomeView() {
       <section className="sec" style={{ paddingTop: 0 }}>
         <div className="wrap placed">
           <div className="photo-frame wide">
-            <img src="/img/students.jpg" alt="Five students sitting together on campus" loading="lazy" />
+            <img src="./img/students.jpg" alt="Five students sitting together on campus" loading="lazy" />
           </div>
           <div>
             <span className="lbl">Students</span>
@@ -228,7 +228,7 @@ export function HomeView() {
               <p>“I knew I qualified before I applied. That had never happened.”</p>
               <div className="who">
                 <span className="av">
-                  <img src="/img/portrait.jpg" alt="" />
+                  <img src="./img/portrait.jpg" alt="" />
                 </span>
                 <span>Amina Nakato · Design · Lumen Labs</span>
               </div>
@@ -237,7 +237,7 @@ export function HomeView() {
               <p>“The office verified my transcript in a day and the ministry called that week.”</p>
               <div className="who">
                 <span className="av">
-                  <img src="/img/hero.jpg" alt="" />
+                  <img src="./img/hero.jpg" alt="" />
                 </span>
                 <span>Joel Mwangi · Statistics · NITA</span>
               </div>
@@ -443,7 +443,7 @@ export function HomeView() {
         <div className="quote">
           <div>
             <div className="portrait" style={{ width: "96px", height: "96px" }}>
-              <img src="/img/portrait.jpg" alt="Portrait of Amina Nakato" />
+              <img src="./img/portrait.jpg" alt="Portrait of Amina Nakato" />
             </div>
             <div className="seal" style={{ marginTop: "14px" }}>
               Verified<br />placement<br />2026

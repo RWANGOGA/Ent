@@ -50,7 +50,7 @@ export function AboutView() {
             </p>
           </div>
           <div className="photo-frame tall">
-            <img src="/img/classroom.jpg" alt="Students in a lecture room" loading="lazy" />
+            <img src="./img/classroom.jpg" alt="Students in a lecture room" loading="lazy" />
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@ export function AboutView() {
             </div>
           </div>
           <div className="photo-frame wide">
-            <img src="/img/building.jpg" alt="A university building and lawn" loading="lazy" />
+            <img src="./img/building.jpg" alt="A university building and lawn" loading="lazy" />
           </div>
         </div>
       </section>

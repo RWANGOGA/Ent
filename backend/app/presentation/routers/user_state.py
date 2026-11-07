@@ -19,6 +19,7 @@ from app.application.services import (
     SavedService,
     StudentProfileService,
     ResumeService,
+    StudentDocumentService,
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
 from app.domain.entities import User
@@ -29,6 +30,7 @@ from app.presentation.deps import (
     get_saved_service,
     get_student_profile_service,
     get_resume_service,
+    get_student_document_service,
 )
 from app.presentation.schemas import (
     ActivatePlanRequest,
@@ -41,6 +43,8 @@ from app.presentation.schemas import (
     StudentProfileRead,
     StudentProfileUpdate,
     ResumeRead,
+    StudentDocumentRead,
+    StudentDocumentsResponse,
     ToggleSavedRequest,
     ToggleSavedResponse,
 )
@@ -259,6 +263,57 @@ def download_resume(
         media_type=resume.content_type,
         headers={"Content-Disposition": f'attachment; filename="{resume.filename}"'},
     )
+
+
+# ---- Student documents -----------------------------------------------------
+
+@router.get("/documents", response_model=StudentDocumentsResponse)
+def list_documents(
+    service: StudentDocumentService = Depends(get_student_document_service),
+    current_user: User = Depends(get_current_user),
+) -> StudentDocumentsResponse:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have documents")
+    return StudentDocumentsResponse(
+        items=[StudentDocumentRead.model_validate(d, from_attributes=True) for d in service.list(current_user.id)]
+    )
+
+
+@router.put("/documents/{document_type}", response_model=StudentDocumentRead)
+async def upload_document(
+    document_type: str,
+    file: UploadFile = File(...),
+    service: StudentDocumentService = Depends(get_student_document_service),
+    current_user: User = Depends(get_current_user),
+) -> StudentDocumentRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have documents")
+    if document_type not in StudentDocumentService.ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported document type")
+    if file.content_type not in (
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ):
+        raise HTTPException(status_code=415, detail="Document must be PDF, JPG, PNG, or Word")
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Document file is empty")
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Document must be 10 MB or smaller")
+    try:
+        document = service.save(
+            user_id=current_user.id,
+            document_type=document_type,
+            filename=file.filename or document_type,
+            content_type=file.content_type,
+            content=content,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return StudentDocumentRead.model_validate(document, from_attributes=True)
 
 
 # ---- Subscription ----------------------------------------------------------

@@ -9,10 +9,11 @@ from app.application.ports import (
     SavedRepository,
     StudentProfileRepository,
     ResumeRepository,
+    StudentDocumentRepository,
     SubscriptionRepository,
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
-from app.domain.entities import Application, Placement, Resume, StudentProfile, Subscription
+from app.domain.entities import Application, Placement, Resume, StudentDocument, StudentProfile, Subscription
 from app.domain.matching import (
     GRADE_RANK,
     REQUIRED_SKILLS,
@@ -258,3 +259,52 @@ class ResumeService:
                 uploaded_at=datetime.now(timezone.utc).isoformat(),
             )
         )
+
+
+class StudentDocumentService:
+    ALLOWED_TYPES = {
+        "transcript",
+        "student_id",
+        "national_id",
+        "recommendation",
+        "portfolio",
+        "testimonial",
+    }
+
+    def __init__(self, repo: StudentDocumentRepository) -> None:
+        self._repo = repo
+
+    def list(self, user_id: str) -> list[StudentDocument]:
+        return self._repo.list_for_user(user_id)
+
+    def save(
+        self,
+        *,
+        user_id: str,
+        document_type: str,
+        filename: str,
+        content_type: str,
+        content: bytes,
+    ) -> StudentDocument:
+        if document_type not in self.ALLOWED_TYPES:
+            raise ValueError("Unsupported document type")
+        existing = next(
+            (
+                d
+                for d in self._repo.list_for_user(user_id)
+                if d.document_type == document_type
+            ),
+            None,
+        )
+        document = StudentDocument(
+            id=existing.id if existing else uuid4().hex,
+            user_id=user_id,
+            document_type=document_type,
+            filename=filename,
+            content_type=content_type,
+            size_bytes=len(content),
+            content=content,
+            status="pending",
+            uploaded_at=datetime.now(timezone.utc).isoformat(),
+        )
+        return self._repo.save(document)

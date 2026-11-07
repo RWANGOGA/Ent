@@ -25,7 +25,6 @@ import {
   Portal,
 } from "../types";
 import {
-  INITIAL_DOCS,
   INITIAL_ADMIN_QUEUE,
   ACTIVITY,
   INITIAL_PACK,
@@ -41,6 +40,7 @@ import {
   fetchApplications,
   fetchStudentProfile,
   fetchResume,
+  fetchStudentDocuments,
   fetchRecommendedInternships,
   fetchMe,
   fetchSaved,
@@ -51,6 +51,7 @@ import {
   setToken,
   toggleSavedApi,
   uploadResume,
+  uploadStudentDocument,
   withdrawApplicationApi,
   updateStudentProfile,
   type ApiUser,
@@ -59,6 +60,7 @@ import {
   type ApplicationDto,
   type MatchDto,
   type ResumeDto,
+  type StudentDocumentDto,
 } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
@@ -188,6 +190,7 @@ interface AppContextType {
   newPlacement: () => void;
   uploadDoc: (name: string) => void;
   uploadResumeFile: (file: File) => Promise<void>;
+  uploadDocumentFile: (documentType: string, file: File) => Promise<void>;
   withdrawApplication: (applicationId: string) => Promise<void>;
   editPack: () => void;
   previewPack: () => void;
@@ -264,7 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     uni: "",
     skills: [],
   });
-  const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
+  const [docs, setDocs] = useState<DocItem[]>([]);
   const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
   const [activity, setActivity] = useState<ActivityItem[]>(ACTIVITY);
   const [pack, setPack] = useState<ApplicationPack>(INITIAL_PACK);
@@ -345,6 +348,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     },
     [role, session, toast]
+  );
+
+  const uploadDocumentFile = useCallback(
+    async (documentType: string, file: File) => {
+      try {
+        const saved = await uploadStudentDocument(documentType, file);
+        setDocs((current) => [
+          ...current.filter((doc) => doc.name !== documentType),
+          {
+            name: documentType,
+            status: saved.status,
+            file: saved.filename,
+            size: `${Math.ceil(saved.size_bytes / 1024)} KB`,
+          },
+        ]);
+        toast(`${documentType} uploaded and pending verification.`);
+      } catch (error) {
+        toast(error instanceof Error ? error.message : "Document upload failed.");
+        throw error;
+      }
+    },
+    [toast]
   );
 
   const withdrawApplication = useCallback(
@@ -1250,8 +1275,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setDashboardDataStatus("loading");
-    Promise.all([fetchApplications(), fetchStudentProfile(), fetchResume()])
-      .then(async ([apps, profile, currentResume]) => {
+    Promise.all([
+      fetchApplications(),
+      fetchStudentProfile(),
+      fetchResume(),
+      fetchStudentDocuments(),
+    ])
+      .then(async ([apps, profile, currentResume, documents]) => {
         const nextStudent: Student = {
           name: session.name,
           course: profile.course,
@@ -1263,6 +1293,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setStudent(nextStudent);
         setResume(currentResume);
+        setDocs(
+          documents.map((document) => ({
+            name: document.document_type,
+            status: document.status,
+            file: document.filename,
+            size: `${Math.ceil(document.size_bytes / 1024)} KB`,
+          }))
+        );
         const matches = await fetchRecommendedInternships(
           nextStudent.skills,
           nextStudent.course,
@@ -1832,6 +1870,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         newPlacement,
         uploadDoc,
         uploadResumeFile,
+        uploadDocumentFile,
         withdrawApplication,
         editPack,
         previewPack,

@@ -88,6 +88,21 @@ class ResumeORM(Base):
     uploaded_at: Mapped[str] = mapped_column(String, default="")
 
 
+class StudentDocumentORM(Base):
+    __tablename__ = "student_documents"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    document_type: Mapped[str] = mapped_column(String, index=True)
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    content_type: Mapped[str] = mapped_column(String, default="application/octet-stream")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    status: Mapped[str] = mapped_column(String, default="pending")
+    rejection_reason: Mapped[str] = mapped_column(Text, default="")
+    uploaded_at: Mapped[str] = mapped_column(String, default="")
+
+
 class SubscriptionORM(Base):
     __tablename__ = "subscriptions"
 

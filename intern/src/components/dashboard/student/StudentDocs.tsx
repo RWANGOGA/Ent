@@ -5,8 +5,17 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentDocs() {
-  const { docs, uploadDoc, resume, uploadResumeFile } = useApp();
+  const { docs, resume, uploadResumeFile, uploadDocumentFile } = useApp();
+  const [uploadingType, setUploadingType] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const documentTypes = [
+    ["transcript", "Transcript"],
+    ["student_id", "Student ID"],
+    ["national_id", "National ID"],
+    ["recommendation", "Recommendation letter"],
+    ["portfolio", "Portfolio"],
+    ["testimonial", "Testimonial"],
+  ];
   const uploadedCount = docs.filter((d) => d.status !== "missing").length;
 
   return (
@@ -19,7 +28,10 @@ export function StudentDocs() {
         <button
           type="button"
           className="btn btn-sm btn-blue"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            setUploadingType("transcript");
+            inputRef.current?.click();
+          }}
         >
           <Icon name="upload" size={12} /> Upload
         </button>
@@ -30,8 +42,12 @@ export function StudentDocs() {
           hidden
           onChange={async (event) => {
             const file = event.target.files?.[0];
-            if (file) await uploadResumeFile(file);
+            if (file) {
+              if (uploadingType === "resume") await uploadResumeFile(file);
+              else if (uploadingType) await uploadDocumentFile(uploadingType, file);
+            }
             event.target.value = "";
+            setUploadingType(null);
           }}
         />
       </div>
@@ -54,28 +70,35 @@ export function StudentDocs() {
                   <span className="tg green">uploaded</span>
                 </div>
               )}
-              {docs.map((d) => (
-                <div key={d.name} className="file">
-                  <span className="fi">{d.name.slice(0, 2).toUpperCase()}</span>
+              {documentTypes.map(([type, label]) => {
+                const d = docs.find((doc) => doc.name === type);
+                return (
+                <div key={type} className="file">
+                  <span className="fi">{label.slice(0, 2).toUpperCase()}</span>
                   <div>
-                    <b>{d.name}</b>
-                    <span>
-                      {d.file || "—"} {d.size ? `· ${d.size}` : ""}
-                    </span>
+                    <b>{label}</b>
+                    <span>{d ? `${d.file} · ${d.size}` : "Not uploaded"}</span>
                   </div>
                   <span
                     className={`tg ${
-                      d.status === "verified"
+                      d?.status === "verified"
                         ? "green"
-                        : d.status === "pending"
+                        : d?.status === "pending"
                         ? "gold"
                         : "red"
                     }`}
                   >
-                    {d.status}
+                    {d?.status || "missing"}
                   </span>
+                  <button type="button" className="btn btn-sm" onClick={() => {
+                    setUploadingType(type);
+                    inputRef.current?.click();
+                  }}>
+                    {d ? "Replace" : "Upload"}
+                  </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -87,7 +110,10 @@ export function StudentDocs() {
           <div className="pb">
             <div
               className="upload"
-              onClick={() => inputRef.current?.click()}
+              onClick={() => {
+                setUploadingType("resume");
+                inputRef.current?.click();
+              }}
             >
               <div className="ic">
                 <Icon name="upload" size={24} />

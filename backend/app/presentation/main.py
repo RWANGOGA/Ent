@@ -13,7 +13,9 @@ from app.infrastructure.orm import (  # noqa: F401 (register tables)
     OrganisationORM,
     PlacementORM,
     StudentProfileORM,
+    StudentDocumentORM,
     ResumeORM,
+    StudentDocumentORM,
     UserORM,
 )
 from app.infrastructure.seed import seed_if_empty

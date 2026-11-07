@@ -19,6 +19,7 @@ from app.application.services import (
     SavedService,
     StudentProfileService,
     ResumeService,
+    StudentDocumentService,
 )
 from app.core.errors import AuthenticationError, UserNotFound
 from app.core.security import decode_access_token
@@ -31,6 +32,7 @@ from app.infrastructure.repositories import (
     SqlAlchemySavedRepository,
     SqlAlchemyStudentProfileRepository,
     SqlAlchemyResumeRepository,
+    SqlAlchemyStudentDocumentRepository,
     SqlAlchemySubscriptionRepository,
     SqlAlchemyUserRepository,
 )
@@ -80,6 +82,12 @@ def get_student_profile_service(
 
 def get_resume_service(session: Session = Depends(get_session)) -> ResumeService:
     return ResumeService(SqlAlchemyResumeRepository(session))
+
+
+def get_student_document_service(
+    session: Session = Depends(get_session),
+) -> StudentDocumentService:
+    return StudentDocumentService(SqlAlchemyStudentDocumentRepository(session))
 
 
 # ---- Auth ------------------------------------------------------------------

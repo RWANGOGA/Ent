@@ -215,6 +215,52 @@ def test_resume_rejects_unsupported_files_and_non_students(client):
     assert client.get("/resume", headers=jobseeker).status_code == 403
 
 
+# ---- Student documents -----------------------------------------------------
+
+
+def test_student_can_upload_replace_and_list_documents(client):
+    h = _login(client, STUDENT)
+    empty = client.get("/documents", headers=h)
+    assert empty.status_code == 200
+    assert empty.json()["items"] == []
+
+    uploaded = client.put(
+        "/documents/transcript",
+        files={"file": ("transcript.pdf", b"transcript", "application/pdf")},
+        headers=h,
+    )
+    assert uploaded.status_code == 200
+    assert uploaded.json()["document_type"] == "transcript"
+    assert uploaded.json()["status"] == "pending"
+
+    replacement = client.put(
+        "/documents/transcript",
+        files={"file": ("new-transcript.pdf", b"new", "application/pdf")},
+        headers=h,
+    )
+    assert replacement.status_code == 200
+    assert replacement.json()["id"] == uploaded.json()["id"]
+    assert replacement.json()["filename"] == "new-transcript.pdf"
+    assert client.get("/documents", headers=h).json()["items"][0]["size_bytes"] == 3
+
+
+def test_documents_enforce_type_and_student_authorization(client):
+    student = _login(client, STUDENT)
+    unsupported = client.put(
+        "/documents/passport",
+        files={"file": ("passport.pdf", b"passport", "application/pdf")},
+        headers=student,
+    )
+    assert unsupported.status_code == 400
+    bad_file = client.put(
+        "/documents/portfolio",
+        files={"file": ("portfolio.txt", b"portfolio", "text/plain")},
+        headers=student,
+    )
+    assert bad_file.status_code == 415
+    assert client.get("/documents", headers=_login(client, JOBSEEKER)).status_code == 403
+
+
 # ---- Subscription ----------------------------------------------------------
 
 

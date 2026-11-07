@@ -286,6 +286,37 @@ export async function uploadResume(file: File): Promise<ResumeDto> {
   return (await res.json()) as ResumeDto;
 }
 
+export interface StudentDocumentDto {
+  id: string;
+  document_type: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  status: string;
+  rejection_reason: string;
+  uploaded_at: string;
+}
+
+export async function fetchStudentDocuments(): Promise<StudentDocumentDto[]> {
+  const data = await getJson<{ items: StudentDocumentDto[] }>("/documents");
+  return data.items;
+}
+
+export async function uploadStudentDocument(
+  documentType: string,
+  file: File
+): Promise<StudentDocumentDto> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(`${API_BASE}/documents/${documentType}`, {
+    method: "PUT",
+    headers: authHeader(),
+    body,
+  });
+  if (!res.ok) await readError(res, `/documents/${documentType}`);
+  return (await res.json()) as StudentDocumentDto;
+}
+
 export async function fetchStudentProfile(): Promise<StudentProfileDto> {
   return getJson<StudentProfileDto>("/profile");
 }

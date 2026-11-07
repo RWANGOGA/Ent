@@ -16,6 +16,7 @@ from app.application.ports import (
     SavedRepository,
     StudentProfileRepository,
     ResumeRepository,
+    StudentDocumentRepository,
     SubscriptionRepository,
     UserRepository,
 )
@@ -24,6 +25,7 @@ from app.domain.entities import (
     Organisation,
     Placement,
     Resume,
+    StudentDocument,
     StudentProfile,
     Subscription,
     User,
@@ -35,6 +37,7 @@ from app.infrastructure.orm import (
     SavedORM,
     StudentProfileORM,
     ResumeORM,
+    StudentDocumentORM,
     SubscriptionORM,
     UserORM,
 )
@@ -324,6 +327,52 @@ class SqlAlchemyResumeRepository(ResumeRepository):
         row.uploaded_at = resume.uploaded_at
         self._session.commit()
         return resume
+
+
+class SqlAlchemyStudentDocumentRepository(StudentDocumentRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: StudentDocumentORM) -> StudentDocument:
+        return StudentDocument(
+            id=row.id,
+            user_id=row.user_id,
+            document_type=row.document_type,
+            filename=row.filename,
+            content_type=row.content_type,
+            size_bytes=row.size_bytes,
+            content=row.content,
+            status=row.status,
+            rejection_reason=row.rejection_reason or "",
+            uploaded_at=row.uploaded_at or "",
+        )
+
+    def list_for_user(self, user_id: str) -> list[StudentDocument]:
+        rows = (
+            self._session.query(StudentDocumentORM)
+            .filter_by(user_id=user_id)
+            .order_by(StudentDocumentORM.document_type)
+            .all()
+        )
+        return [self._to_domain(row) for row in rows]
+
+    def save(self, document: StudentDocument) -> StudentDocument:
+        row = self._session.query(StudentDocumentORM).filter_by(id=document.id).first()
+        if row is None:
+            row = StudentDocumentORM(id=document.id)
+            self._session.add(row)
+        row.user_id = document.user_id
+        row.document_type = document.document_type
+        row.filename = document.filename
+        row.content_type = document.content_type
+        row.size_bytes = document.size_bytes
+        row.content = document.content
+        row.status = document.status
+        row.rejection_reason = document.rejection_reason
+        row.uploaded_at = document.uploaded_at
+        self._session.commit()
+        return document
 
 
 class SqlAlchemyUserRepository(UserRepository):

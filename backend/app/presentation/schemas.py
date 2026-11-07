@@ -178,6 +178,21 @@ class ResumeRead(BaseModel):
     uploaded_at: str
 
 
+class StudentDocumentRead(BaseModel):
+    id: str
+    document_type: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    status: str
+    rejection_reason: str
+    uploaded_at: str
+
+
+class StudentDocumentsResponse(BaseModel):
+    items: list[StudentDocumentRead]
+
+
 class SubscriptionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

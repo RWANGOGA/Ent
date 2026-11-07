@@ -68,6 +68,20 @@ class Resume:
 
 
 @dataclass(frozen=True)
+class StudentDocument:
+    id: str
+    user_id: str
+    document_type: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    content: bytes
+    status: str = "pending"
+    rejection_reason: str = ""
+    uploaded_at: str = ""
+
+
+@dataclass(frozen=True)
 class Application:
     """A student's submission to a placement. One row per (user, placement)."""
 

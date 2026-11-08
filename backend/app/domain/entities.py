@@ -38,11 +38,16 @@ class Placement:
     testimonial: bool = False
     about: str = ""
     duties: list[str] = field(default_factory=list)
+    review_status: str = "approved"
+    published_at: str = ""
+    closes_at: str = ""
+    starts_at: str = ""
+    requirements: list[str] = field(default_factory=list)
     org: Optional[Organisation] = None
 
 
 # Application workflow statuses (kept as plain strings to stay persistence-friendly).
-APPLICATION_STATUSES = ("Submitted", "In Review", "Accepted", "Rejected")
+APPLICATION_STATUSES = ("Submitted", "In Review", "Accepted", "Rejected", "Withdrawn")
 
 
 @dataclass(frozen=True)
@@ -129,5 +134,4 @@ class User:
     role: str
     password_hash: str
     created_at: str = ""
-
-
+    org_id: Optional[str] = None

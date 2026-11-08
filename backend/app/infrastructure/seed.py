@@ -47,7 +47,7 @@ DEMO_PASSWORD = "password123"
 DEMO_USERS: list[dict] = [
     {"email": "amina@makerere.ac.ug", "name": "Amina Nakato", "role": "student"},
     {"email": "brian@example.com", "name": "Brian Ssekandi", "role": "jobseeker"},
-    {"email": "hiring@lumenlabs.example", "name": "Lumen Labs", "role": "employer"},
+    {"email": "hiring@lumenlabs.example", "name": "Lumen Labs", "role": "employer", "org_id": "o4"},
     {"email": "office@makerere.ac.ug", "name": "Makerere University", "role": "admin"},
 ]
 
@@ -68,8 +68,22 @@ def seed_if_empty(session: Session) -> None:
                     role=u["role"],
                     password_hash=hash_password(DEMO_PASSWORD),
                     created_at=today,
+                    org_id=u.get("org_id"),
                 )
                 for u in DEMO_USERS
             ]
         )
         session.commit()
+
+    # Backfill the employer→org link on accounts that predate the org_id column
+    # (the real Neon database was seeded before R1d, so its employer row still
+    # has org_id NULL). Idempotent and scoped to rows that are still unlinked,
+    # so it never overwrites a deliberate change.
+    for u in DEMO_USERS:
+        desired = u.get("org_id")
+        if not desired:
+            continue
+        row = session.query(UserORM).filter_by(email=u["email"], org_id=None).first()
+        if row is not None:
+            row.org_id = desired
+            session.commit()

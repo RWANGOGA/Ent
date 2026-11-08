@@ -44,6 +44,11 @@ class PlacementORM(Base):
     testimonial: Mapped[bool] = mapped_column(Boolean, default=False)
     about: Mapped[str] = mapped_column(Text, default="")
     duties: Mapped[list] = mapped_column(JSON, default=list)
+    review_status: Mapped[str] = mapped_column(String, default="approved")
+    published_at: Mapped[str] = mapped_column(String, default="")
+    closes_at: Mapped[str] = mapped_column(String, default="")
+    starts_at: Mapped[str] = mapped_column(String, default="")
+    requirements: Mapped[list] = mapped_column(JSON, default=list)
 
 
 class SavedORM(Base):
@@ -122,4 +127,6 @@ class UserORM(Base):
     role: Mapped[str] = mapped_column(String, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(String, default="")
-
+    # Employer accounts act on their organisation; derived from the token in
+    # the user-state endpoints. Nullable: students/jobseekers/admins have none.
+    org_id: Mapped[str | None] = mapped_column(String, nullable=True)

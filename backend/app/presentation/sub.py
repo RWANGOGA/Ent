@@ -29,6 +29,7 @@ from app.presentation.routers import (
     auth,
     matching,
     placements,
+    organization,
     user_state,
 )
 
@@ -60,6 +61,7 @@ def create_sub_app() -> FastAPI:
 
     sub.include_router(auth.router)
     sub.include_router(placements.router)
+    sub.include_router(organization.router)
     sub.include_router(matching.router)
     sub.include_router(advisor.router)
     sub.include_router(user_state.router)

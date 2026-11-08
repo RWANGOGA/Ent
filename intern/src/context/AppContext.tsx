@@ -1535,6 +1535,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           testimonial: false,
           about: `Newly published ${title.toLowerCase()} listing.`,
           duties: [],
+          reviewStatus: "approved",
+          publishedAt: new Date().toISOString().slice(0, 10),
+          closesAt: val("npDeadline") || "",
+          startsAt: "",
+          requirements: [],
         };
 
         setPlacements((prev) => [placement, ...prev]);

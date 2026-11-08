@@ -30,6 +30,11 @@ export interface Placement {
   testimonial: boolean;
   about: string;
   duties: string[];
+  reviewStatus: string;
+  publishedAt: string;
+  closesAt: string;
+  startsAt: string;
+  requirements: string[];
 }
 
 export interface GradRole {

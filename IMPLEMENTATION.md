@@ -388,6 +388,20 @@ Each feature is complete only when its backend, frontend, tests, documentation, 
 - Replace hardcoded queues, counts, and activity with backend data.
 - Commit and push.
 
+Progress update:
+
+- Employer/company internship posting now has a live backend workflow:
+  - `GET /api/organization/internships`
+  - `POST /api/organization/internships`
+- Posting records now persist real lifecycle fields:
+  - `published_at`
+  - `closes_at`
+  - `starts_at`
+  - `requirements`
+  - `review_status` (`pending_review` on submission)
+- Public internship catalogue visibility now excludes records pending review.
+- Employer dashboard now submits internships for admin review using live backend data.
+
 ### Feature 6: Jobs domain and database
 
 - Add jobs, requirements, companies, saved jobs, applications, alerts, CVs, cover letters, interviews, and shortlist entities.

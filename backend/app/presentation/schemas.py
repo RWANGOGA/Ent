@@ -36,6 +36,11 @@ class PlacementRead(BaseModel):
     testimonial: bool
     about: str
     duties: list[str]
+    review_status: str
+    published_at: str
+    closes_at: str
+    starts_at: str
+    requirements: list[str]
     org: Optional[OrganisationRead] = None
 
 
@@ -152,6 +157,34 @@ class ApplyRequest(BaseModel):
 class ApplicationsResponse(BaseModel):
     total: int
     items: list[ApplicationRead]
+
+
+class InternshipPostingCreate(BaseModel):
+    title: str
+    courses: list[str] = []
+    grade: str = ""
+    loc: str = ""
+    mode: str = "On-site"
+    duration: str = ""
+    stipend: str = ""
+    slots: int = 1
+    about: str = ""
+    duties: list[str] = []
+    requirements: list[str] = []
+    docs: list[str] = []
+    testimonial: bool = False
+    published_at: str = ""
+    closes_at: str
+    starts_at: str
+
+
+class InternshipPostingRead(PlacementRead):
+    pass
+
+
+class InternshipPostingListResponse(BaseModel):
+    total: int
+    items: list[InternshipPostingRead]
 
 
 class StudentProfileRead(BaseModel):

@@ -2,10 +2,9 @@
 
 import React from "react";
 import { useApp } from "../../../context/AppContext";
-import { Icon } from "../../icons/Icons";
 
 export function EmployerOverview() {
-  const { adminQueue, newPlacement, dashGo, go, showEmbed, toast } = useApp();
+  const { adminQueue, dashGo, go, showEmbed, toast } = useApp();
 
   return (
     <>
@@ -17,9 +16,9 @@ export function EmployerOverview() {
         <button
           type="button"
           className="btn btn-sm btn-blue"
-          onClick={newPlacement}
+          onClick={() => dashGo("placements")}
         >
-          <Icon name="plus" size={12} /> New placement
+          New internship
         </button>
       </div>
       <div className="kpis">

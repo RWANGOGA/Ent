@@ -79,6 +79,11 @@ class SqlAlchemyPlacementRepository(PlacementRepository):
             testimonial=bool(row.testimonial),
             about=row.about or "",
             duties=list(row.duties or []),
+            review_status=row.review_status or "approved",
+            published_at=row.published_at or "",
+            closes_at=row.closes_at or "",
+            starts_at=row.starts_at or "",
+            requirements=list(row.requirements or []),
             org=organisation,
         )
 
@@ -95,7 +100,7 @@ class SqlAlchemyPlacementRepository(PlacementRepository):
         location: Optional[str] = None,
         mode: Optional[str] = None,
     ) -> list[Placement]:
-        query = self._base_query()
+        query = self._base_query().filter(PlacementORM.review_status == "approved")
         if org_type:
             query = query.filter(OrganisationORM.type == org_type)
         if location:

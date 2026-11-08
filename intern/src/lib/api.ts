@@ -85,6 +85,11 @@ interface ApiPlacement {
   testimonial: boolean;
   about: string;
   duties: string[];
+  review_status: string;
+  published_at: string;
+  closes_at: string;
+  starts_at: string;
+  requirements: string[];
   org: ApiOrg | null;
 }
 
@@ -126,6 +131,11 @@ function mapPlacement(p: ApiPlacement): Placement {
     testimonial: p.testimonial,
     about: p.about,
     duties: p.duties,
+    reviewStatus: p.review_status,
+    publishedAt: p.published_at,
+    closesAt: p.closes_at,
+    startsAt: p.starts_at,
+    requirements: p.requirements,
   };
 }
 
@@ -168,6 +178,39 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 export interface Catalog {
   placements: Placement[];
   orgs: Org[];
+}
+
+export interface InternshipPostingInput {
+  title: string;
+  courses: string[];
+  grade: string;
+  loc: string;
+  mode: string;
+  duration: string;
+  stipend: string;
+  slots: number;
+  about: string;
+  duties: string[];
+  requirements: string[];
+  docs: string[];
+  testimonial: boolean;
+  published_at: string;
+  closes_at: string;
+  starts_at: string;
+}
+
+export async function fetchOrganizationInternships(): Promise<Placement[]> {
+  const data = await getJson<ApiListResponse<ApiPlacement>>(
+    "/organization/internships"
+  );
+  return data.items.map(mapPlacement);
+}
+
+export async function createOrganizationInternship(
+  input: InternshipPostingInput
+): Promise<Placement> {
+  const data = await postJson<ApiPlacement>("/organization/internships", input);
+  return mapPlacement(data);
 }
 
 // GET /placements -> placements plus the orgs referenced by them (deduped from

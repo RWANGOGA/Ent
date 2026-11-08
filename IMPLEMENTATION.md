@@ -699,6 +699,22 @@ The frontend remains a separate static deployment. Set
 `NEXT_PUBLIC_API_BASE_URL` to the reachable backend URL before building the
 frontend; GitHub Pages cannot host the authenticated FastAPI API.
 
+The current deployed backend is:
+
+```text
+https://global-inetrnship.onrender.com
+```
+
+The frontend is configured to use:
+
+```text
+https://global-inetrnship.onrender.com/api
+```
+
+This value is configured for local frontend development and the GitHub Pages
+workflow. It is a public API URL, not a secret. The backend remains responsible
+for authentication, authorization, Neon access, and all protected data.
+
 ### Jobs Portal status
 
 The Jobs Portal is **not complete**. The current implementation contains the

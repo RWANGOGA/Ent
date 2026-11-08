@@ -36,6 +36,8 @@ jobs:
         run: npm ci
 
       - name: Static export (Next.js)
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://global-inetrnship.onrender.com/api
         run: npm run export
 
       - name: Upload artifact

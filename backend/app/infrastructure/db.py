@@ -85,6 +85,42 @@ def ensure_schema() -> None:
             for name, definition in job_additions.items()
             if name not in job_columns
         )
+    if "organisations" in inspector.get_table_names():
+        org_columns = {c["name"] for c in inspector.get_columns("organisations")}
+        org_additions = {
+            "billing_email": "VARCHAR",
+            "tax_id": "VARCHAR",
+            "billing_address": "JSON DEFAULT '{}'",
+        }
+        statements.extend(
+            f"ALTER TABLE organisations ADD COLUMN {name} {definition}"
+            for name, definition in org_additions.items()
+            if name not in org_columns
+        )
+    if "subscriptions" in inspector.get_table_names():
+        sub_columns = {c["name"] for c in inspector.get_columns("subscriptions")}
+        sub_additions = {
+            "status": "VARCHAR DEFAULT 'active'",
+            "current_period_start": "TIMESTAMP",
+            "current_period_end": "TIMESTAMP",
+            "cancel_at_period_end": "BOOLEAN DEFAULT FALSE",
+            "trial_end": "TIMESTAMP",
+            "payment_gateway": "VARCHAR",
+            "gateway_customer_id": "VARCHAR",
+            "gateway_subscription_id": "VARCHAR",
+        }
+        statements.extend(
+            f"ALTER TABLE subscriptions ADD COLUMN {name} {definition}"
+            for name, definition in sub_additions.items()
+            if name not in sub_columns
+        )
+    # New tables - create if not exists (handled by create_all, but we check here for completeness)
+    new_tables = ["invoices", "transactions", "student_usage", "payment_gateways"]
+    for table in new_tables:
+        if table not in inspector.get_table_names():
+            # Table will be created by create_all
+            pass
+    
     if statements:
         with engine.begin() as conn:
             for statement in statements:

@@ -5,9 +5,10 @@ fields (courses, docs, duties) are stored as JSON so the schema stays portable
 across Postgres and SQLite without association tables — keeping the project
 minimal for now.
 """
-from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text, DateTime, DECIMAL, UniqueConstraint
 from sqlalchemy import LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
 
 from app.infrastructure.db import Base
 
@@ -22,6 +23,9 @@ class OrganisationORM(Base):
     loc: Mapped[str] = mapped_column(String, default="")
     seal: Mapped[str] = mapped_column(String, default="")
     about: Mapped[str] = mapped_column(Text, default="")
+    billing_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    tax_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    billing_address: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class PlacementORM(Base):
@@ -144,6 +148,89 @@ class SubscriptionORM(Base):
     billing: Mapped[str] = mapped_column(String, default="")
     seats: Mapped[int] = mapped_column(Integer, default=1)
     since: Mapped[str] = mapped_column(String, default="")
+    status: Mapped[str] = mapped_column(String, default="active")  # active, past_due, cancelled, trialing
+    current_period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
+    trial_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    payment_gateway: Mapped[str | None] = mapped_column(String, nullable=True)
+    gateway_customer_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    gateway_subscription_id: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class InvoiceORM(Base):
+    __tablename__ = "invoices"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True, nullable=False)
+    subscription_id: Mapped[str | None] = mapped_column(ForeignKey("subscriptions.org_id"), nullable=True)
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    status: Mapped[str] = mapped_column(String, default="draft")  # draft, open, paid, void, uncollectible
+    invoice_number: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    line_items: Mapped[list] = mapped_column(JSON, default=list)
+    invoice_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    payment_gateway: Mapped[str | None] = mapped_column(String, nullable=True)
+    gateway_invoice_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    gateway_payment_intent_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TransactionORM(Base):
+    __tablename__ = "transactions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True, nullable=False)
+    invoice_id: Mapped[str | None] = mapped_column(ForeignKey("invoices.id"), nullable=True)
+    subscription_id: Mapped[str | None] = mapped_column(ForeignKey("subscriptions.org_id"), nullable=True)
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    type: Mapped[str] = mapped_column(String, nullable=False)  # payment, refund, chargeback, credit, fee
+    status: Mapped[str] = mapped_column(String, default="pending")  # pending, succeeded, failed, cancelled
+    payment_gateway: Mapped[str] = mapped_column(String, nullable=False)
+    gateway_transaction_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    gateway_response: Mapped[dict] = mapped_column(JSON, default=dict)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transaction_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    idempotency_key: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class StudentUsageORM(Base):
+    __tablename__ = "student_usage"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    month: Mapped[str] = mapped_column(String(7), nullable=False)  # YYYY-MM
+    application_count: Mapped[int] = mapped_column(Integer, default=0)
+    billed_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_billed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (UniqueConstraint('user_id', 'month', name='uq_student_usage_user_month'),)
+
+
+class PaymentGatewayORM(Base):
+    __tablename__ = "payment_gateways"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)  # stripe, paypal, flutterwave, mpesa, bank_transfer, crypto
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    config: Mapped[dict] = mapped_column(JSON, default=dict)
+    supported_currencies: Mapped[list] = mapped_column(JSON, default=list)
+    supported_countries: Mapped[list] = mapped_column(JSON, default=list)
+    fee_percentage: Mapped[float | None] = mapped_column(DECIMAL(5,4), nullable=True)
+    fee_fixed_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    min_amount_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_amount_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class UserORM(Base):

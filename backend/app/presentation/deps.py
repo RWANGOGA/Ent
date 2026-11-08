@@ -26,6 +26,7 @@ from app.core.security import decode_access_token
 from app.domain.entities import User
 from app.infrastructure.db import get_session
 from app.infrastructure.groq import GroqClient
+from app.infrastructure.payment_gateways.factory import get_gateway_factory
 from app.infrastructure.repositories import (
     SqlAlchemyApplicationRepository,
     SqlAlchemyPlacementRepository,
@@ -34,6 +35,9 @@ from app.infrastructure.repositories import (
     SqlAlchemyResumeRepository,
     SqlAlchemyStudentDocumentRepository,
     SqlAlchemySubscriptionRepository,
+    SqlAlchemyInvoiceRepository,
+    SqlAlchemyTransactionRepository,
+    SqlAlchemyStudentUsageRepository,
     SqlAlchemyUserRepository,
 )
 
@@ -71,7 +75,15 @@ def get_application_service(
 
 
 def get_billing_service(session: Session = Depends(get_session)) -> BillingService:
-    return BillingService(SqlAlchemySubscriptionRepository(session))
+    gateway_factory = get_gateway_factory()
+    return BillingService(
+        session=session,
+        subscription_repo=SqlAlchemySubscriptionRepository(session),
+        invoice_repo=SqlAlchemyInvoiceRepository(session),
+        transaction_repo=SqlAlchemyTransactionRepository(session),
+        gateway_factory=gateway_factory,
+        student_usage_repo=SqlAlchemyStudentUsageRepository(session),
+    )
 
 
 def get_student_profile_service(
@@ -102,15 +114,15 @@ def get_auth_service(session: Session = Depends(get_session)) -> AuthService:
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     service: AuthService = Depends(get_auth_service),
-) -> User:
-    """Resolve the caller from a valid Bearer token, or raise 401."""
+) -> User | None:
+    """Resolve the caller from a valid Bearer token, or return None if not authenticated."""
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise AuthenticationError("Not authenticated")
+        return None
     try:
         payload = decode_access_token(credentials.credentials)
     except Exception as exc:  # jwt.InvalidTokenError and friends
-        raise AuthenticationError("Invalid or expired token") from exc
+        return None
     try:
         return service.get(payload["sub"])
-    except UserNotFound as exc:
-        raise AuthenticationError("Account no longer exists") from exc
+    except UserNotFound:
+        return None

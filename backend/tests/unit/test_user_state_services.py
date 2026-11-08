@@ -103,31 +103,51 @@ def test_saved_toggle_returns_state_and_ids():
 # ---- BillingService --------------------------------------------------------
 
 
+def make_billing_service() -> BillingService:
+    from tests.fakes import (
+        InMemorySubscriptionRepository,
+        InMemoryInvoiceRepository,
+        InMemoryTransactionRepository,
+        InMemoryStudentUsageRepository,
+        FakeGatewayFactory,
+    )
+    return BillingService(
+        session=None,  # Not used in tests with in-memory repos
+        subscription_repo=InMemorySubscriptionRepository(),
+        invoice_repo=InMemoryInvoiceRepository(),
+        transaction_repo=InMemoryTransactionRepository(),
+        gateway_factory=FakeGatewayFactory(),
+        student_usage_repo=InMemoryStudentUsageRepository(),
+    )
+
+
 def test_billing_defaults_to_free_for_unknown_org():
-    service = BillingService(InMemorySubscriptionRepository())
-    sub = service.get("o1")
+    service = make_billing_service()
+    sub = service.get_subscription("o1")
     assert sub.plan == "Free"
     assert sub.is_premium is False
 
 
 def test_billing_activate_marks_premium_and_clamps_seats():
-    service = BillingService(InMemorySubscriptionRepository())
-    sub = service.activate("o1", plan="Growth", billing="Card", seats=0)
+    service = make_billing_service()
+    sub = service.create_subscription("o1", plan="Pro", billing_cycle="monthly")
 
-    assert sub.plan == "Growth"
+    assert sub.plan == "Pro"
     assert sub.is_premium is True
-    assert sub.seats == 1  # max(1, 0)
-    assert sub.since  # today's date set
-    assert service.get("o1").plan == "Growth"
+    assert sub.seats == 1
+    assert sub.since
+    assert service.get_subscription("o1").plan == "Pro"
 
 
 def test_billing_cancel_reverts_to_free():
-    service = BillingService(InMemorySubscriptionRepository())
-    service.activate("o1", plan="Growth", billing="Card", seats=5)
+    service = make_billing_service()
+    service.create_subscription("o1", plan="Pro", billing_cycle="monthly")
 
-    sub = service.cancel("o1")
-    assert sub.plan == "Free"
-    assert sub.is_premium is False
+    sub = service.cancel_subscription("o1")
+    # Cancellation is at period end, so plan remains Pro but cancel_at_period_end is True
+    assert sub.plan == "Pro"
+    assert sub.cancel_at_period_end is True
+    assert sub.is_premium is True
     assert sub.seats == 1
 
 

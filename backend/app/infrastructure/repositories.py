@@ -19,17 +19,23 @@ from app.application.ports import (
     ResumeRepository,
     StudentDocumentRepository,
     SubscriptionRepository,
+    InvoiceRepository,
+    TransactionRepository,
+    StudentUsageRepository,
     UserRepository,
 )
 from app.domain.entities import (
     Application,
+    Invoice,
     Job,
     Organisation,
     Placement,
     Resume,
     StudentDocument,
     StudentProfile,
+    StudentUsage,
     Subscription,
+    Transaction,
     User,
 )
 from app.infrastructure.orm import (
@@ -298,6 +304,203 @@ class SqlAlchemyApplicationRepository(ApplicationRepository):
             .all()
         )
         return [self._to_domain(r) for r in rows]
+
+
+def get_by_id(self, user_id: str) -> Optional[User]:
+        row = self._session.query(UserORM).filter_by(id=user_id).first()
+        return self._to_domain(row) if row is not None else None
+
+
+class SqlAlchemyInvoiceRepository(InvoiceRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: "InvoiceORM") -> Invoice:
+        return Invoice(
+            id=row.id,
+            org_id=row.org_id,
+            subscription_id=row.subscription_id,
+            amount_cents=row.amount_cents,
+            currency=row.currency,
+            status=row.status,
+            invoice_number=row.invoice_number,
+            description=row.description,
+            line_items=row.line_items or [],
+            metadata=row.invoice_metadata or {},
+            due_date=row.due_date,
+            paid_at=row.paid_at,
+            payment_gateway=row.payment_gateway,
+            gateway_invoice_id=row.gateway_invoice_id,
+            gateway_payment_intent_id=row.gateway_payment_intent_id,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    def get(self, invoice_id: str) -> Optional[Invoice]:
+        row = self._session.query(InvoiceORM).filter_by(id=invoice_id).first()
+        return self._to_domain(row) if row else None
+
+    def list_for_org(self, org_id: str, status: Optional[str] = None) -> list[Invoice]:
+        query = self._session.query(InvoiceORM).filter_by(org_id=org_id)
+        if status:
+            query = query.filter_by(status=status)
+        rows = query.order_by(InvoiceORM.created_at.desc()).all()
+        return [self._to_domain(r) for r in rows]
+
+    def find_by_gateway_id(self, gateway: str, gateway_invoice_id: str) -> Optional[Invoice]:
+        row = self._session.query(InvoiceORM).filter_by(
+            payment_gateway=gateway,
+            gateway_invoice_id=gateway_invoice_id
+        ).first()
+        return self._to_domain(row) if row else None
+
+    def find_by_number(self, invoice_number: str) -> Optional[Invoice]:
+        row = self._session.query(InvoiceORM).filter_by(invoice_number=invoice_number).first()
+        return self._to_domain(row) if row else None
+
+    def save(self, invoice: Invoice) -> Invoice:
+        row = self._session.query(InvoiceORM).filter_by(id=invoice.id).first()
+        if row is None:
+            row = InvoiceORM(id=invoice.id)
+            self._session.add(row)
+        row.org_id = invoice.org_id
+        row.subscription_id = invoice.subscription_id
+        row.amount_cents = invoice.amount_cents
+        row.currency = invoice.currency
+        row.status = invoice.status
+        row.invoice_number = invoice.invoice_number
+        row.description = invoice.description
+        row.line_items = invoice.line_items
+        row.invoice_metadata = invoice.metadata
+        row.due_date = invoice.due_date
+        row.paid_at = invoice.paid_at
+        row.payment_gateway = invoice.payment_gateway
+        row.gateway_invoice_id = invoice.gateway_invoice_id
+        row.gateway_payment_intent_id = invoice.gateway_payment_intent_id
+        row.updated_at = datetime.utcnow()
+        self._session.commit()
+        return invoice
+
+
+class SqlAlchemyTransactionRepository(TransactionRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: "TransactionORM") -> Transaction:
+        return Transaction(
+            id=row.id,
+            org_id=row.org_id,
+            invoice_id=row.invoice_id,
+            subscription_id=row.subscription_id,
+            amount_cents=row.amount_cents,
+            currency=row.currency,
+            type=row.type,
+            status=row.status,
+            payment_gateway=row.payment_gateway,
+            gateway_transaction_id=row.gateway_transaction_id,
+            gateway_response=row.gateway_response or {},
+            description=row.description,
+            metadata=row.transaction_metadata or {},
+            idempotency_key=row.idempotency_key,
+            created_at=row.created_at,
+            processed_at=row.processed_at,
+        )
+
+    def get(self, transaction_id: str) -> Optional[Transaction]:
+        row = self._session.query(TransactionORM).filter_by(id=transaction_id).first()
+        return self._to_domain(row) if row else None
+
+    def list_for_org(self, org_id: str, status: Optional[str] = None) -> list[Transaction]:
+        query = self._session.query(TransactionORM).filter_by(org_id=org_id)
+        if status:
+            query = query.filter_by(status=status)
+        rows = query.order_by(TransactionORM.created_at.desc()).all()
+        return [self._to_domain(r) for r in rows]
+
+    def find_by_idempotency_key(self, key: str) -> Optional[Transaction]:
+        row = self._session.query(TransactionORM).filter_by(idempotency_key=key).first()
+        return self._to_domain(row) if row else None
+
+    def find_by_invoice_and_type(self, invoice_id: str, type: str) -> Optional[Transaction]:
+        row = self._session.query(TransactionORM).filter_by(
+            invoice_id=invoice_id, type=type
+        ).first()
+        return self._to_domain(row) if row else None
+
+    def save(self, transaction: Transaction) -> Transaction:
+        row = self._session.query(TransactionORM).filter_by(id=transaction.id).first()
+        if row is None:
+            row = TransactionORM(id=transaction.id)
+            self._session.add(row)
+        row.org_id = transaction.org_id
+        row.invoice_id = transaction.invoice_id
+        row.subscription_id = transaction.subscription_id
+        row.amount_cents = transaction.amount_cents
+        row.currency = transaction.currency
+        row.type = transaction.type
+        row.status = transaction.status
+        row.payment_gateway = transaction.payment_gateway
+        row.gateway_transaction_id = transaction.gateway_transaction_id
+        row.gateway_response = transaction.gateway_response
+        row.description = transaction.description
+        row.transaction_metadata = transaction.metadata
+        row.idempotency_key = transaction.idempotency_key
+        row.processed_at = transaction.processed_at
+        self._session.commit()
+        return transaction
+
+
+class SqlAlchemyStudentUsageRepository(StudentUsageRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    @staticmethod
+    def _to_domain(row: "StudentUsageORM") -> StudentUsage:
+        return StudentUsage(
+            id=row.id,
+            user_id=row.user_id,
+            month=row.month,
+            application_count=row.application_count,
+            billed_count=row.billed_count,
+            last_billed_at=row.last_billed_at,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    def get(self, user_id: str, month: str) -> Optional[StudentUsage]:
+        row = self._session.query(StudentUsageORM).filter_by(user_id=user_id, month=month).first()
+        return self._to_domain(row) if row else None
+
+    def get_or_create(self, user_id: str, month: str) -> StudentUsage:
+        row = self._session.query(StudentUsageORM).filter_by(user_id=user_id, month=month).first()
+        if row is None:
+            row = StudentUsageORM(
+                id=f"su_{uuid4().hex[:12]}",
+                user_id=user_id,
+                month=month,
+                application_count=0,
+            )
+            self._session.add(row)
+            self._session.flush()
+        return self._to_domain(row)
+
+    def save(self, usage: StudentUsage) -> StudentUsage:
+        row = self._session.query(StudentUsageORM).filter_by(user_id=usage.user_id, month=usage.month).first()
+        if row is None:
+            row = StudentUsageORM(
+                id=usage.id,
+                user_id=usage.user_id,
+                month=usage.month,
+            )
+            self._session.add(row)
+        row.application_count = usage.application_count
+        row.billed_count = usage.billed_count
+        row.last_billed_at = usage.last_billed_at
+        row.updated_at = datetime.utcnow()
+        self._session.commit()
+        return usage
 
 
 class SqlAlchemySubscriptionRepository(SubscriptionRepository):

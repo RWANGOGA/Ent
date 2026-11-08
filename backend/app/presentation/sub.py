@@ -35,6 +35,8 @@ from app.presentation.routers import (
     placements,
     organization,
     user_state,
+    billing,
+    webhooks,
 )
 
 
@@ -71,6 +73,8 @@ def create_sub_app() -> FastAPI:
     sub.include_router(jobs.router)
     sub.include_router(advisor.router)
     sub.include_router(user_state.router)
+    sub.include_router(billing.router)
+    sub.include_router(webhooks.router)
     return sub
 
 

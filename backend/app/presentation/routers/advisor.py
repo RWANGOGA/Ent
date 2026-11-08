@@ -14,7 +14,7 @@ router = APIRouter(tags=["advisor"])
 def advise(
     payload: AdvisorRequest,
     service: AdvisorService = Depends(get_advisor_service),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ) -> AdvisorResponse:
     try:
         reply = service.answer(
@@ -22,7 +22,7 @@ def advise(
             skills=payload.skills,
             course=payload.course,
             cgpa=payload.cgpa,
-            role=current_user.role,
+            role=current_user.role if current_user else "student",
             history=payload.history,
         )
     except LLMNotConfigured as exc:

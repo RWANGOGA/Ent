@@ -8,18 +8,6 @@ import { Icon, IconName } from "../icons/Icons";
 
 type Mode = "signin" | "signup";
 
-// Seeded demo accounts (throwaway local credentials from backend seed.py). The
-// quick-fill buttons load one so the four dashboards can be explored with a real
-// login rather than a fake role switch.
-const DEMO: [UserRole, string, string, IconName][] = [
-  ["student", "Student", "amina@makerere.ac.ug", "user"],
-  ["jobseeker", "Job seeker", "brian@example.com", "brief"],
-  ["employer", "Employer", "hiring@lumenlabs.example", "bldg"],
-  ["admin", "University admin", "office@makerere.ac.ug", "uni"],
-];
-
-const DEMO_PASSWORD = "password123";
-
 export function SignInView() {
   const { signIn, signUp, go } = useApp();
 
@@ -38,19 +26,10 @@ export function SignInView() {
     try {
       if (mode === "signin") await signIn(email.trim(), password);
       else await signUp(email.trim(), name.trim(), role, password);
-      // Success navigates to the dashboard; leave `busy` set so the button
-      // stays disabled until the view unmounts.
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setBusy(false);
     }
-  };
-
-  const quickFill = (demoEmail: string) => {
-    setMode("signin");
-    setEmail(demoEmail);
-    setPassword(DEMO_PASSWORD);
-    setError(null);
   };
 
   const mutedNote: React.CSSProperties = {
@@ -184,33 +163,17 @@ export function SignInView() {
             )}
           </div>
 
-          {isApiEnabled && (
-            <div style={{ marginTop: "22px" }}>
-              <div className="lbl" style={{ marginBottom: "8px" }}>
-                Or open a demo account
-              </div>
-              <div className="roles">
-                {DEMO.map(([id, label, demoEmail, icon]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className="role"
-                    onClick={() => quickFill(demoEmail)}
-                  >
-                    <span className="ric">
-                      <Icon name={icon} size={15} />
-                    </span>
-                    <span>
-                      <b>{label}</b>
-                      <span>{demoEmail}</span>
-                    </span>
-                    <Icon name="arrow" size={13} />
-                  </button>
-                ))}
-              </div>
-              <div style={mutedNote}>Demo password: {DEMO_PASSWORD}</div>
+          <div style={{ marginTop: "22px" }}>
+            <div className="lbl" style={{ marginBottom: "8px" }}>
+              Don't have an account yet?
             </div>
-          )}
+            <p style={mutedNote}>
+              Register with your university or institutional email to access
+              placements, track applications, and manage your career documents.
+              Employers and administrators can request access through their
+              organisation.
+            </p>
+          </div>
         </div>
       </div>
       <div className="auth-r">

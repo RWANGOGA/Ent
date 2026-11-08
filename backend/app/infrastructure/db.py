@@ -73,6 +73,18 @@ def ensure_schema() -> None:
             for name, definition in additions.items()
             if name not in placement_columns
         )
+    if "jobs" in inspector.get_table_names():
+        job_columns = {c["name"] for c in inspector.get_columns("jobs")}
+        job_additions = {
+            "review_status": "VARCHAR DEFAULT 'approved'",
+            "published_at": "VARCHAR DEFAULT ''",
+            "review_reason": "TEXT DEFAULT ''",
+        }
+        statements.extend(
+            f"ALTER TABLE jobs ADD COLUMN {name} {definition}"
+            for name, definition in job_additions.items()
+            if name not in job_columns
+        )
     if statements:
         with engine.begin() as conn:
             for statement in statements:

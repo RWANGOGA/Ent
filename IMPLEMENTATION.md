@@ -735,6 +735,16 @@ The correct Jobs delivery order is:
 6. Remove the remaining job dashboard demo data and verify the full
    sign-in-to-dashboard flow.
 
+Jobs Portal progress:
+
+- The first Jobs sub-feature is complete: a separate live Jobs catalogue now
+  has `Job` domain/ORM records, development seed fixtures, repository mapping,
+  `GET /api/jobs`, `GET /api/jobs/{id}`, search/location/mode filters, and
+  authenticated job-seeker dashboard loading with explicit loading, empty, and
+  error states.
+- Job applications and employer job posting are intentionally not marked
+  complete until their own backend and frontend slices are delivered.
+
 The next implementation slice begins only after the current feature has
 passed backend tests, frontend build/type checking, staged-diff review, commit,
 and push.

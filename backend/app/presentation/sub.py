@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse
 from app.core.errors import AuthenticationError
 from app.infrastructure.db import Base, SessionLocal, engine
 from app.infrastructure.orm import (  # noqa: F401 (register tables)
+    JobORM,
     OrganisationORM,
     PlacementORM,
     StudentProfileORM,
@@ -29,6 +30,7 @@ from app.presentation.routers import (
     auth,
     admin,
     matching,
+    jobs,
     placements,
     organization,
     user_state,
@@ -65,6 +67,7 @@ def create_sub_app() -> FastAPI:
     sub.include_router(placements.router)
     sub.include_router(organization.router)
     sub.include_router(matching.router)
+    sub.include_router(jobs.router)
     sub.include_router(advisor.router)
     sub.include_router(user_state.router)
     return sub

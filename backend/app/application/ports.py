@@ -7,7 +7,7 @@ is what keeps the domain swappable and the tests offline (SOLID: DIP + ISP).
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.domain.entities import Application, Placement, Resume, StudentDocument, StudentProfile, Subscription, User
+from app.domain.entities import Application, Job, Placement, Resume, StudentDocument, StudentProfile, Subscription, User
 
 
 class PlacementRepository(ABC):
@@ -28,6 +28,21 @@ class PlacementRepository(ABC):
     @abstractmethod
     def get(self, placement_id: str) -> Optional[Placement]:
         """Return a single placement by id, or None."""
+
+
+class JobRepository(ABC):
+    @abstractmethod
+    def list(
+        self,
+        *,
+        q: Optional[str] = None,
+        location: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> list[Job]:
+        """Return open jobs matching the requested filters."""
+
+    @abstractmethod
+    def get(self, job_id: str) -> Optional[Job]: ...
 
 
 class LLMClient(ABC):

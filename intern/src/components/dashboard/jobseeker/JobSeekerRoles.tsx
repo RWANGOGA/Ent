@@ -2,10 +2,30 @@
 
 import React from "react";
 import { useApp } from "../../../context/AppContext";
-import { GRAD_ROLES } from "../../../data";
+import { ApiError, fetchJobs, isApiEnabled } from "../../../lib/api";
+import { Job } from "../../../types";
 
 export function JobSeekerRoles() {
-  const { toast } = useApp();
+  const { session } = useApp();
+  const [jobs, setJobs] = React.useState<Job[]>([]);
+  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    if (!isApiEnabled || session?.role !== "jobseeker") {
+      setState("ready");
+      return;
+    }
+    fetchJobs()
+      .then((items) => {
+        setJobs(items);
+        setState("ready");
+      })
+      .catch((cause) => {
+        setError(cause instanceof ApiError ? cause.message : "Unable to load jobs");
+        setState("error");
+      });
+  }, [session]);
 
   return (
     <>
@@ -29,24 +49,24 @@ export function JobSeekerRoles() {
               </tr>
             </thead>
             <tbody>
-              {GRAD_ROLES.map((r) => (
+              {state === "loading" ? (
+                <tr><td colSpan={6}>Loading jobs...</td></tr>
+              ) : state === "error" ? (
+                <tr><td colSpan={6} className="error">{error}</td></tr>
+              ) : jobs.length === 0 ? (
+                <tr><td colSpan={6}>No open jobs are available.</td></tr>
+              ) : jobs.map((r) => (
                 <tr key={r.id}>
                   <td className="who">
                     <b>{r.title}</b>
-                    <span>{r.type}</span>
+                    <span>{r.employmentType}</span>
                   </td>
-                  <td>{r.org}</td>
+                  <td>{r.orgName}</td>
                   <td className="hide-xs">{r.loc}</td>
-                  <td className="num">{r.pay}</td>
-                  <td className="num">{r.closes}</td>
+                  <td className="num">{r.salary}</td>
+                  <td className="num">{r.closesAt}</td>
                   <td className="act">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-blue"
-                      onClick={() => toast(`Application started · ${r.title}`)}
-                    >
-                      Apply
-                    </button>
+                    <span className="tg green">Open</span>
                   </td>
                 </tr>
               ))}

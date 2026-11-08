@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.application.ports import (
     ApplicationRepository,
+    JobRepository,
     PlacementRepository,
     SavedRepository,
     StudentProfileRepository,
@@ -22,6 +23,7 @@ from app.application.ports import (
 )
 from app.domain.entities import (
     Application,
+    Job,
     Organisation,
     Placement,
     Resume,
@@ -32,6 +34,7 @@ from app.domain.entities import (
 )
 from app.infrastructure.orm import (
     ApplicationORM,
+    JobORM,
     OrganisationORM,
     PlacementORM,
     SavedORM,
@@ -124,6 +127,66 @@ class SqlAlchemyPlacementRepository(PlacementRepository):
         if row is None:
             return None
         return self._to_domain(row[0], row[1])
+
+
+class SqlAlchemyJobRepository(JobRepository):
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def _to_domain(self, row: JobORM, org: Optional[OrganisationORM]) -> Job:
+        organisation = (
+            Organisation(
+                id=org.id,
+                name=org.name,
+                type=org.type,
+                sector=org.sector or "",
+                loc=org.loc or "",
+                seal=org.seal or "",
+                about=org.about or "",
+            )
+            if org is not None
+            else None
+        )
+        return Job(
+            id=row.id,
+            title=row.title,
+            org_id=row.org_id,
+            loc=row.loc or "",
+            mode=row.mode or "",
+            employment_type=row.employment_type or "Full time",
+            salary=row.salary or "",
+            closes_at=row.closes_at or "",
+            summary=row.summary or "",
+            requirements=list(row.requirements or []),
+            status=row.status or "Open",
+            org=organisation,
+        )
+
+    def _query(self):
+        return self._session.query(JobORM, OrganisationORM).outerjoin(
+            OrganisationORM, JobORM.org_id == OrganisationORM.id
+        ).filter(JobORM.status == "Open")
+
+    def list(self, *, q=None, location=None, mode=None) -> list[Job]:
+        query = self._query()
+        if location:
+            query = query.filter(JobORM.loc == location)
+        if mode:
+            query = query.filter(JobORM.mode == mode)
+        if q:
+            like = f"%{q.strip().lower()}%"
+            query = query.filter(
+                or_(
+                    func.lower(JobORM.title).like(like),
+                    func.lower(OrganisationORM.name).like(like),
+                    func.lower(JobORM.loc).like(like),
+                )
+            )
+        return [self._to_domain(job, org) for job, org in query.order_by(JobORM.id).all()]
+
+    def get(self, job_id: str) -> Optional[Job]:
+        row = self._query().filter(JobORM.id == job_id).first()
+        return self._to_domain(row[0], row[1]) if row else None
 
 
 class SqlAlchemySavedRepository(SavedRepository):

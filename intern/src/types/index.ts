@@ -38,6 +38,21 @@ export interface Placement {
   reviewReason: string;
 }
 
+export interface Job {
+  id: string;
+  title: string;
+  orgId: string;
+  orgName: string;
+  loc: string;
+  mode: string;
+  employmentType: string;
+  salary: string;
+  closesAt: string;
+  summary: string;
+  requirements: string[];
+  status: string;
+}
+
 export interface GradRole {
   id: string;
   title: string;

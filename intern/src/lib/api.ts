@@ -7,7 +7,7 @@
 //
 // The backend speaks snake_case; the UI types are camelCase. This module is the
 // single translation boundary, so components never learn about either shape.
-import { Org, Placement } from "../types";
+import { Job, Org, Placement } from "../types";
 
 export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   /\/+$/,
@@ -194,6 +194,43 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 export interface Catalog {
   placements: Placement[];
   orgs: Org[];
+}
+
+interface ApiJob {
+  id: string;
+  title: string;
+  org_id: string;
+  loc: string;
+  mode: string;
+  employment_type: string;
+  salary: string;
+  closes_at: string;
+  summary: string;
+  requirements: string[];
+  status: string;
+  org: ApiOrg | null;
+}
+
+function mapJob(job: ApiJob): Job {
+  return {
+    id: job.id,
+    title: job.title,
+    orgId: job.org_id,
+    orgName: job.org?.name || "Verified employer",
+    loc: job.loc,
+    mode: job.mode,
+    employmentType: job.employment_type,
+    salary: job.salary,
+    closesAt: job.closes_at,
+    summary: job.summary,
+    requirements: job.requirements,
+    status: job.status,
+  };
+}
+
+export async function fetchJobs(): Promise<Job[]> {
+  const data = await getJson<ApiListResponse<ApiJob>>("/jobs");
+  return data.items.map(mapJob);
 }
 
 export interface InternshipPostingInput {

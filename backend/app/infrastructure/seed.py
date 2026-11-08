@@ -9,7 +9,7 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
-from app.infrastructure.orm import OrganisationORM, PlacementORM, UserORM
+from app.infrastructure.orm import JobORM, OrganisationORM, PlacementORM, UserORM
 
 ORGS: list[dict] = [
     {"id": "o1", "name": "Ministry of ICT and National Guidance", "type": "Government", "sector": "Public sector", "loc": "Kampala", "seal": "MIC", "about": "National ministry responsible for digital government services, ICT policy and public-sector innovation."},
@@ -39,6 +39,13 @@ PLACEMENTS: list[dict] = [
     {"id": "p12", "title": "Monitoring & Evaluation Intern", "org_id": "o2", "courses": ["Statistics", "Economics", "Business"], "grade": "Second Class Upper", "loc": "Kampala", "mode": "On-site", "duration": "5 months", "stipend": "UGX 950,000 / month", "deadline": "08 Apr 2026", "slots": 4, "status": "Open", "applicants": 39, "docs": ["Transcript", "Student ID", "Writing sample"], "testimonial": True, "about": "Track outcomes across national digital skills programmes.", "duties": ["Maintain indicator frameworks", "Run quarterly reviews", "Produce analysis notes"]},
 ]
 
+JOBS: list[dict] = [
+    {"id": "j1", "title": "Junior Product Designer", "org_id": "o4", "loc": "Remote", "mode": "Remote", "employment_type": "Full time", "salary": "$1,800 / month", "closes_at": "2026-12-15", "summary": "Design clear product experiences with a small senior team.", "requirements": ["Figma", "UI Design", "Portfolio"], "status": "Open"},
+    {"id": "j2", "title": "Graduate Data Analyst", "org_id": "o2", "loc": "Kampala", "mode": "On-site", "employment_type": "Full time", "salary": "UGX 2,000,000 / month", "closes_at": "2026-12-10", "summary": "Turn public-sector datasets into useful decisions and reports.", "requirements": ["SQL", "Excel", "Statistics"], "status": "Open"},
+    {"id": "j3", "title": "Software Engineer I", "org_id": "o5", "loc": "Berlin", "mode": "Hybrid", "employment_type": "Full time", "salary": "€3,200 / month", "closes_at": "2026-12-20", "summary": "Build reliable payment tools for merchants across East Africa.", "requirements": ["Python", "APIs", "Git"], "status": "Open"},
+    {"id": "j4", "title": "Monitoring and Evaluation Officer", "org_id": "o9", "loc": "Kampala", "mode": "On-site", "employment_type": "Full time", "salary": "UGX 2,400,000 / month", "closes_at": "2026-12-08", "summary": "Support evidence-led programmes that improve livelihoods.", "requirements": ["Monitoring & Evaluation", "Report Writing"], "status": "Open"},
+]
+
 
 # Demo accounts so the app is usable the moment the backend boots. These are
 # throwaway local credentials (never production), which is exactly the point:
@@ -56,6 +63,9 @@ def seed_if_empty(session: Session) -> None:
     if session.query(OrganisationORM).count() == 0:
         session.add_all([OrganisationORM(**org) for org in ORGS])
         session.add_all([PlacementORM(**p) for p in PLACEMENTS])
+        session.commit()
+    if session.query(JobORM).count() == 0:
+        session.add_all([JobORM(**job) for job in JOBS])
         session.commit()
     if session.query(UserORM).count() == 0:
         today = date.today().isoformat()

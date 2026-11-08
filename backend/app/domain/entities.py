@@ -47,6 +47,24 @@ class Placement:
     org: Optional[Organisation] = None
 
 
+@dataclass(frozen=True)
+class Job:
+    """A published job in the separate Jobs Portal domain."""
+
+    id: str
+    title: str
+    org_id: str
+    loc: str = ""
+    mode: str = ""
+    employment_type: str = "Full time"
+    salary: str = ""
+    closes_at: str = ""
+    summary: str = ""
+    requirements: list[str] = field(default_factory=list)
+    status: str = "Open"
+    org: Optional[Organisation] = None
+
+
 # Application workflow statuses (kept as plain strings to stay persistence-friendly).
 APPLICATION_STATUSES = ("Submitted", "In Review", "Accepted", "Rejected", "Withdrawn")
 

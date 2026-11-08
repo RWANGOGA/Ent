@@ -52,6 +52,22 @@ class PlacementORM(Base):
     review_reason: Mapped[str] = mapped_column(Text, default="")
 
 
+class JobORM(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True)
+    loc: Mapped[str] = mapped_column(String, default="")
+    mode: Mapped[str] = mapped_column(String, default="")
+    employment_type: Mapped[str] = mapped_column(String, default="Full time")
+    salary: Mapped[str] = mapped_column(String, default="")
+    closes_at: Mapped[str] = mapped_column(String, default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    requirements: Mapped[list] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String, default="Open")
+
+
 class SavedORM(Base):
     __tablename__ = "saved_placements"
 

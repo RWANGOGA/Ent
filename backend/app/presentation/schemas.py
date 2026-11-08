@@ -50,6 +50,28 @@ class PlacementListResponse(BaseModel):
     items: list[PlacementRead]
 
 
+class JobRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    title: str
+    org_id: str
+    loc: str
+    mode: str
+    employment_type: str
+    salary: str
+    closes_at: str
+    summary: str
+    requirements: list[str]
+    status: str
+    org: Optional[OrganisationRead] = None
+
+
+class JobListResponse(BaseModel):
+    total: int
+    items: list[JobRead]
+
+
 class SkillRead(BaseModel):
     name: str
     category: str

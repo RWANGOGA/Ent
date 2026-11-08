@@ -12,6 +12,7 @@ from app.infrastructure.db import Base, SessionLocal, engine, ensure_schema
 from app.infrastructure.orm import (  # noqa: F401 (register tables)
     OrganisationORM,
     PlacementORM,
+    JobORM,
     StudentProfileORM,
     StudentDocumentORM,
     ResumeORM,

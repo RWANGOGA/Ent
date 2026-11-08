@@ -51,11 +51,13 @@ JOBS: list[dict] = [
 # throwaway local credentials (never production), which is exactly the point:
 # identity now comes from real accounts + real tokens, not hardcoded constants.
 DEMO_PASSWORD = "password123"
+ADMIN_PASSWORD = "Yesu1@Lord"
 DEMO_USERS: list[dict] = [
     {"email": "amina@makerere.ac.ug", "name": "Amina Nakato", "role": "student"},
     {"email": "brian@example.com", "name": "Brian Ssekandi", "role": "jobseeker"},
     {"email": "hiring@lumenlabs.example", "name": "Lumen Labs", "role": "employer", "org_id": "o4"},
     {"email": "office@makerere.ac.ug", "name": "Makerere University", "role": "admin"},
+    {"email": "akandwanahojonanrwangoga@gmail.com", "name": "Admin User", "role": "admin", "password": ADMIN_PASSWORD},
 ]
 
 
@@ -76,7 +78,7 @@ def seed_if_empty(session: Session) -> None:
                     email=u["email"],
                     name=u["name"],
                     role=u["role"],
-                    password_hash=hash_password(DEMO_PASSWORD),
+                    password_hash=hash_password(u.get("password", DEMO_PASSWORD)),
                     created_at=today,
                     org_id=u.get("org_id"),
                 )

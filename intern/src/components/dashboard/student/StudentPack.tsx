@@ -5,8 +5,26 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentPack() {
-  const { pack, docs, previewPack, editPack, go, toast } = useApp();
+  const {
+    pack,
+    docs,
+    applications,
+    recommendations,
+    student,
+    getPlacement,
+    getOrg,
+    previewPack,
+    editPack,
+    go,
+    toast,
+  } = useApp();
   const attached = docs.filter((d) => d.status !== "missing");
+  const averageMatch = recommendations?.items.length
+    ? Math.round(
+        recommendations.items.reduce((sum, item) => sum + item.match.score, 0) /
+          recommendations.items.length
+      )
+    : null;
 
   return (
     <>
@@ -31,7 +49,7 @@ export function StudentPack() {
           <div className="ph">
             <div>
               <span className="lbl">Pack · version 3</span>
-              <h3 style={{ marginTop: "6px" }}>Amina Nakato — Design</h3>
+              <h3 style={{ marginTop: "6px" }}>{student.name} — {student.course || "Student"}</h3>
             </div>
             <span className="tg green">Ready to send</span>
           </div>
@@ -57,7 +75,7 @@ export function StudentPack() {
               <span>target roles</span>
             </div>
             <div>
-              <b>92%</b>
+              <b>{averageMatch === null ? "—" : `${averageMatch}%`}</b>
               <span>avg. match</span>
             </div>
           </div>
@@ -147,18 +165,23 @@ export function StudentPack() {
               className="pb"
               style={{ display: "grid", gap: "8px", fontSize: "11.5px" }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Data Analyst Intern</span>
-                <b>Under review</b>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Product Design Intern</span>
-                <b>Shortlisted</b>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Frontend Intern</span>
-                <b>Sent</b>
-              </div>
+              {applications.length === 0 ? (
+                <span className="muted">No applications submitted yet.</span>
+              ) : (
+                applications.slice(0, 3).map((application) => {
+                  const placement = getPlacement(application.placement_id);
+                  const org = placement ? getOrg(placement.orgId) : undefined;
+                  return (
+                    <div key={application.id} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>
+                        {placement?.title || "Internship application"}
+                        {org ? ` · ${org.name}` : ""}
+                      </span>
+                      <b>{application.status}</b>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

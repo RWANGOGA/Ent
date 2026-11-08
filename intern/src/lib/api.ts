@@ -378,6 +378,33 @@ export interface StudentProfileDto {
   skills: string[];
 }
 
+export interface ApplicationPackDto {
+  user_id: string;
+  statement: string;
+  targets: string[];
+}
+
+export async function fetchApplicationPack(): Promise<ApplicationPackDto> {
+  return getJson<ApplicationPackDto>("/application-pack");
+}
+
+export async function updateApplicationPack(
+  pack: Omit<ApplicationPackDto, "user_id">
+): Promise<ApplicationPackDto> {
+  return fetch(`${API_BASE}/application-pack`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeader(),
+    },
+    body: JSON.stringify(pack),
+  }).then(async (res) => {
+    if (!res.ok) await readError(res, "/application-pack");
+    return (await res.json()) as ApplicationPackDto;
+  });
+}
+
 export interface ResumeDto {
   filename: string;
   content_type: string;

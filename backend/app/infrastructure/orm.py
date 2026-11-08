@@ -99,6 +99,14 @@ class StudentProfileORM(Base):
     skills: Mapped[list] = mapped_column(JSON, default=list)
 
 
+class ApplicationPackORM(Base):
+    __tablename__ = "application_packs"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    statement: Mapped[str] = mapped_column(Text, default="")
+    targets: Mapped[list] = mapped_column(JSON, default=list)
+
+
 class ResumeORM(Base):
     __tablename__ = "resumes"
 

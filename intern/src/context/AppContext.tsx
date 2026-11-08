@@ -41,6 +41,8 @@ import {
   fetchStudentProfile,
   fetchResume,
   fetchStudentDocuments,
+  fetchApplicationPack,
+  updateApplicationPack,
   fetchRecommendedInternships,
   fetchMe,
   fetchSaved,
@@ -1299,8 +1301,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fetchStudentProfile(),
       fetchResume(),
       fetchStudentDocuments(),
+      fetchApplicationPack(),
     ])
-      .then(async ([apps, profile, currentResume, documents]) => {
+      .then(async ([apps, profile, currentResume, documents, apiPack]) => {
         const nextStudent: Student = {
           name: session.name,
           course: profile.course,
@@ -1327,6 +1330,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         if (cancelled) return;
         setApplications(apps);
+        setPack({
+          statement: apiPack.statement,
+          targets: apiPack.targets,
+        });
         setRecommendations(matches);
         setDashboardDataStatus("ready");
       })
@@ -1678,25 +1685,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </div>,
       "Save statement",
       () => {
-        setPack((prev) => ({ ...prev, statement: currentVal }));
-        toast("Statement saved · pack updated");
+        updateApplicationPack({ ...pack, statement: currentVal })
+          .then((saved) => {
+            setPack({ statement: saved.statement, targets: saved.targets });
+            toast("Statement saved · pack updated");
+          })
+          .catch((error) => {
+            toast(error instanceof Error ? error.message : "Pack update failed.");
+          });
       }
     );
-  }, [pack.statement, openModal, toast]);
+  }, [pack, openModal, toast]);
 
   const previewPack = useCallback(() => {
     const attached = docs.filter((d) => d.status !== "missing");
+    const averageMatch = recommendations?.items.length
+      ? Math.round(
+          recommendations.items.reduce((sum, item) => sum + item.match.score, 0) /
+            recommendations.items.length
+        )
+      : null;
     openModal(
       "What the employer receives",
       <div style={{ border: "1px solid var(--rule)", padding: "16px", background: "#fff" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <b style={{ fontSize: "14px" }}>Amina Nakato</b>
+            <b style={{ fontSize: "14px" }}>{student.name}</b>
             <div style={{ fontSize: "11.5px", color: "var(--muted)" }}>
-              Design · Makerere University · Year 3
+              {student.course || "Student"} · {student.uni || "University"} · {student.year || "Year not set"}
             </div>
           </div>
-          <span className="tg green">92% match</span>
+          <span className="tg green">
+            {averageMatch === null ? "Match pending" : `${averageMatch}% match`}
+          </span>
         </div>
         <p style={{ fontSize: "12.5px", lineHeight: 1.65, marginTop: "12px" }}>
           {pack.statement}
@@ -1714,7 +1735,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </div>,
       null
     );
-  },   [docs, pack.statement, openModal, resume]);
+  }, [docs, pack.statement, openModal, recommendations, resume, student]);
 
   const showEmbed = useCallback(() => {
     openModal(

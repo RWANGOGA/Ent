@@ -19,6 +19,7 @@ from app.infrastructure.orm import (  # noqa: F401 (register tables)
     OrganisationORM,
     PlacementORM,
     StudentProfileORM,
+    ApplicationPackORM,
     StudentDocumentORM,
     ResumeORM,
     StudentDocumentORM,

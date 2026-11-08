@@ -170,6 +170,38 @@ def test_non_student_cannot_access_student_profile(client):
     assert client.put("/profile", json={}, headers=h).status_code == 403
 
 
+# ---- Application pack ------------------------------------------------------
+
+
+def test_student_application_pack_is_live_and_persists(client):
+    h = _login(client, STUDENT)
+    initial = client.get("/application-pack", headers=h)
+    assert initial.status_code == 200
+    assert initial.json()["statement"] == ""
+
+    updated = client.put(
+        "/application-pack",
+        json={
+            "statement": "  I build accessible digital products.  ",
+            "targets": [" Product design ", "Product design", "Research"],
+        },
+        headers=h,
+    )
+    assert updated.status_code == 200
+    assert updated.json()["statement"] == "I build accessible digital products."
+    assert updated.json()["targets"] == ["Product design", "Research"]
+
+    persisted = client.get("/application-pack", headers=h)
+    assert persisted.json()["statement"] == "I build accessible digital products."
+    assert persisted.json()["targets"] == ["Product design", "Research"]
+
+
+def test_non_student_cannot_access_application_pack(client):
+    h = _login(client, JOBSEEKER)
+    assert client.get("/application-pack", headers=h).status_code == 403
+    assert client.put("/application-pack", json={}, headers=h).status_code == 403
+
+
 # ---- Resume -----------------------------------------------------------------
 
 

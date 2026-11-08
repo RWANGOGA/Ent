@@ -12,6 +12,7 @@ to an HTTP status.
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.application.services import (
     ApplicationService,
@@ -23,6 +24,8 @@ from app.application.services import (
 )
 from app.core.errors import PlacementNotFound, PlacementNotOpen
 from app.domain.entities import User
+from app.infrastructure.db import get_session
+from app.infrastructure.orm import ApplicationPackORM
 from app.presentation.deps import (
     get_application_service,
     get_billing_service,
@@ -35,6 +38,8 @@ from app.presentation.deps import (
 from app.presentation.schemas import (
     ActivatePlanRequest,
     ApplicationRead,
+    ApplicationPackRead,
+    ApplicationPackUpdate,
     ApplicationsResponse,
     ApplyRequest,
     CancelPlanRequest,
@@ -50,6 +55,41 @@ from app.presentation.schemas import (
 )
 
 router = APIRouter(tags=["user-state"])
+
+
+@router.get("/application-pack", response_model=ApplicationPackRead)
+def get_application_pack(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> ApplicationPackRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have application packs")
+    pack = session.get(ApplicationPackORM, current_user.id)
+    if pack is None:
+        pack = ApplicationPackORM(user_id=current_user.id, statement="", targets=[])
+        session.add(pack)
+        session.commit()
+        session.refresh(pack)
+    return ApplicationPackRead.model_validate(pack, from_attributes=True)
+
+
+@router.put("/application-pack", response_model=ApplicationPackRead)
+def update_application_pack(
+    payload: ApplicationPackUpdate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> ApplicationPackRead:
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students have application packs")
+    pack = session.get(ApplicationPackORM, current_user.id)
+    if pack is None:
+        pack = ApplicationPackORM(user_id=current_user.id)
+        session.add(pack)
+    pack.statement = payload.statement.strip()[:600]
+    pack.targets = list(dict.fromkeys(target.strip() for target in payload.targets if target.strip()))
+    session.commit()
+    session.refresh(pack)
+    return ApplicationPackRead.model_validate(pack, from_attributes=True)
 
 
 def _org_for(user: User, explicit: Optional[str]) -> str:

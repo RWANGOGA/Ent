@@ -745,6 +745,19 @@ Jobs Portal progress:
 - Job applications and employer job posting are intentionally not marked
   complete until their own backend and frontend slices are delivered.
 
+Learner dashboard progress:
+
+- The application pack is now persisted per authenticated student through
+  `GET /api/application-pack` and `PUT /api/application-pack`.
+- Student pack statements are limited to 600 characters and target roles are
+  normalized and deduplicated by the backend.
+- The pack preview uses the student's live profile, documents, and
+  recommendation scores.
+- The sent-application panel uses live application and placement records rather
+  than bundled demo applications.
+- Remaining learner workflow work includes persisted testimonials and any
+  remaining dashboard actions that currently only display local confirmation.
+
 The next implementation slice begins only after the current feature has
 passed backend tests, frontend build/type checking, staged-diff review, commit,
 and push.

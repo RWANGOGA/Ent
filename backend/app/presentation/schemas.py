@@ -237,6 +237,17 @@ class StudentProfileUpdate(BaseModel):
     skills: list[str] = []
 
 
+class ApplicationPackRead(BaseModel):
+    user_id: str
+    statement: str
+    targets: list[str]
+
+
+class ApplicationPackUpdate(BaseModel):
+    statement: str = ""
+    targets: list[str] = []
+
+
 class ResumeRead(BaseModel):
     filename: str
     content_type: str

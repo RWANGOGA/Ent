@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
 import { Icon } from "../icons/Icons";
+import { AdvisorAction } from "../../types";
 
 export function ChatDrawer() {
   const { isChatOpen, openChat, closeChat, chatMessages, sendChat, askChat } =
@@ -20,6 +21,30 @@ export function ChatDrawer() {
     if (!inputText.trim()) return;
     sendChat(inputText);
     setInputText("");
+  };
+
+  const handleAction = (action: AdvisorAction) => {
+    // Handle different action types
+    switch (action.type) {
+      case "navigate":
+        if (action.payload.dashboard) {
+          // The dashboard navigation is handled via hash routing
+          window.location.hash = String(action.payload.dashboard);
+        }
+        break;
+      case "apply":
+        // Could trigger apply modal
+        sendChat(`Apply to ${String(action.payload.placementTitle || "this placement")}`);
+        break;
+      case "check_eligibility":
+        sendChat(`Am I eligible for ${String(action.payload.placementTitle || "this placement")}?`);
+        break;
+      case "open_placement":
+        sendChat(`Tell me about ${String(action.payload.placementTitle || "this placement")}`);
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -65,7 +90,27 @@ export function ChatDrawer() {
                   ···
                 </span>
               ) : (
-                <span dangerouslySetInnerHTML={{ __html: msg.text }} />
+                <>
+                  <span dangerouslySetInnerHTML={{ __html: msg.text }} />
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div
+                      className="msg-actions"
+                      style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}
+                    >
+                      {msg.actions.map((action: AdvisorAction, idx: number) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="btn btn-sm"
+                          style={{ fontSize: "11px" }}
+                          onClick={() => handleAction(action)}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ))}

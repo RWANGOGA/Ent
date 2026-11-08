@@ -157,10 +157,19 @@ class AdvisorRequest(BaseModel):
     skills: list[str] = []
     course: str = ""
     cgpa: float = 0.0
+    role: str = "student"
+    history: list[dict] = []
+
+
+class AdvisorAction(BaseModel):
+    type: str  # "navigate", "apply", "check_eligibility", "open_placement", "open_dashboard"
+    label: str
+    payload: dict = {}
 
 
 class AdvisorResponse(BaseModel):
     reply: str
+    actions: list[AdvisorAction] = []
 
 
 # ---------------- B4: user state (saved, applications, subscription) -------

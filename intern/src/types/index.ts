@@ -194,6 +194,13 @@ export interface ChatMessage {
   who: "INTERN" | "me";
   text: string;
   isTyping?: boolean;
+  actions?: AdvisorAction[];
+}
+
+export interface AdvisorAction {
+  type: string;
+  label: string;
+  payload: Record<string, unknown>;
 }
 
 export interface ModalConfig {

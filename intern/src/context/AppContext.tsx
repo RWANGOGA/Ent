@@ -67,6 +67,8 @@ import {
   type MatchDto,
   type ResumeDto,
   type StudentDocumentDto,
+  type AdvisorResponse,
+  type AdvisorAction,
 } from "../lib/api";
 
 // Placement-fee model. Free host organisations (seed org "o4") publish up to
@@ -732,11 +734,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const answerChat = useCallback(
     (query: string): string => {
       const q = query.toLowerCase();
+      const currentRole = role;
 
-      // Skills-driven career guidance. These run first because the product's
-      // core claim is advising from the student's actual profile, not generic
-      // FAQs. Deterministic for now; the FastAPI advisor will reuse the same
-      // matchPlacement() output.
+      // Role-specific responses
+      if (currentRole === "employer") {
+        if (q.includes("applicant") || q.includes("candidate")) {
+          return `Use the Applicants tab to review candidates for your placements. You can filter by placement, see match scores, and shortlist candidates.`;
+        }
+        if (q.includes("post") || q.includes("create") || q.includes("new internship")) {
+          return `Go to the Placements tab and click "New internship" to create a posting. You'll specify courses, grade, documents, dates, and duties.`;
+        }
+        if (q.includes("dashboard") || q.includes("overview")) {
+          return `Your employer dashboard shows live placements, applicant counts, shortlisted candidates, and your plan usage.`;
+        }
+      }
+
+      if (currentRole === "admin") {
+        if (q.includes("queue") || q.includes("review") || q.includes("pending")) {
+          return `The Admin dashboard has a Review Queue showing students awaiting document verification. Use the Documents tab to verify or reject uploaded files.`;
+        }
+        if (q.includes("metric") || q.includes("stat") || q.includes("report")) {
+          return `Admin Overview shows open placements, pending documents, students placed, and placement record completion rate.`;
+        }
+        if (q.includes("user") || q.includes("student") || q.includes("organisation")) {
+          return `Use the Students and Organisations tabs to manage platform users and host organisations.`;
+        }
+      }
+
+      if (currentRole === "jobseeker") {
+        if (q.includes("job") || q.includes("role") || q.includes("application")) {
+          return `Your Applications tab shows all job applications with their status. Browse Roles to find new opportunities.`;
+        }
+        if (q.includes("profile") || q.includes("cv") || q.includes("resume")) {
+          return `Your profile and CV are used to match you with roles. Keep your skills and experience updated.`;
+        }
+      }
+
+      // Skills-driven career guidance for students (default)
+      // ... rest of the existing logic
       const ranked = placements
         .map((p) => ({
           p,
@@ -949,7 +984,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       return `I can rank placements against your skills and tell you which one fits best, name the single skill that would unlock the most roles for you, check your eligibility for a specific placement, list the documents you still need, or show the next deadlines. Ask about a role or say "what should I learn" and I will use your actual profile.`;
     },
-    [placements, pid, getPlacement, isEligible, student, getOrg, docs]
+    [placements, pid, getPlacement, isEligible, student, getOrg, docs, role]
   );
 
   const sendChat = useCallback(
@@ -965,30 +1000,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { id: typingMsgId, who: "INTERN", text: "···", isTyping: true },
       ]);
 
-      const finalize = (reply: string) =>
+      const finalize = (response: AdvisorResponse) =>
         setChatMessages((prev) =>
           prev
             .filter((m) => m.id !== typingMsgId)
             .concat({
               id: Date.now().toString(),
               who: "INTERN",
-              text: reply,
+              text: response.reply,
+              actions: response.actions,
             })
         );
+
+      // Prepare history for the advisor (last 6 non-typing messages)
+      const history = chatMessages
+        .filter((m) => !m.isTyping)
+        .slice(-6)
+        .map((m) => ({ id: m.id, who: m.who, text: m.text }));
 
       // Prefer the Groq advisor (grounded by the server-side matcher). If the
       // API is off/unreachable or Groq isn't configured (503), fall back to the
       // built-in deterministic assistant so the chat always answers.
       if (isApiEnabled) {
-        askAdvisor(trimmed, student.skills, student.course, student.cgpa)
+        askAdvisor(trimmed, student.skills, student.course, student.cgpa, role, history)
           .then(finalize)
-          .catch(() => finalize(answerChat(trimmed)));
+          .catch(() => finalize({ reply: answerChat(trimmed), actions: [] }));
         return;
       }
 
-      setTimeout(() => finalize(answerChat(trimmed)), 650);
+      setTimeout(() => finalize({ reply: answerChat(trimmed), actions: [] }), 650);
     },
-    [answerChat, student]
+    [answerChat, student, role, chatMessages]
   );
 
   const askChat = useCallback(

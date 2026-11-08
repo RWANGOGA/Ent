@@ -62,6 +62,9 @@ class Job:
     summary: str = ""
     requirements: list[str] = field(default_factory=list)
     status: str = "Open"
+    review_status: str = "approved"
+    published_at: str = ""
+    review_reason: str = ""
     org: Optional[Organisation] = None
 
 

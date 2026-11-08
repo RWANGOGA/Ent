@@ -64,12 +64,35 @@ class JobRead(BaseModel):
     summary: str
     requirements: list[str]
     status: str
+    review_status: str
+    published_at: str
+    review_reason: str
     org: Optional[OrganisationRead] = None
 
 
 class JobListResponse(BaseModel):
     total: int
     items: list[JobRead]
+
+
+class JobPostingCreate(BaseModel):
+    title: str
+    loc: str = ""
+    mode: str = "On-site"
+    employment_type: str = "Full time"
+    salary: str = ""
+    closes_at: str
+    summary: str = ""
+    requirements: list[str] = []
+
+
+class JobPostingListResponse(JobListResponse):
+    pass
+
+
+class JobReviewRequest(BaseModel):
+    decision: str
+    reason: str = ""
 
 
 class SkillRead(BaseModel):
@@ -268,6 +291,58 @@ class StudentDocumentRead(BaseModel):
 
 class StudentDocumentsResponse(BaseModel):
     items: list[StudentDocumentRead]
+
+
+class StudentDocumentVerifyRequest(BaseModel):
+    status: str  # "verified" or "rejected"
+    rejection_reason: str = ""
+
+
+class StudentDocumentVerifyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    document_type: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    status: str
+    rejection_reason: str
+    uploaded_at: str
+
+
+# ---------------- Admin dashboard --------------------------------------------
+
+
+class AdminQueueItemRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    n: str
+    i: str
+    c: str
+    y: str
+    p: str
+    d: str
+    st: str
+
+
+class AdminQueueListResponse(BaseModel):
+    total: int
+    items: list[AdminQueueItemRead]
+
+
+class AdminDashboardMetrics(BaseModel):
+    open_placements: int
+    pending_documents: int
+    students_placed: int
+    placement_record_complete: int  # percentage
+
+
+class AdminActivityItem(BaseModel):
+    who: str
+    action: str
+    time: str
 
 
 class SubscriptionRead(BaseModel):

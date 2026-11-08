@@ -1,4 +1,6 @@
 """Application services — thin use-case orchestrators over the ports."""
+from __future__ import annotations
+
 from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import uuid4
@@ -276,6 +278,41 @@ class StudentDocumentService:
 
     def list(self, user_id: str) -> list[StudentDocument]:
         return self._repo.list_for_user(user_id)
+
+    def get_by_id(self, document_id: str) -> StudentDocument | None:
+        return self._repo.get_by_id(document_id)
+
+    def list_all(self, status: str | None = None) -> list[StudentDocument]:
+        return self._repo.list_all(status=status)
+
+    def verify_document(
+        self,
+        *,
+        document_id: str,
+        status: str,
+        rejection_reason: str = "",
+    ) -> StudentDocument | None:
+        """Admin action: verify or reject a student document."""
+        if status not in ("verified", "rejected"):
+            raise ValueError("Status must be 'verified' or 'rejected'")
+        if status == "rejected" and not rejection_reason.strip():
+            raise ValueError("Rejection reason is required")
+        document = self._repo.get_by_id(document_id)
+        if document is None:
+            return None
+        document = StudentDocument(
+            id=document.id,
+            user_id=document.user_id,
+            document_type=document.document_type,
+            filename=document.filename,
+            content_type=document.content_type,
+            size_bytes=document.size_bytes,
+            content=document.content,
+            status=status,
+            rejection_reason=rejection_reason.strip() if status == "rejected" else "",
+            uploaded_at=document.uploaded_at,
+        )
+        return self._repo.save(document)
 
     def save(
         self,

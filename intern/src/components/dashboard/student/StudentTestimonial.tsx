@@ -5,19 +5,38 @@ import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 
 export function StudentTestimonial() {
-  const { toast } = useApp();
+  const { toast, uploadDocumentFile, docs } = useApp();
   const [supervisor, setSupervisor] = useState("");
   const [role, setRole] = useState("");
   const [project, setProject] = useState("");
   const [testimonial, setTestimonial] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const testimonialDoc = docs.find((d) => d.name === "testimonial");
+  const isUploaded = testimonialDoc && testimonialDoc.status !== "missing";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast("Testimonial submitted for verification");
-    setSupervisor("");
-    setRole("");
-    setProject("");
-    setTestimonial("");
+    if (!supervisor.trim() || !role.trim() || !project.trim() || !testimonial.trim()) {
+      toast("Please fill in all fields");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      // Create a text file with the testimonial content
+      const content = `Testimonial for ${project}\n\nSupervisor: ${supervisor}\nRole: ${role}\n\n${testimonial}`;
+      const file = new File([content], "testimonial.txt", { type: "text/plain" });
+      await uploadDocumentFile("testimonial", file);
+      toast("Testimonial submitted for verification");
+      setSupervisor("");
+      setRole("");
+      setProject("");
+      setTestimonial("");
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Failed to submit testimonial");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -77,8 +96,8 @@ export function StudentTestimonial() {
                 ></textarea>
               </div>
               <div>
-                <button className="btn btn-sm btn-blue" type="submit">
-                  Submit for verification
+                <button className="btn btn-sm btn-blue" type="submit" disabled={submitting}>
+                  {submitting ? "Submitting…" : "Submit for verification"}
                 </button>
               </div>
             </form>
@@ -90,14 +109,29 @@ export function StudentTestimonial() {
           </div>
           <div className="pb">
             <div className="check">
-              <div className="ci todo">
-                <span className="box"></span>
-                <div className="t">
-                  <b>Not submitted</b>
-                  <span>Needed for Ministry of ICT</span>
+              {isUploaded ? (
+                <div className="ci done">
+                  <span className="box">
+                    <Icon name="check" size={9} />
+                  </span>
+                  <div className="t">
+                    <b>Testimonial submitted</b>
+                    <span>{testimonialDoc?.status === "verified" ? "Verified" : "Pending review"}</span>
+                  </div>
+                  <span className="st">
+                    {testimonialDoc?.status === "verified" ? "Met" : "Pending"}
+                  </span>
                 </div>
-                <span className="st">Action</span>
-              </div>
+              ) : (
+                <div className="ci todo">
+                  <span className="box"></span>
+                  <div className="t">
+                    <b>Not submitted</b>
+                    <span>Needed for Ministry of ICT</span>
+                  </div>
+                  <span className="st">Action</span>
+                </div>
+              )}
               <div className="ci done">
                 <span className="box">
                   <Icon name="check" size={9} />

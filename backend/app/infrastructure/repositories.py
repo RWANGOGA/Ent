@@ -159,13 +159,16 @@ class SqlAlchemyJobRepository(JobRepository):
             summary=row.summary or "",
             requirements=list(row.requirements or []),
             status=row.status or "Open",
+            review_status=row.review_status or "approved",
+            published_at=row.published_at or "",
+            review_reason=row.review_reason or "",
             org=organisation,
         )
 
     def _query(self):
         return self._session.query(JobORM, OrganisationORM).outerjoin(
             OrganisationORM, JobORM.org_id == OrganisationORM.id
-        ).filter(JobORM.status == "Open")
+        ).filter(JobORM.status == "Open", JobORM.review_status == "approved")
 
     def list(self, *, q=None, location=None, mode=None) -> list[Job]:
         query = self._query()
@@ -424,6 +427,17 @@ class SqlAlchemyStudentDocumentRepository(StudentDocumentRepository):
             .order_by(StudentDocumentORM.document_type)
             .all()
         )
+        return [self._to_domain(row) for row in rows]
+
+    def get_by_id(self, document_id: str) -> Optional[StudentDocument]:
+        row = self._session.query(StudentDocumentORM).filter_by(id=document_id).first()
+        return self._to_domain(row) if row is not None else None
+
+    def list_all(self, status: Optional[str] = None) -> list[StudentDocument]:
+        query = self._session.query(StudentDocumentORM)
+        if status:
+            query = query.filter(StudentDocumentORM.status == status)
+        rows = query.order_by(StudentDocumentORM.uploaded_at.desc()).all()
         return [self._to_domain(row) for row in rows]
 
     def save(self, document: StudentDocument) -> StudentDocument:

@@ -11,6 +11,7 @@ import { AdminOverview } from "./admin/AdminOverview";
 import { AdminPlacements } from "./admin/AdminPlacements";
 import { AdminRequirements } from "./admin/AdminRequirements";
 import { AdminStudents } from "./admin/AdminStudents";
+import { AdminDocuments } from "./admin/AdminDocuments";
 
 import { StudentOverview } from "./student/StudentOverview";
 import { StudentApplications } from "./student/StudentApplications";
@@ -86,6 +87,8 @@ export function DashboardShell() {
           return <AdminRequirements />;
         case "students":
           return <AdminStudents />;
+        case "documents":
+          return <AdminDocuments />;
         default:
           return <AdminOverview />;
       }

@@ -7,12 +7,15 @@ from sqlalchemy.orm import Session
 
 from app.domain.entities import User
 from app.infrastructure.db import get_session
-from app.infrastructure.orm import OrganisationORM, PlacementORM
+from app.infrastructure.orm import OrganisationORM, PlacementORM, JobORM
 from app.presentation.deps import get_current_user
 from app.presentation.schemas import (
     InternshipPostingCreate,
     InternshipPostingListResponse,
     InternshipPostingRead,
+    JobPostingCreate,
+    JobPostingListResponse,
+    JobRead,
 )
 from app.infrastructure.repositories import SqlAlchemyPlacementRepository
 
@@ -110,3 +113,54 @@ def create_organization_internship(
     if placement is None:
         raise HTTPException(status_code=500, detail="Internship could not be loaded after creation")
     return InternshipPostingRead.model_validate(placement)
+
+
+@router.get("/jobs", response_model=JobPostingListResponse)
+def list_organization_jobs(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> JobPostingListResponse:
+    org_id = _require_employer(current_user)
+    rows = session.query(JobORM).filter(JobORM.org_id == org_id).order_by(JobORM.id.desc()).all()
+    return JobPostingListResponse(
+        total=len(rows),
+        items=[JobRead.model_validate(row, from_attributes=True) for row in rows],
+    )
+
+
+@router.post("/jobs", response_model=JobRead, status_code=201)
+def create_organization_job(
+    payload: JobPostingCreate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> JobRead:
+    org_id = _require_employer(current_user)
+    if session.get(OrganisationORM, org_id) is None:
+        raise HTTPException(status_code=409, detail="Organisation record was not found")
+    try:
+        closing_date = date.fromisoformat(payload.closes_at)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="closes_at must use YYYY-MM-DD") from exc
+    if closing_date < date.today():
+        raise HTTPException(status_code=422, detail="Closing date must be in the future")
+    if not payload.title.strip():
+        raise HTTPException(status_code=422, detail="Job title is required")
+    row = JobORM(
+        id=f"j-{uuid4().hex[:12]}",
+        title=payload.title.strip(),
+        org_id=org_id,
+        loc=payload.loc.strip(),
+        mode=payload.mode.strip(),
+        employment_type=payload.employment_type.strip(),
+        salary=payload.salary.strip(),
+        closes_at=payload.closes_at,
+        summary=payload.summary.strip(),
+        requirements=list(dict.fromkeys(value.strip() for value in payload.requirements if value.strip())),
+        status="Open",
+        review_status="pending_review",
+        published_at=date.today().isoformat(),
+    )
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return JobRead.model_validate(row, from_attributes=True)

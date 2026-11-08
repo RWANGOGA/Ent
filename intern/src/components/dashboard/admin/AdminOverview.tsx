@@ -1,19 +1,64 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
+import { ApiError, fetchAdminMetrics, fetchAdminQueue, fetchAdminActivity, isApiEnabled } from "../../../lib/api";
+import { AdminQueueItem, ActivityItem } from "../../../types";
 
 export function AdminOverview() {
-  const { adminQueue, activity, dashGo, newPlacement, reviewStudent } =
-    useApp();
+  const { dashGo, newPlacement, reviewStudent, session } = useApp();
+  const [metrics, setMetrics] = useState<{
+    open_placements: number;
+    pending_documents: number;
+    students_placed: number;
+    placement_record_complete: number;
+  } | null>(null);
+  const [queue, setQueue] = useState<AdminQueueItem[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isApiEnabled || session?.role !== "admin") {
+      setStatus("ready");
+      return;
+    }
+    loadData();
+  }, [session]);
+
+  async function loadData() {
+    setStatus("loading");
+    try {
+      const [metricsRes, queueRes, activityRes] = await Promise.all([
+        fetchAdminMetrics(),
+        fetchAdminQueue(),
+        fetchAdminActivity(),
+      ]);
+      setMetrics(metricsRes);
+      setQueue(queueRes.items);
+      setActivity(activityRes);
+      setStatus("ready");
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError
+          ? cause.message
+          : "Unable to load admin dashboard"
+      );
+      setStatus("error");
+    }
+  }
+
+  const adminQueue = queue.slice(0, 5);
 
   return (
     <>
       <div className="dpane-h">
         <div>
           <h2>Placement office</h2>
-          <p>Makerere University · term 2, 2026 · 42 open placements</p>
+          <p>
+            Makerere University · term 2, 2026 · {metrics?.open_placements ?? 42} open placements
+          </p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
@@ -36,21 +81,21 @@ export function AdminOverview() {
       <div className="kpis">
         <div className="kpi">
           <span className="delta">+6</span>
-          <b>42</b>
+          <b>{metrics?.open_placements ?? 42}</b>
           <span className="lbl">open placements</span>
         </div>
         <div className="kpi alert">
-          <span className="delta">7 due</span>
-          <b>23</b>
+          <span className="delta">{metrics?.pending_documents ?? 23} due</span>
+          <b>{metrics?.pending_documents ?? 23}</b>
           <span className="lbl">documents to verify</span>
         </div>
         <div className="kpi">
           <span className="delta">+18</span>
-          <b>186</b>
+          <b>{metrics?.students_placed ?? 186}</b>
           <span className="lbl">students placed</span>
         </div>
         <div className="kpi">
-          <b>94%</b>
+          <b>{metrics?.placement_record_complete ?? 94}%</b>
           <span className="lbl">placement record complete</span>
         </div>
       </div>
@@ -79,40 +124,46 @@ export function AdminOverview() {
                 </tr>
               </thead>
               <tbody>
-                {adminQueue.map((s) => (
-                  <tr key={s.n}>
-                    <td className="who">
-                      <b>{s.n}</b>
-                      <span>
-                        {s.c} · {s.y}
-                      </span>
-                    </td>
-                    <td>{s.p}</td>
-                    <td className="num">{s.d}</td>
-                    <td>
-                      <span
-                        className={`tg ${
-                          s.st === "Ready"
-                            ? "green"
-                            : s.st === "Review"
-                            ? "gold"
-                            : "red"
-                        }`}
-                      >
-                        {s.st}
-                      </span>
-                    </td>
-                    <td className="act">
-                      <button
-                        type="button"
-                        className="btn btn-sm"
-                        onClick={() => reviewStudent(s.n)}
-                      >
-                        Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {status === "loading" ? (
+                  <tr><td colSpan={5}>Loading queue...</td></tr>
+                ) : adminQueue.length === 0 ? (
+                  <tr><td colSpan={5}>No students in the review queue.</td></tr>
+                ) : (
+                  adminQueue.map((s) => (
+                    <tr key={s.n}>
+                      <td className="who">
+                        <b>{s.n}</b>
+                        <span>
+                          {s.c} · {s.y}
+                        </span>
+                      </td>
+                      <td>{s.p}</td>
+                      <td className="num">{s.d}</td>
+                      <td>
+                        <span
+                          className={`tg ${
+                            s.st === "Ready"
+                              ? "green"
+                              : s.st === "Review"
+                              ? "gold"
+                              : "red"
+                          }`}
+                        >
+                          {s.st}
+                        </span>
+                      </td>
+                      <td className="act">
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => reviewStudent(s.n)}
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -169,34 +220,40 @@ export function AdminOverview() {
               <span className="lbl">Recent activity</span>
             </div>
             <div className="pb" style={{ display: "grid", gap: "9px" }}>
-              {activity.map(([w, a, t], idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr auto",
-                    gap: "8px",
-                    fontSize: "11.5px",
-                    borderBottom: "1px solid var(--rule)",
-                    paddingBottom: "8px",
-                  }}
-                >
-                  <div>
-                    <b style={{ fontWeight: 600 }}>{w}</b>{" "}
-                    <span style={{ color: "var(--muted)" }}>{a}</span>
-                  </div>
-                  <span
+              {status === "loading" ? (
+                <div>Loading activity...</div>
+              ) : activity.length === 0 ? (
+                <div className="muted">No recent activity.</div>
+              ) : (
+                activity.map(([w, a, t], idx) => (
+                  <div
+                    key={idx}
                     style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: "9px",
-                      color: "var(--faint)",
-                      whiteSpace: "nowrap",
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      gap: "8px",
+                      fontSize: "11.5px",
+                      borderBottom: "1px solid var(--rule)",
+                      paddingBottom: "8px",
                     }}
                   >
-                    {t}
-                  </span>
-                </div>
-              ))}
+                    <div>
+                      <b style={{ fontWeight: 600 }}>{w}</b>{" "}
+                      <span style={{ color: "var(--muted)" }}>{a}</span>
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: "var(--mono)",
+                        fontSize: "9px",
+                        color: "var(--faint)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {t}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

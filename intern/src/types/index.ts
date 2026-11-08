@@ -36,6 +36,7 @@ export interface Placement {
   startsAt: string;
   requirements: string[];
   reviewReason: string;
+  org?: Org;
 }
 
 export interface Job {
@@ -51,6 +52,9 @@ export interface Job {
   summary: string;
   requirements: string[];
   status: string;
+  reviewStatus?: string;
+  publishedAt?: string;
+  reviewReason?: string;
 }
 
 export interface GradRole {
@@ -79,6 +83,18 @@ export interface DocItem {
   status: "verified" | "pending" | "missing" | string;
   file: string;
   size: string;
+}
+
+export interface StudentDocument {
+  id: string;
+  user_id: string;
+  document_type: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  status: string;
+  rejection_reason: string;
+  uploaded_at: string;
 }
 
 export interface AdminQueueItem {
@@ -131,6 +147,24 @@ export interface Subscription {
   since: string; // ISO date the paid plan started, "" for free
 }
 
+
+export interface MatchDto {
+  score: number;
+  matched: string[];
+  missing: string[];
+  courseFit: boolean;
+  gradeFit: boolean;
+}
+
+export interface RankedPlacement {
+  placement: Placement;
+  match: MatchDto;
+}
+
+export interface MatchResponse {
+  total: number;
+  items: RankedPlacement[];
+}
 
 export type DashboardView =
   | "overview"

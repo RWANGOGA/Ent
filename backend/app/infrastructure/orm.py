@@ -66,6 +66,9 @@ class JobORM(Base):
     summary: Mapped[str] = mapped_column(Text, default="")
     requirements: Mapped[list] = mapped_column(JSON, default=list)
     status: Mapped[str] = mapped_column(String, default="Open")
+    review_status: Mapped[str] = mapped_column(String, default="approved")
+    published_at: Mapped[str] = mapped_column(String, default="")
+    review_reason: Mapped[str] = mapped_column(Text, default="")
 
 
 class SavedORM(Base):

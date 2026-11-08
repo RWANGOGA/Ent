@@ -208,6 +208,9 @@ interface ApiJob {
   summary: string;
   requirements: string[];
   status: string;
+  review_status: string;
+  published_at: string;
+  review_reason: string;
   org: ApiOrg | null;
 }
 
@@ -225,12 +228,36 @@ function mapJob(job: ApiJob): Job {
     summary: job.summary,
     requirements: job.requirements,
     status: job.status,
+    reviewStatus: job.review_status,
+    publishedAt: job.published_at,
+    reviewReason: job.review_reason,
   };
 }
 
 export async function fetchJobs(): Promise<Job[]> {
   const data = await getJson<ApiListResponse<ApiJob>>("/jobs");
   return data.items.map(mapJob);
+}
+
+export interface JobPostingInput {
+  title: string;
+  loc: string;
+  mode: string;
+  employment_type: string;
+  salary: string;
+  closes_at: string;
+  summary: string;
+  requirements: string[];
+}
+
+export async function fetchOrganizationJobs(): Promise<Job[]> {
+  const data = await getJson<ApiListResponse<ApiJob>>("/organization/jobs");
+  return data.items.map(mapJob);
+}
+
+export async function createOrganizationJob(input: JobPostingInput): Promise<Job> {
+  const data = await postJson<ApiJob>("/organization/jobs", input);
+  return mapJob(data);
 }
 
 export interface InternshipPostingInput {
@@ -588,6 +615,76 @@ export async function askAdvisor(
     cgpa,
   });
   return data.reply;
+}
+
+// ---- Admin document verification ------------------------------------------
+
+export interface StudentDocumentRead {
+  id: string;
+  user_id: string;
+  document_type: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  status: string;
+  rejection_reason: string;
+  uploaded_at: string;
+}
+
+export async function fetchAllStudentDocuments(
+  status?: string
+): Promise<StudentDocumentRead[]> {
+  const params = status ? `?status=${status}` : "";
+  return getJson<StudentDocumentRead[]>(`/admin/documents${params}`);
+}
+
+export async function verifyStudentDocument(
+  documentId: string,
+  status: "verified" | "rejected",
+  rejectionReason = ""
+): Promise<StudentDocumentRead> {
+  return patchJson<StudentDocumentRead>(`/admin/documents/${documentId}/verify`, {
+    status,
+    rejection_reason: rejectionReason,
+  });
+}
+
+// ---- Admin dashboard ------------------------------------------------------
+
+export interface AdminDashboardMetrics {
+  open_placements: number;
+  pending_documents: number;
+  students_placed: number;
+  placement_record_complete: number;
+}
+
+export interface AdminQueueItemRead {
+  n: string;
+  i: string;
+  c: string;
+  y: string;
+  p: string;
+  d: string;
+  st: string;
+}
+
+export interface AdminQueueListResponse {
+  total: number;
+  items: AdminQueueItemRead[];
+}
+
+export type AdminActivityItem = [string, string, string];
+
+export async function fetchAdminMetrics(): Promise<AdminDashboardMetrics> {
+  return getJson<AdminDashboardMetrics>("/admin/metrics");
+}
+
+export async function fetchAdminQueue(): Promise<AdminQueueListResponse> {
+  return getJson<AdminQueueListResponse>("/admin/queue");
+}
+
+export async function fetchAdminActivity(): Promise<AdminActivityItem[]> {
+  return getJson<AdminActivityItem[]>("/admin/activity");
 }
 
 // ---- Auth (real accounts + tokens) ----------------------------------------

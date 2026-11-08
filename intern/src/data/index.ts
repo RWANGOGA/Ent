@@ -474,6 +474,7 @@ export const NAV: Record<UserRole, [string, string, string][]> = {
     ["placements", "Placements", "02"],
     ["requirements", "Requirements", "03"],
     ["students", "Students", "04"],
+    ["documents", "Documents", "05"],
   ],
 };
 

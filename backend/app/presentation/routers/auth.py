@@ -4,7 +4,7 @@ Register and login return a signed Bearer token plus the safe user view; the
 password/hash never cross the boundary. ``/auth/me`` proves the token works and
 is the anchor the frontend uses to restore a session on load.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.application.auth import AuthService
 from app.core.errors import EmailAlreadyExists, InvalidCredentials
@@ -48,11 +48,17 @@ def register(
 
 @router.post("/login", response_model=AuthResponse)
 def login(
-    payload: LoginRequest, service: AuthService = Depends(get_auth_service)
+    payload: LoginRequest = Body(...), service: AuthService = Depends(get_auth_service)
 ) -> AuthResponse:
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Login attempt: username={payload.username}")
     try:
-        user = service.login(email=payload.email, password=payload.password)
+        user = service.login(email=payload.username, password=payload.password)
+        logger.debug(f"Login success: {user.email}")
     except InvalidCredentials:
+        logger.debug("Invalid credentials")
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return _auth_response(user)
 

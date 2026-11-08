@@ -49,6 +49,7 @@ class PlacementORM(Base):
     closes_at: Mapped[str] = mapped_column(String, default="")
     starts_at: Mapped[str] = mapped_column(String, default="")
     requirements: Mapped[list] = mapped_column(JSON, default=list)
+    review_reason: Mapped[str] = mapped_column(Text, default="")
 
 
 class SavedORM(Base):

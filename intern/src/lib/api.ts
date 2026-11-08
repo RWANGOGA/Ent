@@ -90,6 +90,7 @@ interface ApiPlacement {
   closes_at: string;
   starts_at: string;
   requirements: string[];
+  review_reason: string;
   org: ApiOrg | null;
 }
 
@@ -136,6 +137,7 @@ function mapPlacement(p: ApiPlacement): Placement {
     closesAt: p.closes_at,
     startsAt: p.starts_at,
     requirements: p.requirements,
+    reviewReason: p.review_reason,
   };
 }
 
@@ -164,6 +166,20 @@ async function getJson<T>(path: string): Promise<T> {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...authHeader(),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) await readError(res, path);
+  return (await res.json()) as T;
+}
+
+async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -210,6 +226,25 @@ export async function createOrganizationInternship(
   input: InternshipPostingInput
 ): Promise<Placement> {
   const data = await postJson<ApiPlacement>("/organization/internships", input);
+  return mapPlacement(data);
+}
+
+export async function fetchInternshipReviewQueue(): Promise<Placement[]> {
+  const data = await getJson<ApiListResponse<ApiPlacement>>(
+    "/admin/internships/review"
+  );
+  return data.items.map(mapPlacement);
+}
+
+export async function reviewInternship(
+  internshipId: string,
+  decision: "approved" | "rejected",
+  reason = ""
+): Promise<Placement> {
+  const data = await patchJson<ApiPlacement>(
+    `/admin/internships/${internshipId}/review`,
+    { decision, reason }
+  );
   return mapPlacement(data);
 }
 

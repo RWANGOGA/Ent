@@ -35,6 +35,7 @@ export interface Placement {
   closesAt: string;
   startsAt: string;
   requirements: string[];
+  reviewReason: string;
 }
 
 export interface GradRole {

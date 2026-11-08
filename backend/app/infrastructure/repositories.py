@@ -84,6 +84,7 @@ class SqlAlchemyPlacementRepository(PlacementRepository):
             closes_at=row.closes_at or "",
             starts_at=row.starts_at or "",
             requirements=list(row.requirements or []),
+            review_reason=row.review_reason or "",
             org=organisation,
         )
 

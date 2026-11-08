@@ -27,6 +27,7 @@ from app.infrastructure.seed import seed_if_empty
 from app.presentation.routers import (
     advisor,
     auth,
+    admin,
     matching,
     placements,
     organization,
@@ -60,6 +61,7 @@ def create_sub_app() -> FastAPI:
         return JSONResponse(status_code=401, content={"detail": str(exc)})
 
     sub.include_router(auth.router)
+    sub.include_router(admin.router)
     sub.include_router(placements.router)
     sub.include_router(organization.router)
     sub.include_router(matching.router)

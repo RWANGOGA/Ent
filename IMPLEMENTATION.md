@@ -505,3 +505,157 @@ Its acceptance criteria are:
 - Portal navigation is ready for live backend data.
 - Tests/build pass.
 - Each feature is committed and pushed before the next feature begins.
+
+## 13. Current system documentation
+
+This section documents the implemented system as it exists today. It is
+updated alongside each feature so the implementation contract remains useful
+for development, testing, onboarding, and deployment.
+
+### Frontend architecture
+
+The frontend is a Next.js 14 and React 18 TypeScript application in
+`intern/`. It uses one App Router page with hash-based navigation so the
+public website, portal catalogue, sign-in flow, and role dashboards can be
+served as a static GitHub Pages export.
+
+- `src/app/` contains the root layout, metadata, global styles, and page entry.
+- `src/components/public/` contains the public home, about, employers,
+  universities, portal, catalogue, detail, sign-in, plans, and legal views.
+- `src/components/dashboard/` contains the shared dashboard shell and
+  student, employer, admin, and job-seeker views.
+- `src/context/AppContext.tsx` owns routing, session state, portal state,
+  catalogue state, dashboard state, application actions, document actions,
+  saved items, subscriptions, and existing modal/toast behavior.
+- `src/lib/api.ts` is the typed browser-to-backend boundary. It translates
+  backend snake_case DTOs to frontend camelCase models and attaches the
+  authenticated bearer token.
+- `src/types/` contains frontend domain types.
+- `src/data/` contains presentation defaults and legacy demo-only dashboard
+  data that is still being migrated; it is not the source of truth for live
+  catalogue, student profile, application, resume, or document data.
+- `public/img/` contains local static imagery. Public image references are
+  relative so they work under the GitHub Pages project path.
+
+The visual system is defined in `src/app/globals.css` and remains the source
+of truth: BrighterMonday-inspired red `#BC2132`, near-black bands, white and
+zinc surfaces, existing status colors, Plus Jakarta Sans headings, Inter body
+text, current cards/tables/buttons, and existing responsive behavior.
+
+### Backend architecture
+
+The backend is a FastAPI application in `backend/`, mounted under `/api` in
+production and exposed at the root in the test harness.
+
+- `app/presentation/main.py` is the composition root and mounts the feature
+  sub-application.
+- `app/presentation/sub.py` registers feature routers and maps authentication
+  failures to HTTP 401 responses.
+- `app/presentation/routers/` contains thin HTTP handlers for authentication,
+  placements, matching, advisor, authenticated user state, organization
+  posting, and administrator review.
+- `app/application/` contains use-case services and ports.
+- `app/domain/` contains persistence-independent entities and matching rules.
+- `app/infrastructure/orm.py` contains SQLAlchemy models.
+- `app/infrastructure/repositories.py` maps ORM records to domain entities and
+  implements repository ports.
+- `app/infrastructure/db.py` creates the Neon/Postgres or SQLite engine,
+  creates missing tables, and applies additive compatibility columns.
+- `app/infrastructure/seed.py` contains development/test seed records only.
+- `backend/tests/` contains unit tests and HTTP integration tests using an
+  isolated SQLite database.
+
+The backend derives the acting user and organization from the bearer token.
+Employer internship writes require an employer account linked to an
+organization. Administrator review requires the `admin` role. Browser code
+never connects directly to Neon.
+
+### Implemented live workflows
+
+- Authentication: register, login, current-user lookup, role-aware dashboard
+  selection, and sign-out.
+- Internship catalogue: live organization and internship reads, search/filter
+  metadata, detail views, and backend matching.
+- Student profile: persisted course, year, CGPA, university, and skills.
+- Student documents: live resume and student document uploads, replacement,
+  metadata, size/type validation, and student ownership.
+- Student applications: live application history, idempotent application
+  submission, status tracking, and eligible withdrawal.
+- Organization internship posting: organization-scoped posting creation with
+  eligible courses, requirements, required documents, publication date,
+  closing date, start date, duration, location, slots, stipend, duties, and
+  `pending_review` status.
+- Administrator internship review: protected review queue, approve/reject
+  decisions, required rejection reasons, and public-catalogue visibility only
+  after approval.
+- GitHub Pages export: relative public asset paths and static frontend build.
+
+### APIs currently used by the frontend
+
+Authentication:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+
+Public internship and matching:
+
+- `GET /api/placements`
+- `GET /api/placements/{placement_id}`
+- `GET /api/placements/meta`
+- `POST /api/match`
+- `POST /api/skills/extract`
+- `POST /api/advisor`
+
+Authenticated student state:
+
+- `GET/POST /api/saved`
+- `POST /api/saved/toggle`
+- `GET/POST /api/applications`
+- `POST /api/applications/{application_id}/withdraw`
+- `GET/PUT /api/profile`
+- `GET/PUT /api/resume`
+- `GET /api/resume/download`
+- `GET /api/documents`
+- `PUT /api/documents/{document_type}`
+- `GET/POST /api/subscription`
+
+Organization internship posting:
+
+- `GET /api/organization/internships`
+- `POST /api/organization/internships`
+
+Administrator internship review:
+
+- `GET /api/admin/internships/review`
+- `PATCH /api/admin/internships/{internship_id}/review`
+
+### Completion status
+
+Complete and pushed:
+
+- Implementation contract and portal foundation
+- Live internship catalogue
+- Live student dashboard overview and matching
+- Persistent student profile and skills
+- BrighterWorks rebrand
+- Resume upload
+- Application tracking and withdrawal
+- Live student documents
+- Organization internship submission
+- Administrator internship approval/rejection workflow
+
+In progress:
+
+- Replacing remaining legacy seeded dashboard metrics and queues
+- Administrator overview metrics, user/organization management, audit activity,
+  reports, and document verification actions
+- University, NGO, government, and company-specific organization dashboards
+- Jobs domain, jobs catalogue, candidate workflows, and employer jobs portal
+- Notifications, alerts, learning, and career assistance persistence
+- Production hardening: restricted CORS, formal migrations, observability,
+  deployment verification, and accessibility/mobile review
+
+The next implementation slice begins only after the current feature has
+passed backend tests, frontend build/type checking, staged-diff review, commit,
+and push.

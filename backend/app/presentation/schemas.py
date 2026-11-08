@@ -41,6 +41,7 @@ class PlacementRead(BaseModel):
     closes_at: str
     starts_at: str
     requirements: list[str]
+    review_reason: str
     org: Optional[OrganisationRead] = None
 
 
@@ -183,6 +184,16 @@ class InternshipPostingRead(PlacementRead):
 
 
 class InternshipPostingListResponse(BaseModel):
+    total: int
+    items: list[InternshipPostingRead]
+
+
+class InternshipReviewRequest(BaseModel):
+    decision: str
+    reason: str = ""
+
+
+class InternshipReviewListResponse(BaseModel):
     total: int
     items: list[InternshipPostingRead]
 

@@ -46,6 +46,6 @@ def get_placement(
     service: PlacementService = Depends(get_placement_service),
 ) -> PlacementRead:
     placement = service.get_placement(placement_id)
-    if placement is None:
+    if placement is None or placement.review_status != "approved":
         raise HTTPException(status_code=404, detail="Placement not found")
     return PlacementRead.model_validate(placement)

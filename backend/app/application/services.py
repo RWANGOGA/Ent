@@ -141,7 +141,7 @@ class ApplicationService:
         placement = self._placements.get(placement_id)
         if placement is None:
             raise PlacementNotFound(placement_id)
-        if placement.status == "Closed":
+        if placement.status == "Closed" or placement.review_status != "approved":
             raise PlacementNotOpen(placement_id)
 
         existing = self._apps.find(user_id, placement_id)

@@ -43,6 +43,7 @@ class Placement:
     closes_at: str = ""
     starts_at: str = ""
     requirements: list[str] = field(default_factory=list)
+    review_reason: str = ""
     org: Optional[Organisation] = None
 
 

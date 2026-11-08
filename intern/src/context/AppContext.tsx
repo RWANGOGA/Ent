@@ -1540,6 +1540,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           closesAt: val("npDeadline") || "",
           startsAt: "",
           requirements: [],
+          reviewReason: "",
         };
 
         setPlacements((prev) => [placement, ...prev]);

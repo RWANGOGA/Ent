@@ -66,6 +66,7 @@ def ensure_schema() -> None:
             "closes_at": "VARCHAR DEFAULT ''",
             "starts_at": "VARCHAR DEFAULT ''",
             "requirements": "JSON",
+            "review_reason": "TEXT DEFAULT ''",
         }
         statements.extend(
             f"ALTER TABLE placements ADD COLUMN {name} {definition}"

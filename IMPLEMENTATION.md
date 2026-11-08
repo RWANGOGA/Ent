@@ -357,25 +357,25 @@ Each feature is complete only when its backend, frontend, tests, documentation, 
 - Remove the frontend catalogue fallback.
 - Commit and push. Completed in `01a36e5`.
 
-### Feature 3: Live internship candidate workflows — in progress
+### Feature 3: Live internship candidate workflows — complete
 
 - Persist saved internships. Complete in `cd8c8fe`/`01a36e5`.
 - Persist internship applications. Complete in `cd8c8fe`/`01a36e5`.
 - Load application history from the backend. Complete in `c730087`.
 - Track applications and withdraw eligible submissions. Complete in the current student dashboard workflow.
 - Connect eligibility and matching to live backend metadata. Complete for the dashboard overview in `c730087`.
-- Remove related local-only state. Remaining dashboard views are still being migrated.
+- Remove related local-only state. All dashboard views migrated to live API data.
 - Commit and push.
 
-### Feature 4: Internship student profile and documents — partially complete
+### Feature 4: Internship student profile and documents — complete
 
 - Add persistent student/recent-graduate profile records. Complete in `4d28284`.
 - Add skills persistence. Complete in `4d28284`.
 - Add resume upload metadata and content storage. Complete in the current student dashboard workflow.
 - Add live document upload metadata/content and student-owned status records. Complete in the current student dashboard workflow.
-- Add administrator verification actions and rejection reasons.
-- Persist application pack data.
-- Connect dashboard views to live records.
+- Add administrator verification actions and rejection reasons. Complete — `GET /admin/documents`, `PATCH /admin/documents/{id}/verify` with `AdminDocuments` dashboard.
+- Persist application pack data. Complete.
+- Connect dashboard views to live records. Complete — all student dashboards use live API.
 - Commit and push.
 
 ### Feature 5: Internship institution and host dashboards
@@ -401,6 +401,21 @@ Progress update:
   - `review_status` (`pending_review` on submission)
 - Public internship catalogue visibility now excludes records pending review.
 - Employer dashboard now submits internships for admin review using live backend data.
+- **Admin document verification workflow complete:**
+  - `GET /admin/documents` — list all student documents with status filter
+  - `PATCH /admin/documents/{id}/verify` — verify/reject with reasons
+  - `AdminDocuments` dashboard component for review queue
+- **All dashboard hardcoded data removed** — replaced with live API calls:
+  - `AdminOverview` — `/admin/metrics`, `/admin/queue`, `/admin/activity`
+  - `AdminStudents` — `/admin/queue`
+  - `EmployerOverview` — `/organization/internships`, `/placements/{id}/applicants`
+  - `EmployerApplicants` — live placement selector + `/placements/{id}/applicants`
+  - `JobSeekerOverview` & `JobSeekerApps` — `/applications`
+  - `StudentPlacements` — `/match` API for server-side ranked recommendations
+  - `SkillProfile` — `/match` API for live recommendations
+  - `StudentTestimonial` — submits via document upload API
+- **Admin user provisioned** — `akandwanahojonanrwangoga@gmail.com` / `Yesu1@Lord` in seed data
+- **Login page polished** — removed hardcoded demo accounts, added professional guidance text
 
 ### Feature 6: Jobs domain and database
 
@@ -489,11 +504,11 @@ Before a feature is marked complete:
 
 ## 12. Current implementation status
 
-The first implementation target, **Portal Foundation**, is complete. The current
-delivery target is the student dashboard workflow: live documents/resume,
-application tracking, and application withdrawal.
+The **Portal Foundation**, **Live Internship Catalogue**, **Live Internship Candidate Workflows**, and **Internship Student Profile & Documents** are complete.
 
-Its acceptance criteria are:
+The current delivery target is **Feature 5: Internship Institution and Host Dashboards** — building university, NGO, government, and employer-specific dashboards with role/organization authorization.
+
+Acceptance criteria for completed features:
 
 - The global header shows Internship and Jobs as the two main opportunity portals.
 - Job-specific links are removed from the global header.
@@ -502,7 +517,9 @@ Its acceptance criteria are:
 - Existing public pages still work.
 - Existing authentication still works.
 - Existing dashboard styles and colors remain unchanged.
-- Portal navigation is ready for live backend data.
+- All dashboard data comes from live backend APIs (no hardcoded metrics/queues).
+- Admin document verification workflow is live.
+- Login page is polished with professional guidance (no demo credentials exposed).
 - Tests/build pass.
 - Each feature is committed and pushed before the next feature begins.
 
@@ -644,17 +661,18 @@ Complete and pushed:
 - Live student documents
 - Organization internship submission
 - Administrator internship approval/rejection workflow
+- **Admin document verification workflow** (`/admin/documents`, `AdminDocuments` dashboard)
+- **All dashboard hardcoded data replaced with live API** (admin, employer, jobseeker, student)
+- **Admin user provisioned** in seed data
+- **Login page polished** — no hardcoded demo credentials
 
 In progress:
 
-- Replacing remaining legacy seeded dashboard metrics and queues
-- Administrator overview metrics, user/organization management, audit activity,
-  reports, and document verification actions
+- Administrator overview metrics, user/organization management, audit activity, reports
 - University, NGO, government, and company-specific organization dashboards
 - Jobs domain, jobs catalogue, candidate workflows, and employer jobs portal
 - Notifications, alerts, learning, and career assistance persistence
-- Production hardening: restricted CORS, formal migrations, observability,
-  deployment verification, and accessibility/mobile review
+- Production hardening: restricted CORS, formal migrations, observability, deployment verification, accessibility/mobile review
 
 ### Authentication entry-point contract
 

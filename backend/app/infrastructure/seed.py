@@ -86,6 +86,27 @@ def seed_if_empty(session: Session) -> None:
             ]
         )
         session.commit()
+    else:
+        # Ensure admin user exists with correct role (handles pre-existing student accounts)
+        admin_email = "akandwanahojonanrwangoga@gmail.com"
+        admin_user = session.query(UserORM).filter_by(email=admin_email).first()
+        if admin_user and admin_user.role != "admin":
+            admin_user.role = "admin"
+            admin_user.password_hash = hash_password(ADMIN_PASSWORD)
+            session.commit()
+        elif not admin_user:
+            today = date.today().isoformat()
+            session.add(
+                UserORM(
+                    id=uuid4().hex,
+                    email=admin_email,
+                    name="Admin User",
+                    role="admin",
+                    password_hash=hash_password(ADMIN_PASSWORD),
+                    created_at=today,
+                )
+            )
+            session.commit()
 
     # Backfill the employer→org link on accounts that predate the org_id column
     # (the real Neon database was seeded before R1d, so its employer row still

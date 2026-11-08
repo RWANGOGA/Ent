@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../../../context/AppContext";
 import { Icon } from "../../icons/Icons";
 import {
   extractSkills,
-  matchPlacement,
   requiredSkillsFor,
   skillList,
   skillNames,
 } from "../../../lib/skills";
+import {
+  fetchRecommendedInternships,
+  isApiEnabled,
+  MatchResponse,
+} from "../../../lib/api";
 
 function scoreColor(score: number): string {
   if (score >= 70) return "var(--green)";
@@ -20,9 +24,6 @@ function scoreColor(score: number): string {
 export function SkillProfile() {
   const {
     student,
-    placements,
-    getOrg,
-    meta,
     addSkill,
     removeSkill,
     setSkills,
@@ -33,6 +34,8 @@ export function SkillProfile() {
   const [text, setText] = useState("");
   const [suggested, setSuggested] = useState<string[]>([]);
   const [picked, setPicked] = useState("");
+  const [matches, setMatches] = useState<MatchResponse["items"]>([]);
+  const [loading, setLoading] = useState(false);
 
   const owned = student.skills;
 
@@ -61,17 +64,22 @@ export function SkillProfile() {
     setPicked("");
   };
 
-  // Ranked matches recompute live as the profile changes — this is the whole
-  // point of the score, so it never reads from a stale snapshot.
-  const ranked = useMemo(() => {
-    return placements
-      .map((p) => ({
-        p,
-        match: matchPlacement(p, owned, student.course, student.cgpa),
-      }))
-      .sort((a, b) => b.match.score - a.match.score)
-      .slice(0, 6);
-  }, [placements, owned, student.course, student.cgpa, meta]);
+  useEffect(() => {
+    if (!isApiEnabled || !owned.length) {
+      setMatches([]);
+      return;
+    }
+    setLoading(true);
+    fetchRecommendedInternships(owned, student.course, student.cgpa, 6)
+      .then((res) => {
+        setMatches(res.items);
+        setLoading(false);
+      })
+      .catch(() => {
+        setMatches([]);
+        setLoading(false);
+      });
+  }, [owned, student.course, student.cgpa]);
 
   return (
     <>
@@ -80,7 +88,7 @@ export function SkillProfile() {
           <h2>Skills profile</h2>
           <p>
             {owned.length} skill{owned.length === 1 ? "" : "s"} on record ·
-            ranked against {placements.length} live placements
+            ranked against {matches.length} live placements
           </p>
         </div>
       </div>
@@ -235,88 +243,98 @@ export function SkillProfile() {
             <span className="lbl">Best matches for you</span>
           </div>
           <div className="pb" style={{ display: "grid", gap: "12px" }}>
-            {ranked.map(({ p, match }) => {
-              const org = getOrg(p.orgId);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => openPlacement(p.id)}
-                  style={{
-                    textAlign: "left",
-                    border: "1px solid var(--rule)",
-                    borderRadius: "var(--r-md)",
-                    padding: "12px 13px",
-                    background: "var(--white)",
-                    cursor: "pointer",
-                    display: "block",
-                    width: "100%",
-                  }}
-                >
-                  <div
+            {loading ? (
+              <div>Loading recommendations...</div>
+            ) : matches.length === 0 ? (
+              <div style={{ color: "var(--muted)" }}>
+                {owned.length === 0
+                  ? "Add skills to your profile to see personalised recommendations."
+                  : "No matching placements found. Try updating your skills or course."}
+              </div>
+            ) : (
+              matches.map(({ placement: p, match }) => {
+                const org = p.org;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => openPlacement(p.id)}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                      gap: "10px",
+                      textAlign: "left",
+                      border: "1px solid var(--rule)",
+                      borderRadius: "var(--r-md)",
+                      padding: "12px 13px",
+                      background: "var(--white)",
+                      cursor: "pointer",
+                      display: "block",
+                      width: "100%",
                     }}
                   >
-                    <b style={{ fontSize: "13px" }}>{p.title}</b>
-                    <span
-                      className="mono"
-                      style={{ color: scoreColor(match.score), fontSize: "13px", fontWeight: 600 }}
-                    >
-                      {match.score}%
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                    {org?.name} · {p.loc}
-                  </div>
-
-                  <div
-                    style={{
-                      height: "6px",
-                      background: "var(--paper-2)",
-                      borderRadius: "var(--r-pill)",
-                      margin: "9px 0",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <i
+                    <div
                       style={{
-                        display: "block",
-                        height: "100%",
-                        width: `${match.score}%`,
-                        background: scoreColor(match.score),
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                        gap: "10px",
                       }}
-                    />
-                  </div>
-
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-                    {match.matched.map((s) => (
-                      <span key={s} className="tg green" style={{ fontSize: "8.5px" }}>
-                        ✓ {s}
+                    >
+                      <b style={{ fontSize: "13px" }}>{p.title}</b>
+                      <span
+                        className="mono"
+                        style={{ color: scoreColor(match.score), fontSize: "13px", fontWeight: 600 }}
+                      >
+                        {match.score}%
                       </span>
-                    ))}
-                    {match.missing.slice(0, 2).map((s) => (
-                      <span key={s} className="tg" style={{ fontSize: "8.5px" }}>
-                        {s}
-                      </span>
-                    ))}
-                    {requiredSkillsFor(p).length === 0 && (
-                      <span className="tg" style={{ fontSize: "8.5px" }}>
-                        no skill list
-                      </span>
-                    )}
-                  </div>
-                  {!match.courseFit && (
-                    <div style={{ fontSize: "10.5px", color: "var(--red)", marginTop: "7px" }}>
-                      Your course ({student.course}) is not on their eligible list.
                     </div>
-                  )}
-                </button>
-              );
-            })}
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                      {org?.name} · {p.loc}
+                    </div>
+
+                    <div
+                      style={{
+                        height: "6px",
+                        background: "var(--paper-2)",
+                        borderRadius: "var(--r-pill)",
+                        margin: "9px 0",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <i
+                        style={{
+                          display: "block",
+                          height: "100%",
+                          width: `${match.score}%`,
+                          background: scoreColor(match.score),
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                      {match.matched.map((s) => (
+                        <span key={s} className="tg green" style={{ fontSize: "8.5px" }}>
+                          ✓ {s}
+                        </span>
+                      ))}
+                      {match.missing.slice(0, 2).map((s) => (
+                        <span key={s} className="tg" style={{ fontSize: "8.5px" }}>
+                          {s}
+                        </span>
+                      ))}
+                      {requiredSkillsFor(p).length === 0 && (
+                        <span className="tg" style={{ fontSize: "8.5px" }}>
+                          no skill list
+                        </span>
+                      )}
+                    </div>
+                    {!match.courseFit && (
+                      <div style={{ fontSize: "10.5px", color: "var(--red)", marginTop: "7px" }}>
+                        Your course ({student.course}) is not on their eligible list.
+                      </div>
+                    )}
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

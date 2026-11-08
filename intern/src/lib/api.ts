@@ -550,18 +550,47 @@ export async function withdrawApplicationApi(
   );
 }
 
+export interface RankedPlacement {
+  placement: Placement;
+  match: {
+    score: number;
+    matched: string[];
+    missing: string[];
+    courseFit: boolean;
+    gradeFit: boolean;
+  };
+}
+
+export interface MatchResponse {
+  total: number;
+  items: RankedPlacement[];
+}
+
 export async function fetchRecommendedInternships(
   skills: string[],
   course: string,
   cgpa: number,
   limit = 6
-): Promise<MatchDto> {
-  return postJson<MatchDto>("/match", {
+): Promise<MatchResponse> {
+  const data = await postJson<MatchDto>("/match", {
     skills,
     course,
     cgpa,
     limit,
   });
+  return {
+    total: data.total,
+    items: data.items.map((item) => ({
+      placement: mapPlacement(item.placement),
+      match: {
+        score: item.match.score,
+        matched: item.match.matched,
+        missing: item.match.missing,
+        courseFit: item.match.course_fit,
+        gradeFit: item.match.grade_fit,
+      },
+    })),
+  };
 }
 
 // ---- Subscription (host-org placement-fee plan) ---------------------------
@@ -685,6 +714,22 @@ export async function fetchAdminQueue(): Promise<AdminQueueListResponse> {
 
 export async function fetchAdminActivity(): Promise<AdminActivityItem[]> {
   return getJson<AdminActivityItem[]>("/admin/activity");
+}
+
+// ---- Employer dashboard ---------------------------------------------------
+
+export async function fetchOrganizationApplicants(
+  placementId: string
+): Promise<ApplicationDto[]> {
+  const data = await getJson<ApiListResponse<ApplicationDto>>(
+    `/placements/${placementId}/applicants`
+  );
+  return data.items;
+}
+
+export async function fetchJobApplications(): Promise<ApplicationDto[]> {
+  const data = await getJson<ApiListResponse<ApplicationDto>>("/applications");
+  return data.items;
 }
 
 // ---- Auth (real accounts + tokens) ----------------------------------------

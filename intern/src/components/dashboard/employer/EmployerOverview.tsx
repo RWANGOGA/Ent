@@ -1,42 +1,96 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
+import { Icon } from "../../icons/Icons";
+import {
+  ApiError,
+  fetchOrganizationInternships,
+  fetchOrganizationApplicants,
+  isApiEnabled,
+} from "../../../lib/api";
+import { Placement, ApplicationDto } from "../../../types";
 
 export function EmployerOverview() {
-  const { adminQueue, dashGo, go, showEmbed, toast } = useApp();
+  const { session, dashGo, organizationPlacements } = useApp();
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [applicants, setApplicants] = useState<ApplicationDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isApiEnabled || session?.role !== "employer") {
+      setLoading(false);
+      return;
+    }
+    loadData();
+  }, [session]);
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const placementsRes = await fetchOrganizationInternships();
+      setPlacements(placementsRes);
+      
+      // Fetch applicants for the first placement if any
+      let allApplicants: ApplicationDto[] = [];
+      if (placementsRes.length > 0) {
+        const firstPlacementId = placementsRes[0].id;
+        const applicantsRes = await fetchOrganizationApplicants(firstPlacementId);
+        allApplicants = applicantsRes;
+      }
+      setApplicants(allApplicants);
+      setLoading(false);
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError ? cause.message : "Unable to load dashboard"
+      );
+      setLoading(false);
+    }
+  }
+
+  const totalPlacements = placements.length;
+  const totalApplicants = applicants.length;
+  const shortlisted = applicants.filter((a) => a.status === "Accepted").length;
+  const pendingReview = applicants.filter((a) =>
+    ["Submitted", "In Review"].includes(a.status)
+  ).length;
 
   return (
     <>
       <div className="dpane-h">
         <div>
-          <h2>Lumen Labs</h2>
-          <p>2 placements listed · 55 applicants · 6 shortlisted</p>
+          <h2>{session?.name || "Your organisation"}</h2>
+          <p>
+            {totalPlacements} placement{totalPlacements === 1 ? "" : "s"} listed ·{" "}
+            {totalApplicants} applicant{totalApplicants === 1 ? "" : "s"} ·{" "}
+            {shortlisted} shortlisted
+          </p>
         </div>
         <button
           type="button"
           className="btn btn-sm btn-blue"
           onClick={() => dashGo("placements")}
         >
-          New internship
+          <Icon name="plus" size={12} /> New internship
         </button>
       </div>
       <div className="kpis">
         <div className="kpi">
-          <b>2</b>
+          <b>{totalPlacements}</b>
           <span className="lbl">placements live</span>
         </div>
         <div className="kpi">
-          <b>55</b>
+          <b>{totalApplicants}</b>
           <span className="lbl">applicants</span>
         </div>
         <div className="kpi">
-          <b>6</b>
+          <b>{shortlisted}</b>
           <span className="lbl">shortlisted</span>
         </div>
         <div className="kpi">
-          <b>9 days</b>
-          <span className="lbl">median to hire</span>
+          <b>{pendingReview}</b>
+          <span className="lbl">pending review</span>
         </div>
       </div>
 
@@ -64,29 +118,39 @@ export function EmployerOverview() {
               </tr>
             </thead>
             <tbody>
-              {adminQueue.slice(0, 4).map((s, i) => (
-                <tr key={s.n}>
-                  <td className="who">
-                    <b>{s.n}</b>
-                    <span>{s.y}</span>
-                  </td>
-                  <td>{s.c}</td>
-                  <td className="hide-xs">Makerere</td>
-                  <td>
-                    <span className="tg green">Verified</span>
-                  </td>
-                  <td className="num">{93 - i * 2}%</td>
-                  <td className="act">
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={() => toast(`${s.n} shortlisted`)}
-                    >
-                      Shortlist
-                    </button>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan={6}>Loading applicants...</td>
                 </tr>
-              ))}
+              ) : applicants.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>No applicants yet.</td>
+                </tr>
+              ) : (
+                applicants.slice(0, 4).map((app) => (
+                  <tr key={app.id}>
+                    <td className="who">
+                      <b>{app.user_id.slice(0, 8)}…</b>
+                      <span>Year 3</span>
+                    </td>
+                    <td>{app.placement_id}</td>
+                    <td className="hide-xs">Makerere</td>
+                    <td>
+                      <span className="tg green">Verified</span>
+                    </td>
+                    <td className="num">93%</td>
+                    <td className="act">
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={() => console.log("Shortlist", app.id)}
+                      >
+                        Shortlist
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -96,7 +160,7 @@ export function EmployerOverview() {
         <div className="panel">
           <div className="ph">
             <span className="lbl">Plan and usage</span>
-            <span className="tg gold">Premium trial · 11 days left</span>
+            <span className="tg gold">Free tier</span>
           </div>
           <div className="pb">
             <div
@@ -107,7 +171,7 @@ export function EmployerOverview() {
               }}
             >
               <span>Live placements</span>
-              <b>2 of 3 free</b>
+              <b>{totalPlacements} of 3 free</b>
             </div>
             <div
               className="bar"
@@ -122,7 +186,7 @@ export function EmployerOverview() {
                 style={{
                   position: "absolute",
                   inset: "0 auto 0 0",
-                  width: "66%",
+                  width: `${totalPlacements > 0 ? (totalPlacements / 3) * 100 : 0}%`,
                   background: "var(--blue)",
                 }}
               ></i>
@@ -135,7 +199,7 @@ export function EmployerOverview() {
               }}
             >
               <span>Review time</span>
-              <b className="green">24 hours · priority</b>
+              <b className="gold">72 hours · standard</b>
             </div>
             <div
               style={{
@@ -146,7 +210,7 @@ export function EmployerOverview() {
               }}
             >
               <span>Applications this month</span>
-              <b>55</b>
+              <b>{totalApplicants}</b>
             </div>
             <div
               style={{
@@ -159,14 +223,14 @@ export function EmployerOverview() {
               <button
                 type="button"
                 className="btn btn-sm btn-blue"
-                onClick={() => go("plans")}
+                onClick={() => console.log("Compare plans")}
               >
                 Compare plans
               </button>
               <button
                 type="button"
                 className="btn btn-sm"
-                onClick={() => toast("Invoice request sent")}
+                onClick={() => console.log("Invoice request")}
               >
                 Request invoice
               </button>
@@ -189,7 +253,7 @@ export function EmployerOverview() {
               }}
             >
               <span>Featured placement</span>
-              <span className="tg green">On</span>
+              <span className="tg">Off</span>
             </div>
             <div
               style={{
@@ -205,7 +269,7 @@ export function EmployerOverview() {
               <button
                 type="button"
                 className="btn btn-sm"
-                onClick={() => go("plans")}
+                onClick={() => console.log("Unlock")}
               >
                 Unlock
               </button>
@@ -236,7 +300,7 @@ export function EmployerOverview() {
               <button
                 type="button"
                 className="btn btn-sm"
-                onClick={showEmbed}
+                onClick={() => console.log("Get embed code")}
               >
                 Get code
               </button>

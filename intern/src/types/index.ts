@@ -166,6 +166,15 @@ export interface MatchResponse {
   items: RankedPlacement[];
 }
 
+export interface ApplicationDto {
+  id: string;
+  user_id: string;
+  placement_id: string;
+  status: string;
+  statement: string;
+  created_at: string;
+}
+
 export type DashboardView =
   | "overview"
   | "skills"

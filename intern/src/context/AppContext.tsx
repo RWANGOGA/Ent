@@ -25,8 +25,6 @@ import {
   Portal,
 } from "../types";
 import {
-  INITIAL_ADMIN_QUEUE,
-  ACTIVITY,
   INITIAL_PACK,
 } from "../data";
 import { matchPlacement, setSkillTables } from "../lib/skills";
@@ -35,6 +33,9 @@ import {
   applyApi,
   askAdvisor,
   cancelSubscriptionApi,
+  fetchAdminActivity,
+  fetchAdminMetrics,
+  fetchAdminQueue,
   fetchCatalog,
   fetchCatalogMeta,
   fetchApplications,
@@ -44,6 +45,9 @@ import {
   fetchApplicationPack,
   updateApplicationPack,
   fetchRecommendedInternships,
+  fetchOrganizationInternships,
+  fetchOrganizationApplicants,
+  MatchResponse,
   fetchMe,
   fetchSaved,
   fetchSubscription,
@@ -104,7 +108,7 @@ interface AppContextType {
   catalogStatus: "loading" | "ready" | "error";
   applications: ApplicationDto[];
   resume: ResumeDto | null;
-  recommendations: MatchDto | null;
+  recommendations: MatchResponse | null;
   dashboardDataStatus: "idle" | "loading" | "ready" | "error";
   pid: string | null;
   typeFilter: string;
@@ -128,6 +132,7 @@ interface AppContextType {
   adminQueue: AdminQueueItem[];
   activity: ActivityItem[];
   pack: ApplicationPack;
+  organizationPlacements: Placement[];
 
   // UI state
   isMenuOpen: boolean;
@@ -252,7 +257,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   >(isApiEnabled ? "loading" : "error");
   const [applications, setApplications] = useState<ApplicationDto[]>([]);
   const [resume, setResume] = useState<ResumeDto | null>(null);
-  const [recommendations, setRecommendations] = useState<MatchDto | null>(null);
+  const [recommendations, setRecommendations] = useState<MatchResponse | null>(null);
   const [dashboardDataStatus, setDashboardDataStatus] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
@@ -270,9 +275,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     skills: [],
   });
   const [docs, setDocs] = useState<DocItem[]>([]);
-  const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>(INITIAL_ADMIN_QUEUE);
-  const [activity, setActivity] = useState<ActivityItem[]>(ACTIVITY);
+  const [adminQueue, setAdminQueue] = useState<AdminQueueItem[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [pack, setPack] = useState<ApplicationPack>(INITIAL_PACK);
+  const [organizationPlacements, setOrganizationPlacements] = useState<Placement[]>([]);
 
   // Billing. Free host organisations publish up to FREE_ALLOWANCE placements,
   // then a placement fee unlocks unlimited posting. Persisted so refreshing
@@ -1345,6 +1351,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [session, role]);
 
+  // Admin dashboard data: load queue and activity when admin is signed in
+  useEffect(() => {
+    if (!isApiEnabled || !session || role !== "admin") {
+      setAdminQueue([]);
+      setActivity([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([fetchAdminQueue(), fetchAdminActivity()])
+      .then(([queueRes, activityRes]) => {
+        if (cancelled) return;
+        setAdminQueue(queueRes.items);
+        setActivity(activityRes);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAdminQueue([]);
+          setActivity([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, role]);
+
+  // Employer dashboard data: load organization placements when employer is signed in
+  useEffect(() => {
+    if (!isApiEnabled || !session || role !== "employer") {
+      setOrganizationPlacements([]);
+      return;
+    }
+    let cancelled = false;
+    fetchOrganizationInternships()
+      .then((items) => {
+        if (cancelled) return;
+        setOrganizationPlacements(items);
+      })
+      .catch(() => {
+        if (!cancelled) setOrganizationPlacements([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, role]);
+
   useEffect(() => {
     if (
       !isApiEnabled ||
@@ -1866,6 +1917,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         adminQueue,
         activity,
         pack,
+        organizationPlacements,
 
         isMenuOpen,
         isSideDrawerOpen,

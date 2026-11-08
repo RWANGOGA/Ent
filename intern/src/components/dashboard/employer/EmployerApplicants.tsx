@@ -1,54 +1,101 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
+import {
+  ApiError,
+  fetchOrganizationInternships,
+  fetchOrganizationApplicants,
+  isApiEnabled,
+} from "../../../lib/api";
+import { Placement, ApplicationDto } from "../../../types";
 
 export function EmployerApplicants() {
-  const { adminQueue, go, toast } = useApp();
+  const { session, dashGo } = useApp();
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [applicants, setApplicants] = useState<Record<string, ApplicationDto[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedPlacementId, setSelectedPlacementId] = useState<string>("");
+
+  useEffect(() => {
+    if (!isApiEnabled || session?.role !== "employer") {
+      setLoading(false);
+      return;
+    }
+    loadPlacements();
+  }, [session]);
+
+  async function loadPlacements() {
+    setLoading(true);
+    try {
+      const items = await fetchOrganizationInternships();
+      setPlacements(items);
+      if (items.length > 0) {
+        setSelectedPlacementId(items[0].id);
+        loadApplicants(items[0].id);
+      }
+      setLoading(false);
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : "Unable to load placements");
+      setLoading(false);
+    }
+  }
+
+  async function loadApplicants(placementId: string) {
+    try {
+      const apps = await fetchOrganizationApplicants(placementId);
+      setApplicants((prev) => ({ ...prev, [placementId]: apps }));
+    } catch (cause) {
+      console.error("Failed to load applicants:", cause);
+    }
+  }
+
+  const totalApplicants = Object.values(applicants).flat().length;
+  const shortlisted = Object.values(applicants)
+    .flat()
+    .filter((a) => a.status === "Accepted").length;
 
   return (
     <>
       <div className="dpane-h">
         <div>
           <h2>Applicants</h2>
-          <p>55 candidates · only those meeting your stated requirements</p>
+          <p>
+            {totalApplicants} candidate{totalApplicants === 1 ? "" : "s"} ·{" "}
+            {shortlisted} shortlisted
+          </p>
         </div>
         <button
           type="button"
           className="btn btn-sm"
-          onClick={() => toast("Shortlist exported")}
+          onClick={() => console.log("Export")}
         >
           Export
         </button>
       </div>
 
-      <div
-        className="panel"
-        style={{ marginBottom: "14px", borderColor: "var(--ink)" }}
-      >
-        <div
-          className="pb"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "14px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <span className="lbl">Premium · talent search</span>
-            <div style={{ fontSize: "12.5px", marginTop: "4px" }}>
-              Search 41,208 verified students by course, grade, skill and availability — before a placement exists.
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-blue"
-            onClick={() => go("plans")}
+      <div className="panel" style={{ marginBottom: "14px" }}>
+        <div className="ph">
+          <span className="lbl">Select placement</span>
+        </div>
+        <div className="pb">
+          <select
+            value={selectedPlacementId}
+            onChange={(e) => {
+              const id = e.target.value;
+              setSelectedPlacementId(id);
+              if (id && !applicants[id]) loadApplicants(id);
+            }}
+            className="field"
+            style={{ maxWidth: "400px" }}
           >
-            Unlock search
-          </button>
+            {placements.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} ({p.applicants} applicants)
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -66,29 +113,43 @@ export function EmployerApplicants() {
               </tr>
             </thead>
             <tbody>
-              {adminQueue.map((s, i) => (
-                <tr key={s.n}>
-                  <td className="who">
-                    <b>{s.n}</b>
-                    <span>{s.y} · Makerere</span>
-                  </td>
-                  <td>{s.c}</td>
-                  <td className="num">{(3.2 + i * 0.12).toFixed(1)}</td>
-                  <td className="hide-xs">
-                    <span className="tg green">3 of 3 verified</span>
-                  </td>
-                  <td className="num">{93 - i * 2}%</td>
-                  <td className="act">
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={() => toast(`${s.n} invited to interview`)}
-                    >
-                      Invite
-                    </button>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan={6}>Loading...</td>
                 </tr>
-              ))}
+              ) : placements.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>No placements posted yet.</td>
+                </tr>
+              ) : applicants[selectedPlacementId]?.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>No applicants for this placement.</td>
+                </tr>
+              ) : (
+                applicants[selectedPlacementId]?.map((app, i) => (
+                  <tr key={app.id}>
+                    <td className="who">
+                      <b>{app.user_id.slice(0, 8)}…</b>
+                      <span>Year 3</span>
+                    </td>
+                    <td>{app.placement_id}</td>
+                    <td className="num">3.7</td>
+                    <td className="hide-xs">
+                      <span className="tg green">3 of 3 verified</span>
+                    </td>
+                    <td className="num">93%</td>
+                    <td className="act">
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={() => console.log("Invite", app.id)}
+                      >
+                        Invite
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

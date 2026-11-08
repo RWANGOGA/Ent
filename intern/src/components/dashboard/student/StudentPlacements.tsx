@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useApp } from "../../../context/AppContext";
-import { fetchRecommendedInternships, isApiEnabled, MatchDto } from "../../../lib/api";
-import { Placement, RankedPlacement } from "../../../types";
+import { fetchRecommendedInternships, isApiEnabled, MatchResponse } from "../../../lib/api";
+import { Placement } from "../../../types";
 
 function scoreTone(score: number): { color: string; label: string } {
   if (score >= 70) return { color: "var(--green)", label: "Strong" };
@@ -13,7 +13,7 @@ function scoreTone(score: number): { color: string; label: string } {
 
 export function StudentPlacements() {
   const { student, applyTo, openPlacement, go, toast } = useApp();
-  const [ranked, setRanked] = useState<Array<{ placement: Placement; match: RankedPlacement["match"] }>>([]);
+  const [ranked, setRanked] = useState<MatchResponse["items"]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
 
@@ -29,59 +29,13 @@ export function StudentPlacements() {
   async function loadRecommendations() {
     setStatus("loading");
     try {
-      const matches: MatchDto = await fetchRecommendedInternships(
+      const matches: MatchResponse = await fetchRecommendedInternships(
         student.skills,
         student.course,
         student.cgpa,
         50 // limit
       );
-      // Transform to the format we need
-      const transformed = matches.items.map(({ placement, match }) => ({
-        placement: {
-          id: placement.id,
-          title: placement.title,
-          orgId: placement.org_id,
-          courses: placement.courses,
-          grade: placement.grade,
-          loc: placement.loc,
-          mode: placement.mode,
-          duration: placement.duration,
-          stipend: placement.stipend,
-          deadline: placement.deadline,
-          slots: placement.slots,
-          status: placement.status,
-          applicants: placement.applicants,
-          docs: placement.docs,
-          testimonial: placement.testimonial,
-          about: placement.about,
-          duties: placement.duties,
-          reviewStatus: placement.review_status,
-          publishedAt: placement.published_at,
-          closesAt: placement.closes_at,
-          startsAt: placement.starts_at,
-          requirements: placement.requirements,
-          reviewReason: placement.review_reason,
-          org: placement.org
-            ? {
-                id: placement.org.id,
-                name: placement.org.name,
-                type: placement.org.type,
-                sector: placement.org.sector,
-                loc: placement.org.loc,
-                seal: placement.org.seal,
-                about: placement.org.about,
-              }
-            : undefined,
-        },
-        match: {
-          score: match.score,
-          matched: match.matched,
-          missing: match.missing,
-          courseFit: match.course_fit,
-          gradeFit: match.grade_fit,
-        },
-      }));
-      setRanked(transformed);
+      setRanked(matches.items);
       setStatus("ready");
     } catch (cause) {
       setError(

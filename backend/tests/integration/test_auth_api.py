@@ -42,6 +42,11 @@ def test_register_rejects_unknown_role(client):
     assert res.status_code == 422
 
 
+def test_register_cannot_create_an_admin_account(client):
+    res = _register(client, role="admin")
+    assert res.status_code == 422
+
+
 def test_login_seeded_demo_account(client):
     res = client.post("/auth/login", json={"email": DEMO_EMAIL, "password": DEMO_PASSWORD})
     assert res.status_code == 200

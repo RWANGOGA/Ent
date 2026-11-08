@@ -139,7 +139,6 @@ export function SignInView() {
                   <option value="student">Student</option>
                   <option value="jobseeker">Job seeker</option>
                   <option value="employer">Employer</option>
-                  <option value="admin">University admin</option>
                 </select>
               </div>
             )}

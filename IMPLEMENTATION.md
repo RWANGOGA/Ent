@@ -656,6 +656,69 @@ In progress:
 - Production hardening: restricted CORS, formal migrations, observability,
   deployment verification, and accessibility/mobile review
 
+### Authentication entry-point contract
+
+All protected work begins at the sign-in/sign-up screen:
+
+1. The frontend calls `POST /api/auth/login` or `POST /api/auth/register`.
+2. The backend returns a signed bearer token and safe account record.
+3. The frontend stores the token, calls `/api/auth/me` on reload, and derives
+   the dashboard role from the authenticated account.
+4. Successful authentication routes to the matching dashboard overview.
+5. Unauthenticated dashboard deep links return to sign-in.
+6. A dashboard URL cannot switch an authenticated user into another role's
+   workspace; the frontend redirects to the account's own role dashboard and
+   backend authorization remains authoritative.
+7. Admin accounts are provisioned by the platform and cannot be created through
+   public sign-up.
+
+The backend container is defined by `backend/Dockerfile` and
+`backend/docker-compose.yml`. It runs the FastAPI service on port `8000`,
+includes a health check, runs as a non-root user, and supports either local
+Postgres through Compose or Neon through `DATABASE_URL`. Secrets belong in a
+local/deployment `.env`, never in the image or repository.
+
+Container deployment:
+
+```bash
+cd backend
+cp .env.example .env
+# Set DATABASE_URL to Neon and SECRET_KEY to a long production secret.
+docker build -t brighterworks-api .
+docker run --env-file .env -p 8000:8000 brighterworks-api
+```
+
+For local Postgres development:
+
+```bash
+cd backend
+docker compose up --build
+```
+
+The frontend remains a separate static deployment. Set
+`NEXT_PUBLIC_API_BASE_URL` to the reachable backend URL before building the
+frontend; GitHub Pages cannot host the authenticated FastAPI API.
+
+### Jobs Portal status
+
+The Jobs Portal is **not complete**. The current implementation contains the
+portal entry point, role-aware job-seeker dashboard shell, and presentation
+demo screens only. It does not yet have live Jobs entities, database tables,
+organization job posting, job approval, live search, saved jobs, applications,
+alerts, CV/cover-letter persistence, interviews, or shortlist workflows.
+
+The correct Jobs delivery order is:
+
+1. Add separate Job domain entities, ORM tables, migrations, repositories, and
+   organization/admin authorization.
+2. Add organization job drafts, requirements, publication dates, closing dates,
+   and admin approval using the same lifecycle proven for internships.
+3. Add live Jobs catalogue and job detail pages.
+4. Add job-seeker profile, saved jobs, applications, and status tracking.
+5. Add employer applicants, shortlist, interviews, and company profile.
+6. Remove the remaining job dashboard demo data and verify the full
+   sign-in-to-dashboard flow.
+
 The next implementation slice begins only after the current feature has
 passed backend tests, frontend build/type checking, staged-diff review, commit,
 and push.

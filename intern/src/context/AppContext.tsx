@@ -581,6 +581,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isApiEnabled, authReady, session, route]);
 
+  useEffect(() => {
+    if (
+      !isApiEnabled ||
+      !authReady ||
+      !session ||
+      route !== "dashboard" ||
+      typeof window === "undefined"
+    ) {
+      return;
+    }
+    const requestedRole = window.location.hash.split("-")[1];
+    const accountRole = mapApiRole(session.role);
+    if (requestedRole && requestedRole !== accountRole) {
+      setRole(accountRole);
+      setDash("overview");
+      window.location.hash = `#dashboard-${accountRole}-overview`;
+    }
+  }, [authReady, route, session]);
+
   const go = useCallback(
     (newRoute: string) => {
       closeMenu();

@@ -22,7 +22,7 @@ class AuthService:
     ) -> User:
         email = email.strip().lower()
         role = role.strip()
-        if role not in USER_ROLES:
+        if role not in USER_ROLES or role == "admin":
             raise ValueError(f"Unknown role: {role!r}")
         if not email or "@" not in email:
             raise ValueError("A valid email is required")

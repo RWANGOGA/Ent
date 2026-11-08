@@ -12,15 +12,15 @@ from app.application.services import MatchingService
 from app.domain.matching import RankedPlacement
 
 _SYSTEM = (
-    "You are a concise career advisor for a skills-to-opportunity internship "
-    "platform. Base every answer only on the listed opportunities."
+    "You are a concise career advisor for a skills-to-opportunity platform. "
+    "Base every answer only on the listed opportunities. Never invent placements."
 )
 
 _ROLE_CONTEXT = {
-    "student": "You are helping a university student find and apply for internships.",
-    "jobseeker": "You are helping a job seeker find and apply for graduate roles.",
-    "employer": "You are helping an employer manage their internship and job postings.",
-    "admin": "You are helping a platform administrator oversee the system.",
+    "student": "Help a university student find and apply for internships.",
+    "jobseeker": "Help a job seeker find and apply for graduate roles.",
+    "employer": "Help an employer manage internship and job postings.",
+    "admin": "Help a platform administrator oversee the system.",
 }
 
 
@@ -51,18 +51,16 @@ def compose_prompt(
         lines.append(f"- {m.score}% | {p.title} @ {employer} | has: {has} | add: {add}")
     lines.append("")
     if history:
-        lines.append("Conversation history:")
-        for msg in history[-6:]:  # Last 6 messages
+        lines.append("Recent conversation:")
+        for msg in history[-4:]:  # Last 4 messages
             who = "Student" if msg.get("who") == "me" else "Advisor"
-            lines.append(f"  {who}: {msg.get('text', '')[:200]}")
+            lines.append(f"  {who}: {msg.get('text', '')[:150]}")
         lines.append("")
-    lines.append(f"Student question: {question}")
+    lines.append(f"Question: {question}")
     lines.append(
-        "Reply in at most 4 short sentences: name the single best role to target "
-        "now and the top 1-2 skills that would most improve the match. Do not "
-        "invent opportunities that are not listed. If the user asks to take an "
-        "action (apply, check eligibility, view placement), suggest it naturally "
-        "in your response."
+        "Reply in 2-3 short sentences. Name the single best role to target now "
+        "and the top 1-2 skills to add. If user wants to act (apply, check eligibility), "
+        "mention it naturally. Do not repeat the same info if already said."
     )
     return "\n".join(lines)
 

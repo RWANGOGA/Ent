@@ -808,23 +808,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const impact = skillImpact();
         if (!impact.length) {
           const top = ranked[0];
-          return `Your profile already covers every required skill for your best fit${
-            top ? ` (<b>${top.p.title}</b> at ${top.m.score}% match)` : ""
-          }. To widen your options, add adjacent skills on your Skills profile — pick a placement you cannot reach yet and learn the skills its row lists as missing.`;
+          return `You already cover all required skills for your best fit${top ? ` (${top.p.title}, ${top.m.score}% match)` : ""}. To widen options, add adjacent skills on your Skills profile — pick a placement you can't reach yet and learn its missing skills.`;
         }
         const lead = impact.slice(0, 2);
-        return `Based on your record (${student.skills.length} skills, ${
-          student.course
-        }, CGPA ${student.cgpa}), the fastest wins are: ${lead
+        return `Fastest wins for your profile (${student.skills.length} skills, ${student.course}, CGPA ${student.cgpa}): ${lead
           .map(
             (i) =>
-              `<b>${i.skill}</b> (unlocks ${i.count} placement${
-                i.count > 1 ? "s" : ""
-              } you already clear on course and grade)`
+              `**${i.skill}** (unlocks ${i.count} placement${i.count > 1 ? "s" : ""} you already clear on course/grade)`
           )
-          .join(", ")}. Add ${
-          lead[0].skill
-        } to your Skills profile and watch those match scores jump. Paste a project or CV line into the extractor if you have used it before — it will claim the skill for you.`;
+          .join("; ")}. Add **${lead[0].skill}** to your Skills profile and watch match scores jump. Paste a project/CV line into the extractor if you've used it before — it'll claim the skill for you.`;
       }
 
       if (
@@ -840,21 +832,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ) {
         const top = ranked[0];
         if (!top)
-          return `Ask about a specific role and I will score it against your skills, course and grade.`;
+          return `Ask about a specific role and I'll score it against your skills, course and grade.`;
         const org = getOrg(top.p.orgId);
         const near = ranked[1];
         const gapText = top.m.missing.length
-          ? ` The only skills you are missing there: ${top.m.missing.join(
-              ", "
-            )}.`
-          : ` You already match every skill it asks for.`;
-        return `Your strongest fit right now is <b>${top.p.title}</b> at ${
-          org?.name || "a host organisation"
-        } — ${top.m.score}% match, closing ${top.p.deadline}.${gapText}${
-          near
-            ? ` Next best is ${near.p.title} at ${near.m.score}%.`
-            : ""
-        } Open your Placements tab to see the full ranking, or the Skills profile to close that gap and re-score.`;
+          ? ` Missing: ${top.m.missing.join(", ")}.`
+          : ` You match every required skill.`;
+        return `**Top fit:** ${top.p.title} at ${org?.name || "host org"} — ${top.m.score}% match, closes ${top.p.deadline}.${gapText}${near ? ` Next: ${near.p.title} (${near.m.score}%).` : ""} Open Placements for full ranking or Skills to close the gap.`;
       }
 
       if (
@@ -863,7 +847,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("how are you ranking") ||
         q.includes("how do you calculate")
       ) {
-        return `Match is weighted: your skill coverage of a placement's required skills is 60%, whether your course (${student.course}) is on its list is 25%, and whether your CGPA (${student.cgpa}) clears its minimum grade is 15%. It is fully explainable — every placement row lists the skills it needs and the exact ones you already bring. Nothing is a black box, and when the advisor moves server-side the same score is what the API returns.`;
+        return `Match = 60% skill coverage + 25% course fit + 15% CGPA. Fully explainable — every row lists required skills and which you bring. Same score powers the server-side advisor.`;
       }
 
       if (
@@ -881,22 +865,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const targetP = found;
         if (!targetP)
-          return `The placement catalog has not loaded yet, so I cannot score eligibility. Open the Placements tab and ask again once the live list appears.`;
+          return `Catalog not loaded yet. Open Placements and ask again once the live list appears.`;
         const ok = isEligible(targetP);
         const courseOk = targetP.courses.includes(student.course);
         const targetOrg = getOrg(targetP.orgId);
         const orgName = targetOrg ? targetOrg.name : "the organisation";
 
         return ok
-          ? `Yes — for <b>${targetP.title}</b> at ${orgName}. Your course (${student.course}) is on the list and your CGPA of ${student.cgpa} clears ${targetP.grade}. You still need ${
-              targetP.docs.filter((d) => {
-                const h = docs.find((x) => x.name === d);
-                return !h || h.status === "missing";
-              }).length
-            } document(s) uploaded before the office can forward your file. Closing date is ${targetP.deadline}.`
-          : `Not on paper. <b>${targetP.title}</b> requires ${targetP.grade} and the courses ${targetP.courses.join(", ")}. Your record is ${student.course} at ${student.cgpa}${
-              courseOk ? "" : " — your course is not on their list"
-            }. The university can still request an exception; that goes to the placement office, not the employer.`;
+          ? `**Yes** — ${targetP.title} at ${orgName}. Your course (${student.course}) is listed and CGPA ${student.cgpa} clears ${targetP.grade}. You need ${targetP.docs.filter((d) => {
+              const h = docs.find((x) => x.name === d);
+              return !h || h.status === "missing";
+            }).length} document(s) uploaded before the office forwards your file. Deadline: ${targetP.deadline}.`
+          : `**Not on paper.** ${targetP.title} requires ${targetP.grade} and courses ${targetP.courses.join(", ")}. Your record: ${student.course} at ${student.cgpa}${courseOk ? "" : " — course not on their list"}. University can request an exception via the placement office.`;
       }
 
       if (
@@ -907,11 +887,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const missing = docs
           .filter((d) => d.status === "missing")
           .map((d) => d.name);
-        return `Three states matter: verified, pending and missing. On your record, ${
-          docs.filter((d) => d.status === "verified").length
-        } files are verified and ${missing.length} are missing${
-          missing.length ? " (" + missing.join(", ") + ")" : ""
-        }. Upload from Documents — PDF or JPG up to 10 MB. The office reviews within 48 hours and a rejection keeps its reason, so you can replace the file without starting again.`;
+        return `Three states: **verified**, **pending**, **missing**. You have ${docs.filter((d) => d.status === "verified").length} verified, ${missing.length} missing${missing.length ? ` (${missing.join(", ")})` : ""}. Upload from Documents (PDF/JPG, ≤10 MB). Office reviews in ~48 hrs; rejections keep reasons so you can replace without restarting.`;
       }
 
       if (
@@ -928,7 +904,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           .filter(Boolean)
           .slice(0, 3)
           .join(", ");
-        return `There are ${gov.length} government placements live, from ${orgNames}. They use the same requirement fields as companies — courses, minimum grade, documents, testimonial. The Data Analyst Intern closes soonest, on 28 February.`;
+        return `${gov.length} government placements live (e.g., ${orgNames}). Same requirements as companies — courses, grade, documents, testimonial. Data Analyst Intern closes soonest (28 Feb).`;
       }
 
       if (
@@ -936,7 +912,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("verify") ||
         q.includes("transcript")
       ) {
-        return `Your transcript and student ID are verified by the placement office, not by the employer. A placement officer opens the file, checks it against the university record and marks it verified or returns it with a reason. Median turnaround is 48 hours. Employers only ever see verified files.`;
+        return `Transcript & student ID verified by placement office, not employer. Officer checks against university record → marks verified or returns with reason. Median: 48 hrs. Employers only see verified files.`;
       }
 
       if (
@@ -951,9 +927,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
           )
           .slice(0, 3);
-        return `The next three deadlines are ${soon
-          .map((p) => `${p.title} (${p.deadline})`)
-          .join(", ")}. Atlas Health closes first. I can check your eligibility for any of them before you spend an application.`;
+        return `Next deadlines: ${soon.map((p) => `${p.title} (${p.deadline})`).join(", ")}. Atlas Health closes first. Ask me to check eligibility for any before you apply.`;
       }
 
       if (
@@ -962,7 +936,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("free") ||
         q.includes("price")
       ) {
-        return `Applying is free and always will be. Universities and host organisations fund the service. There is no premium tier for students and no fee to unlock a placement.`;
+        return `Applying is free and always will be. Universities and host organisations fund the service. No premium tier for students, no fee to unlock a placement.`;
       }
 
       if (
@@ -971,7 +945,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("phone") ||
         q.includes("email")
       ) {
-        return `The office is at Plot 9, Nkrumah Road, Kampala — Monday to Friday, 08:30 to 17:00 EAT, with a one working day reply. Nairobi and Berlin offices are listed on the Contact page.`;
+        return `Office: Plot 9, Nkrumah Road, Kampala — Mon–Fri 08:30–17:00 EAT, 1-day reply. Nairobi & Berlin offices on Contact page.`;
       }
 
       if (
@@ -979,10 +953,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         q.includes("about") ||
         q.includes("how does it work")
       ) {
-        return `BrighterWorks is a career platform with separate internship and jobs portals. Universities publish placements from companies, government agencies and NGOs; each carries its eligible courses, minimum grade, required documents and testimonial rule. Students see eligibility before applying, the office verifies documents, and employers receive only qualified files.`;
+        return `BrighterWorks = separate internship & jobs portals. Universities publish placements from companies, gov agencies, NGOs with eligible courses, min grade, docs, testimonial rule. Students see eligibility before applying; office verifies docs; employers get qualified files only.`;
       }
 
-      return `I can rank placements against your skills and tell you which one fits best, name the single skill that would unlock the most roles for you, check your eligibility for a specific placement, list the documents you still need, or show the next deadlines. Ask about a role or say "what should I learn" and I will use your actual profile.`;
+      if (
+        q.includes("who are you") ||
+        q.includes("what are you") ||
+        q.includes("identity")
+      ) {
+        return `I'm your career advisor. I use your actual profile (skills, course, CGPA) to rank placements, suggest skills to learn, check eligibility, list missing documents, and show deadlines. Ask "what should I learn" or "which placement fits me" and I'll use your real data.`;
+      }
+
+      return `I rank placements against your skills, suggest the single skill that unlocks the most roles, check eligibility for any placement, list missing documents, and show upcoming deadlines. Ask about a role or say "what should I learn".`;
     },
     [placements, pid, getPlacement, isEligible, student, getOrg, docs, role]
   );

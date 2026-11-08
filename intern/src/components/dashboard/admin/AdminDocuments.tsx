@@ -126,12 +126,12 @@ export function AdminDocuments() {
                     {error}
                   </td>
                 </tr>
-              ) : documents.length === 0 ? (
+              ) : !documents || documents.length === 0 ? (
                 <tr>
                   <td colSpan={7}>No documents found for this filter.</td>
                 </tr>
               ) : (
-                documents.map((doc) => (
+                (documents || []).map((doc) => (
                   <tr key={doc.id}>
                     <td className="who">
                       <b>{doc.user_id.slice(0, 8)}…</b>

@@ -90,7 +90,7 @@ export function EmployerApplicants() {
             className="field"
             style={{ maxWidth: "400px" }}
           >
-            {placements.map((p) => (
+            {(placements || []).map((p) => (
               <option key={p.id} value={p.id}>
                 {p.title} ({p.applicants} applicants)
               </option>
@@ -126,7 +126,7 @@ export function EmployerApplicants() {
                   <td colSpan={6}>No applicants for this placement.</td>
                 </tr>
               ) : (
-                applicants[selectedPlacementId]?.map((app, i) => (
+                (applicants[selectedPlacementId] || []).map((app, i) => (
                   <tr key={app.id}>
                     <td className="who">
                       <b>{app.user_id.slice(0, 8)}…</b>

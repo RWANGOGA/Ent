@@ -126,7 +126,7 @@ export function AdminOverview() {
               <tbody>
                 {status === "loading" ? (
                   <tr><td colSpan={5}>Loading queue...</td></tr>
-                ) : adminQueue.length === 0 ? (
+                ) : !adminQueue || adminQueue.length === 0 ? (
                   <tr><td colSpan={5}>No students in the review queue.</td></tr>
                 ) : (
                   adminQueue.map((s) => (
@@ -222,10 +222,10 @@ export function AdminOverview() {
             <div className="pb" style={{ display: "grid", gap: "9px" }}>
               {status === "loading" ? (
                 <div>Loading activity...</div>
-              ) : activity.length === 0 ? (
+              ) : activity && activity.length === 0 ? (
                 <div className="muted">No recent activity.</div>
               ) : (
-                activity.map(([w, a, t], idx) => (
+                (activity || []).map(([w, a, t], idx) => (
                   <div
                     key={idx}
                     style={{

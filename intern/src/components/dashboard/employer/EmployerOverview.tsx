@@ -122,12 +122,12 @@ export function EmployerOverview() {
                 <tr>
                   <td colSpan={6}>Loading applicants...</td>
                 </tr>
-              ) : applicants.length === 0 ? (
+              ) : !applicants || applicants.length === 0 ? (
                 <tr>
                   <td colSpan={6}>No applicants yet.</td>
                 </tr>
               ) : (
-                applicants.slice(0, 4).map((app) => (
+                (applicants || []).slice(0, 4).map((app) => (
                   <tr key={app.id}>
                     <td className="who">
                       <b>{app.user_id.slice(0, 8)}…</b>

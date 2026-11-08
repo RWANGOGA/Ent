@@ -73,10 +73,10 @@ export function AdminStudents() {
                 <tr><td colSpan={6}>Loading student queue...</td></tr>
               ) : status === "error" ? (
                 <tr><td colSpan={6} className="error">{error}</td></tr>
-              ) : queue.length === 0 ? (
+              ) : !queue || queue.length === 0 ? (
                 <tr><td colSpan={6}>No students in the queue.</td></tr>
               ) : (
-                queue.map((s) => (
+                (queue || []).map((s) => (
                   <tr key={s.n}>
                     <td className="who">
                       <b>{s.n}</b>

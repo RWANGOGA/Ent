@@ -62,7 +62,7 @@ export function JobSeekerOverview() {
           <span className="lbl">application open</span>
         </div>
         <div className="kpi">
-          <b>{applications.filter((a) => a.status === "Accepted").length}</b>
+          <b>{(applications || []).filter((a) => a.status === "Accepted").length}</b>
           <span className="lbl">interviews</span>
         </div>
         <div className="kpi">
@@ -89,12 +89,12 @@ export function JobSeekerOverview() {
                 <tr>
                   <td colSpan={4}>Loading applications...</td>
                 </tr>
-              ) : applications.length === 0 ? (
+              ) : !applications || applications.length === 0 ? (
                 <tr>
                   <td colSpan={4}>No applications yet. Browse roles to get started.</td>
                 </tr>
               ) : (
-                applications.map((app) => (
+                (applications || []).map((app) => (
                   <tr key={app.id}>
                     <td className="who">
                       <b>{app.placement_id}</b>

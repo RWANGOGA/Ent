@@ -38,7 +38,7 @@ export function JobSeekerApps() {
           <h2>Applications</h2>
           <p>
             {applications.length} application{applications.length === 1 ? "" : "s"} ·
-            {applications.filter((a) => !["Accepted", "Rejected", "Withdrawn"].includes(a.status)).length} open
+            {(applications || []).filter((a) => !["Accepted", "Rejected", "Withdrawn"].includes(a.status)).length} open
           </p>
         </div>
       </div>
@@ -58,12 +58,12 @@ export function JobSeekerApps() {
                 <tr>
                   <td colSpan={4}>Loading applications...</td>
                 </tr>
-              ) : applications.length === 0 ? (
+              ) : !applications || applications.length === 0 ? (
                 <tr>
                   <td colSpan={4}>No applications yet. Browse roles to get started.</td>
                 </tr>
               ) : (
-                applications.map((app) => (
+                (applications || []).map((app) => (
                   <tr key={app.id}>
                     <td className="who">
                       <b>{app.placement_id}</b>
